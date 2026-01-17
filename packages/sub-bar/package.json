@@ -1,0 +1,22 @@
+{
+  "name": "pi-sub-bar",
+  "version": "0.1.0",
+  "description": "Usage widget extension for pi-coding-agent - shows current provider usage above the editor",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  }
+}

@@ -1,0 +1,4 @@
+node_modules/
+settings.json
+cache.json
+cache.lock

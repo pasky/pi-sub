@@ -1,0 +1,22 @@
+{
+  "name": "pi-sub-core",
+  "version": "0.1.0",
+  "description": "Shared usage data core for pi extensions",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  }
+}

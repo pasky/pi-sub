@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/sub-core" },
+    { "path": "./packages/sub-bar" },
+    { "path": "./packages/sub-shared" }
+  ]
+}
