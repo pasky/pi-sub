@@ -21,3 +21,4 @@
 - [ ] Publish packages to npm under `pi-sub-*` names while keeping extension/command names as `sub-*`
 - [ ] Add GitHub Actions publish workflow (lockstep versions, npm publish with NPM_TOKEN)
 - [ ] Document that users install only pi-sub-core/pi-sub-bar; pi-sub-shared is a dependency installed by npm
+- [ ] Add an npx installer (e.g., `npx pi-sub-install`) to symlink extensions into ~/.pi/agent/extensions
