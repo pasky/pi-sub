@@ -220,10 +220,15 @@ export async function showSettingsUI(
 						}
 					}
 
+					// Use custom theme with no hint text (we show it separately below)
+					const customTheme = {
+						...getSettingsListTheme(),
+						hint: () => "", // Disable built-in hint
+					};
 					const settingsList = new SettingsList(
 						items,
 						Math.min(items.length + 2, 15),
-						getSettingsListTheme(),
+						customTheme,
 						handleChange,
 						() => {
 							currentCategory = backCategory;
@@ -238,13 +243,13 @@ export async function showSettingsUI(
 				// Help text
 				let helpText: string;
 				if (currentCategory === "main" || currentCategory === "providers") {
-					helpText = "↑↓ navigate • enter select • esc back";
+					helpText = "↑↓ navigate • Enter select • Esc back";
 				} else if (currentCategory === "provider-order") {
 					helpText = reorderingIndex !== null
-						? "enter swap position • esc cancel"
-						: "enter select to move • esc back";
+						? "Enter swap position • Esc cancel"
+						: "Enter select to move • Esc back";
 				} else {
-					helpText = "↑↓ navigate • ←→ change value • esc back";
+					helpText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
 				}
 				container.addChild(new Spacer(1));
 				container.addChild(new Text(theme.fg("dim", helpText), 1, 0));
@@ -269,7 +274,7 @@ export async function showSettingsUI(
 				container.addChild(new Spacer(1));
 				container.addChild(selectList);
 				container.addChild(new Spacer(1));
-				container.addChild(new Text(theme.fg("dim", "↑↓ navigate • enter select • esc back"), 1, 0));
+				container.addChild(new Text(theme.fg("dim", "↑↓ navigate • Enter select • Esc back"), 1, 0));
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 
 				selectList.onSelect = (item) => {
