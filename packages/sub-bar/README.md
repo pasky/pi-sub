@@ -126,7 +126,7 @@ Each provider has its own settings page accessible via Provider Settings menu:
 | Show Provider Name | on/off | on | Show provider label in status |
 | Show Usage Labels | on/off | on | Show "used/rem." labels |
 | Divider Character | blank, \|, •, ●, ○, ◇ | • | Character between usage entries |
-| Divider Blanks | 0, 1 | 1 | Padding around divider |
+| Divider Blanks | 0, 1, 2, 3 | 1 | Padding around divider |
 | Show Top Divider | on/off | on | Show horizontal divider line above bar |
 | Widget Wrapping | truncate, wrap | truncate | Wrap usage line to multiple lines or truncate |
 | Error Threshold (%) | 10-40 | 25 | Percentage remaining below which shows red |

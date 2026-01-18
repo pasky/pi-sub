@@ -65,7 +65,7 @@ export function buildDisplayItems(settings: Settings): SettingItem[] {
 			id: "dividerBlanks",
 			label: "Blanks Before/After Divider",
 			currentValue: String(settings.display.dividerBlanks),
-			values: ["0", "1"],
+			values: ["0", "1", "2", "3"],
 		},
 		{
 			id: "showTopDivider",
@@ -127,7 +127,7 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.dividerCharacter = value as DividerCharacter;
 			break;
 		case "dividerBlanks":
-			settings.display.dividerBlanks = parseInt(value, 10) as 0 | 1;
+			settings.display.dividerBlanks = parseInt(value, 10) as 0 | 1 | 2 | 3;
 			break;
 		case "showTopDivider":
 			settings.display.showTopDivider = value === "on";

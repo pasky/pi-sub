@@ -151,8 +151,8 @@ export interface DisplaySettings {
 	showUsageLabels: boolean;
 	/** Divider character */
 	dividerCharacter: DividerCharacter;
-	/** Blanks before and after divider (0 or 1) */
-	dividerBlanks: 0 | 1;
+	/** Blanks before and after divider (0, 1, 2, or 3) */
+	dividerBlanks: 0 | 1 | 2 | 3;
 	/** Show divider line above the bar */
 	showTopDivider: boolean;
 	/** Widget line wrapping */
