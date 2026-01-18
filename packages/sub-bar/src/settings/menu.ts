@@ -59,10 +59,10 @@ export function buildProviderListItems(settings: Settings): SelectItem[] {
 }
 
 export function buildProviderOrderItems(settings: Settings): SelectItem[] {
-	return settings.providerOrder.map((provider, index) => ({
+	const activeProviders = settings.providerOrder.filter((provider) => settings.providers[provider].enabled);
+	return activeProviders.map((provider, index) => ({
 		value: provider,
 		label: `${index + 1}. ${PROVIDER_DISPLAY_NAMES[provider]}`,
-		description: "enter to select, then enter to swap",
 	}));
 }
 

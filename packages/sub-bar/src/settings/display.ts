@@ -28,7 +28,6 @@ export function buildDisplayItems(settings: Settings): SettingItem[] {
 		{
 			id: "colorScheme",
 			label: "Color Scheme",
-			description: "Color coding based on remaining quota percentage",
 			currentValue: settings.display.colorScheme,
 			values: [
 				"muted-warning-error",

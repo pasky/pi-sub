@@ -53,7 +53,9 @@ export async function showSettingsUI(
 ): Promise<Settings> {
 	let settings = getSettings();
 	let currentCategory: SettingsCategory = "main";
-	let reorderingIndex: number | null = null;
+	let providerOrderSelectedIndex = 0;
+	let providerOrderReordering = false;
+	let suppressProviderOrderChange = false;
 
 	return new Promise((resolve) => {
 		ctx.ui.custom<Settings>((tui, theme, _kb, done) => {
@@ -135,48 +137,78 @@ export async function showSettingsUI(
 					container.addChild(selectList);
 				} else if (currentCategory === "provider-order") {
 					const items = buildProviderOrderItems(settings);
+					const isReordering = providerOrderReordering;
 					const selectList = new SelectList(items, Math.min(items.length, 10), {
-						selectedPrefix: (t: string) => reorderingIndex !== null ? theme.fg("warning", t) : theme.fg("accent", t),
-						selectedText: (t: string) => reorderingIndex !== null ? theme.fg("warning", t) : theme.fg("accent", t),
+						selectedPrefix: (t: string) => isReordering ? theme.fg("warning", t) : theme.fg("accent", t),
+						selectedText: (t: string) => isReordering ? theme.fg("warning", t) : theme.fg("accent", t),
 						description: (t: string) => theme.fg("muted", t),
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
-					selectList.onSelect = (item) => {
-						const idx = settings.providerOrder.indexOf(item.value as ProviderName);
-						if (reorderingIndex === null) {
-							reorderingIndex = idx;
-							rebuild();
-							tui.requestRender();
-						} else {
-							// Swap positions
-							const temp = settings.providerOrder[reorderingIndex];
-							settings.providerOrder[reorderingIndex] = settings.providerOrder[idx];
-							settings.providerOrder[idx] = temp;
-							reorderingIndex = null;
-							saveSettings(settings);
-							if (onSettingsChange) void onSettingsChange(settings);
-							rebuild();
-							tui.requestRender();
+
+					if (items.length > 0) {
+						suppressProviderOrderChange = true;
+						providerOrderSelectedIndex = Math.min(providerOrderSelectedIndex, items.length - 1);
+						selectList.setSelectedIndex(providerOrderSelectedIndex);
+						suppressProviderOrderChange = false;
+					}
+
+					selectList.onSelectionChange = (item) => {
+						if (suppressProviderOrderChange) return;
+						const newIndex = items.findIndex((listItem) => listItem.value === item.value);
+						if (newIndex === -1) return;
+
+						if (!providerOrderReordering) {
+							providerOrderSelectedIndex = newIndex;
+							return;
 						}
+
+						const activeProviders = settings.providerOrder.filter((provider) => settings.providers[provider].enabled);
+						const oldIndex = providerOrderSelectedIndex;
+						if (newIndex === oldIndex) return;
+						if (oldIndex < 0 || oldIndex >= activeProviders.length) return;
+
+						const provider = activeProviders[oldIndex];
+						const updatedActive = [...activeProviders];
+						updatedActive.splice(oldIndex, 1);
+						updatedActive.splice(newIndex, 0, provider);
+
+						let activeIndex = 0;
+						settings.providerOrder = settings.providerOrder.map((existing) => {
+							if (!settings.providers[existing].enabled) return existing;
+							const next = updatedActive[activeIndex];
+							activeIndex += 1;
+							return next;
+						});
+
+						providerOrderSelectedIndex = newIndex;
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						rebuild();
+						tui.requestRender();
 					};
+
+					selectList.onSelect = () => {
+						if (items.length === 0) return;
+						providerOrderReordering = !providerOrderReordering;
+						rebuild();
+						tui.requestRender();
+					};
+
 					selectList.onCancel = () => {
-						if (reorderingIndex !== null) {
-							reorderingIndex = null;
+						if (providerOrderReordering) {
+							providerOrderReordering = false;
 							rebuild();
 							tui.requestRender();
-						} else {
-							currentCategory = "main";
-							rebuild();
-							tui.requestRender();
+							return;
 						}
+						currentCategory = "main";
+						rebuild();
+						tui.requestRender();
 					};
+
 					activeList = selectList;
 					container.addChild(selectList);
-
-					if (reorderingIndex !== null) {
-						container.addChild(new Text(theme.fg("warning", "Select position to swap with, or Esc to cancel"), 1, 0));
-					}
 				} else {
 					// Settings list for category
 					let items: SettingItem[];
@@ -220,10 +252,10 @@ export async function showSettingsUI(
 						}
 					}
 
-					// Use custom theme with no hint text (we show it separately below)
+					const settingsHint = theme.fg("dim", "↑↓ navigate • Enter/Space to change • Esc to cancel");
 					const customTheme = {
 						...getSettingsListTheme(),
-						hint: () => "", // Disable built-in hint
+						hint: () => settingsHint,
 					};
 					const settingsList = new SettingsList(
 						items,
@@ -241,18 +273,24 @@ export async function showSettingsUI(
 				}
 
 				// Help text
-				let helpText: string;
-				if (currentCategory === "main" || currentCategory === "providers") {
-					helpText = "↑↓ navigate • Enter select • Esc back";
-				} else if (currentCategory === "provider-order") {
-					helpText = reorderingIndex !== null
-						? "Enter swap position • Esc cancel"
-						: "Enter select to move • Esc back";
-				} else {
-					helpText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
+				const usesSettingsList =
+					currentCategory === "display" ||
+					currentCategory === "behavior" ||
+					getProviderFromCategory(currentCategory) !== null;
+				if (!usesSettingsList) {
+					let helpText: string;
+					if (currentCategory === "main" || currentCategory === "providers") {
+						helpText = "↑↓ navigate • Enter/Space select • Esc back";
+					} else if (currentCategory === "provider-order") {
+						helpText = providerOrderReordering
+							? "↑↓ move provider • Esc back"
+							: "↑↓ navigate • Enter/Space select • Esc back";
+					} else {
+						helpText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
+					}
+					container.addChild(new Spacer(1));
+					container.addChild(new Text(theme.fg("dim", helpText), 1, 0));
 				}
-				container.addChild(new Spacer(1));
-				container.addChild(new Text(theme.fg("dim", helpText), 1, 0));
 
 				// Bottom border
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
@@ -274,7 +312,7 @@ export async function showSettingsUI(
 				container.addChild(new Spacer(1));
 				container.addChild(selectList);
 				container.addChild(new Spacer(1));
-				container.addChild(new Text(theme.fg("dim", "↑↓ navigate • Enter select • Esc back"), 1, 0));
+				container.addChild(new Text(theme.fg("dim", "↑↓ navigate • Enter/Space select • Esc back"), 1, 0));
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 
 				selectList.onSelect = (item) => {
@@ -303,10 +341,21 @@ export async function showSettingsUI(
 					container.invalidate();
 				},
 				handleInput(data: string) {
-					if (activeList) {
-						if ("handleInput" in activeList && activeList.handleInput) {
-							activeList.handleInput(data);
+					if (data === " ") {
+						if (currentCategory === "provider-order") {
+							providerOrderReordering = !providerOrderReordering;
+							rebuild();
+							tui.requestRender();
+							return;
 						}
+						if (activeList && "handleInput" in activeList && activeList.handleInput) {
+							activeList.handleInput("\r");
+						}
+						tui.requestRender();
+						return;
+					}
+					if (activeList && "handleInput" in activeList && activeList.handleInput) {
+						activeList.handleInput(data);
 					}
 					tui.requestRender();
 				},

@@ -121,7 +121,7 @@ Each provider has its own settings page accessible via Provider Settings menu:
 | Bar Style | bar, percentage, both | both | How to display usage |
 | Bar Width | 4-12 | 6 | Width of progress bar in characters |
 | Bar Character | light, heavy, double, block | heavy | Character used for progress bar (─, ━, ═, █) |
-| Color Scheme | muted-warning-error, text-warning-error, success-text-warning-error, monochrome | muted-warning-error | Color coding based on remaining quota percentage |
+| Color Scheme | muted-warning-error, text-warning-error, success-text-warning-error, monochrome | muted-warning-error | Color coding for usage levels |
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
 | Show Provider Name | on/off | on | Show provider label in status |
 | Show Usage Labels | on/off | on | Show "used/rem." labels |
