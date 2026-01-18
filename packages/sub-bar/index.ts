@@ -54,15 +54,16 @@ export default function createExtension(pi: ExtensionAPI) {
 		ctx.ui.setWidget("usage", (_tui, theme) => ({
 			render(width: number) {
 				const safeWidth = Math.max(1, width);
-				const divider = theme.fg("borderMuted", "─".repeat(safeWidth));
+				const showTopDivider = settings.display.showTopDivider ?? true;
+				const divider = showTopDivider ? theme.fg("borderMuted", "─".repeat(safeWidth)) : undefined;
 				const formatted = formatUsageStatus(theme, usage, ctx.model?.id, settings);
-				if (!formatted) return [divider];
+				if (!formatted) return divider ? [divider] : [];
 				if (settings.display.widgetWrapping === "wrap") {
 					const wrapped = wrapTextWithAnsi(formatted, safeWidth);
-					return [divider, ...wrapped];
+					return divider ? [divider, ...wrapped] : wrapped;
 				}
 				const trimmed = truncateToWidth(formatted, safeWidth, theme.fg("dim", "..."));
-				return [divider, trimmed];
+				return divider ? [divider, trimmed] : [trimmed];
 			},
 			invalidate() {},
 		}));

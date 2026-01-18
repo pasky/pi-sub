@@ -153,6 +153,8 @@ export interface DisplaySettings {
 	dividerCharacter: DividerCharacter;
 	/** Blanks before and after divider (0 or 1) */
 	dividerBlanks: 0 | 1;
+	/** Show divider line above the bar */
+	showTopDivider: boolean;
 	/** Widget line wrapping */
 	widgetWrapping: WidgetWrapping;
 	/** Error threshold (percentage remaining below this = red) */
@@ -271,6 +273,7 @@ export function getDefaultSettings(): Settings {
 			showUsageLabels: true,
 			dividerCharacter: "•",
 			dividerBlanks: 1,
+			showTopDivider: true,
 			errorThreshold: 25,
 			warningThreshold: 50,
 			widgetWrapping: "truncate",

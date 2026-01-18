@@ -62,6 +62,12 @@ export function buildDisplayItems(settings: Settings): SettingItem[] {
 			values: ["0", "1"],
 		},
 		{
+			id: "showTopDivider",
+			label: "Show Top Divider",
+			currentValue: settings.display.showTopDivider ? "on" : "off",
+			values: ["on", "off"],
+		},
+		{
 			id: "widgetWrapping",
 			label: "Widget Wrapping",
 			currentValue: settings.display.widgetWrapping,
@@ -116,6 +122,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "dividerBlanks":
 			settings.display.dividerBlanks = parseInt(value, 10) as 0 | 1;
+			break;
+		case "showTopDivider":
+			settings.display.showTopDivider = value === "on";
 			break;
 		case "widgetWrapping":
 			settings.display.widgetWrapping = value as WidgetWrapping;
