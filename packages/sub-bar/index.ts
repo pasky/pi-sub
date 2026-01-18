@@ -195,14 +195,6 @@ export default function createExtension(pi: ExtensionAPI) {
 		},
 	});
 
-	// Register command to redraw usage widget
-	pi.registerCommand("/sub-bar:redraw", {
-		description: "Redraw usage widget (uses cache if fresh)",
-		handler: async () => {
-			emitCoreAction({ type: "refresh", force: true });
-		},
-	});
-
 	// Register command to show all providers
 	pi.registerCommand("/sub-bar:compare-all", {
 		description: "Show all provider plans",
