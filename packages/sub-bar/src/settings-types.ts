@@ -13,7 +13,7 @@ export type BarStyle = "bar" | "percentage" | "both";
 /**
  * Color scheme for usage bars
  */
-export type ColorScheme = "traffic-light" | "gradient" | "monochrome";
+export type ColorScheme = "monochrome" | "text-warning-error" | "success-text-warning-error" | "muted-warning-error";
 
 /**
  * Progress bar character style
@@ -266,8 +266,8 @@ export function getDefaultSettings(): Settings {
 		display: {
 			barStyle: "both",
 			barWidth: 6,
-			barCharacter: "double",
-			colorScheme: "traffic-light",
+			barCharacter: "heavy",
+			colorScheme: "muted-warning-error",
 			resetTimePosition: "front",
 			showProviderName: true,
 			showUsageLabels: true,
@@ -373,6 +373,19 @@ export function migrateSettings(loaded: Partial<Settings> & { copilot?: { showMu
 		const oldValue = loaded.display.barCharacter as string;
 		if (oldValue in oldToNew) {
 			loaded.display.barCharacter = oldToNew[oldValue];
+		}
+	}
+
+	// Migrate old colorScheme values
+	if (loaded.display?.colorScheme) {
+		const oldToNew: Record<string, ColorScheme> = {
+			"traffic-light": "muted-warning-error",
+			"gradient": "success-text-warning-error",
+			"monochrome": "monochrome",
+		};
+		const oldValue = loaded.display.colorScheme as string;
+		if (oldValue in oldToNew) {
+			loaded.display.colorScheme = oldToNew[oldValue];
 		}
 	}
 

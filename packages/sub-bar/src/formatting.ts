@@ -46,7 +46,7 @@ function getUsageColor(
 	errorThreshold: number = 25,
 	warningThreshold: number = 50,
 	successThreshold: number = 75
-): "error" | "warning" | "muted" | "success" | "accent" {
+): "error" | "warning" | "muted" | "success" | "accent" | "text" {
 	if (colorScheme === "monochrome") {
 		return "muted";
 	}
@@ -54,14 +54,23 @@ function getUsageColor(
 	// For remaining percentage (Codex style), invert the logic
 	const effectivePercent = isRemaining ? percent : 100 - percent;
 
-	if (colorScheme === "gradient") {
+	if (colorScheme === "success-text-warning-error") {
+		// >75%: success, >50%: text, >25%: warning, <=25%: error
 		if (effectivePercent < errorThreshold) return "error";
 		if (effectivePercent < warningThreshold) return "warning";
-		if (effectivePercent < successThreshold) return "muted";
+		if (effectivePercent < successThreshold) return "text";
 		return "success";
 	}
 
-	// traffic-light (default)
+	if (colorScheme === "text-warning-error") {
+		// >50%: text, >25%: warning, <=25%: error
+		if (effectivePercent < errorThreshold) return "error";
+		if (effectivePercent < warningThreshold) return "warning";
+		return "text";
+	}
+
+	// muted-warning-error (default)
+	// >50%: muted, >25%: warning, <=25%: error
 	if (effectivePercent < errorThreshold) return "error";
 	if (effectivePercent < warningThreshold) return "warning";
 	return "muted";
@@ -91,7 +100,7 @@ export function formatUsageWindow(
 			const extraParts = [styledLabel, parts.bar, parts.pct].filter(Boolean);
 			return extraParts.join(" ");
 		}
-		const extraParts = [theme.fg(getUsageColor(window.usedPercent, false, settings?.display.colorScheme ?? "traffic-light"), window.label), parts.bar, parts.pct].filter(Boolean);
+		const extraParts = [theme.fg(getUsageColor(window.usedPercent, false, settings?.display.colorScheme ?? "muted-warning-error"), window.label), parts.bar, parts.pct].filter(Boolean);
 		return extraParts.join(" ");
 	}
 
@@ -109,8 +118,8 @@ export function formatUsageWindowParts(
 ): UsageWindowParts {
 	const barStyle: BarStyle = settings?.display.barStyle ?? "both";
 	const barWidth = settings?.display.barWidth ?? 6;
-	const barCharacter: BarCharacter = settings?.display.barCharacter ?? "double";
-	const colorScheme: ColorScheme = settings?.display.colorScheme ?? "traffic-light";
+	const barCharacter: BarCharacter = settings?.display.barCharacter ?? "heavy";
+	const colorScheme: ColorScheme = settings?.display.colorScheme ?? "muted-warning-error";
 	const resetTimePosition = settings?.display.resetTimePosition ?? "front";
 	const showUsageLabels = settings?.display.showUsageLabels ?? true;
 	const errorThreshold = settings?.display.errorThreshold ?? 25;

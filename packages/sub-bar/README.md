@@ -116,21 +116,22 @@ Each provider has its own settings page accessible via Provider Settings menu:
 
 ### Display Settings
 
-| Setting | Options | Description |
-|---------|---------|-------------|
-| Bar Style | bar, percentage, both | How to display usage |
-| Bar Width | 4-12 | Width of progress bar in characters |
-| Bar Character | light, heavy, double, block | Character used for progress bar (─, ━, ═, █) |
-| Color Scheme | traffic-light, gradient, monochrome | Color coding for usage levels |
-| Reset Timer | off, front, back, integrated | Show time until quota resets |
-| Show Provider Name | on/off | Show provider label in status |
-| Show Usage Labels | on/off | Show “used/rem.” labels |
-| Divider Character | blank, |, •, ●, ○, ◇ | Character between usage entries |
-| Divider Blanks | 0, 1 | Padding around divider |
-| Widget Wrapping | truncate, wrap | Wrap usage line to multiple lines or truncate |
-| Error Threshold (%) | 10-40 | Percentage remaining below which shows red (default: 25%) |
-| Warning Threshold (%) | 30-70 | Percentage remaining below which shows yellow (default: 50%) |
-| Success Threshold (%) | 60-90 | Percentage remaining above which shows green - gradient only (default: 75%) |
+| Setting | Options | Default | Description |
+|---------|---------|---------|-------------|
+| Bar Style | bar, percentage, both | both | How to display usage |
+| Bar Width | 4-12 | 6 | Width of progress bar in characters |
+| Bar Character | light, heavy, double, block | heavy | Character used for progress bar (─, ━, ═, █) |
+| Color Scheme | muted-warning-error, text-warning-error, success-text-warning-error, monochrome | muted-warning-error | Color coding based on remaining quota percentage |
+| Reset Timer | off, front, back, integrated | front | Show time until quota resets |
+| Show Provider Name | on/off | on | Show provider label in status |
+| Show Usage Labels | on/off | on | Show "used/rem." labels |
+| Divider Character | blank, \|, •, ●, ○, ◇ | • | Character between usage entries |
+| Divider Blanks | 0, 1 | 1 | Padding around divider |
+| Show Top Divider | on/off | on | Show horizontal divider line above bar |
+| Widget Wrapping | truncate, wrap | truncate | Wrap usage line to multiple lines or truncate |
+| Error Threshold (%) | 10-40 | 25 | Percentage remaining below which shows red |
+| Warning Threshold (%) | 30-70 | 50 | Percentage remaining below which shows yellow |
+| Success Threshold (%) | 60-90 | 75 | Percentage remaining above which shows green/success - success-text-warning-error only |
 
 ### Behavior Settings
 
