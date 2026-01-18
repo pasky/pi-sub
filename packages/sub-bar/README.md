@@ -10,8 +10,8 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 - Auto-detects provider from current model (via sub-core)
 - Shows rate limit windows with visual progress bars
 - Status indicators from provider status pages
-- **Extensive settings UI** via `/sub-bar-settings`
-- Manual redraw via `/sub-bar-redraw` command
+- **Extensive settings UI** via `/sub-bar:settings`
+- Manual redraw via `/sub-bar:redraw` command
 - Cycle through providers with `Ctrl+Alt+P`
 
 ## Supported Providers
@@ -81,8 +81,8 @@ Until then, manual paths/symlinks work as documented above.
 
 The extension loads automatically. Use:
 
-- `/sub-bar-settings` - Open the settings UI
-- `/sub-bar-redraw` - Redraw the usage widget
+- `/sub-bar:settings` - Open the settings UI
+- `/sub-bar:redraw` - Redraw the usage widget
 - `Ctrl+Alt+P` - Cycle through available providers
 
 **Caching:**
@@ -94,7 +94,7 @@ The extension loads automatically. Use:
 
 `sub-bar` is a display client. It listens for `sub-core:update`/`sub-core:ready` events and renders the widget. On startup it requests the current state via `sub-core:request`.
 
-When you change settings in `/sub-bar-settings`, it sends a `sub-core:settings:patch` so core refresh behavior stays in sync. Commands like redraw/cycle forward to `sub-core:action` so core updates provider selection and then broadcasts the new state.
+When you change settings in `/sub-bar:settings`, it sends a `sub-core:settings:patch` so core refresh behavior stays in sync. Commands like redraw/cycle forward to `sub-core:action` so core updates provider selection and then broadcasts the new state.
 
 ## Settings
 

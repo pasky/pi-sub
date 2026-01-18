@@ -177,7 +177,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	});
 
 	// Register command to open settings
-	pi.registerCommand("sub-bar-settings", {
+	pi.registerCommand("/sub-bar:settings", {
 		description: "Open sub-bar settings",
 		handler: async (_args, ctx) => {
 			const newSettings = await showSettingsUI(ctx, async (updatedSettings) => {
@@ -196,7 +196,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	});
 
 	// Register command to redraw usage widget
-	pi.registerCommand("sub-bar-redraw", {
+	pi.registerCommand("/sub-bar:redraw", {
 		description: "Redraw usage widget (uses cache if fresh)",
 		handler: async () => {
 			emitCoreAction({ type: "refresh", force: true });
@@ -204,7 +204,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	});
 
 	// Register command to show all providers
-	pi.registerCommand("sub-bar-compare-all", {
+	pi.registerCommand("/sub-bar:compare-all", {
 		description: "Show all provider plans",
 		handler: async (_args, ctx) => {
 			await showAllProviders(ctx);
