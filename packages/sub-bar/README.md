@@ -92,7 +92,7 @@ The extension loads automatically. Use:
 
 ## Communication with sub-core
 
-`sub-bar` is a display client. It listens for `sub-core:update`/`sub-core:ready` events and renders the widget. On startup it requests the current state via `sub-core:request`.
+`sub-bar` is a display client. It listens for `sub-core:update-current`/`sub-core:ready` events and renders the widget. On startup it requests the current state via `sub-core:request`.
 
 `sub-bar` only manages display settings. Provider + behavior settings are configured in `sub-core:settings`, and sub-core broadcasts updates that sub-bar consumes. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
 

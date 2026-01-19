@@ -59,9 +59,15 @@ export type SubCoreState = {
 	usage?: UsageSnapshot;
 };
 
+export type SubCoreAllState = {
+	provider?: ProviderName;
+	entries: ProviderUsageEntry[];
+};
+
 export type SubCoreEvents =
 	| { type: "sub-core:ready"; state: SubCoreState }
-	| { type: "sub-core:update"; state: SubCoreState };
+	| { type: "sub-core:update-current"; state: SubCoreState }
+	| { type: "sub-core:update-all"; state: SubCoreAllState };
 
 export type ProviderStatusConfig =
 	| { type: "statuspage"; url: string }

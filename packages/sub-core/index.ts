@@ -10,7 +10,8 @@ import type { ProviderUsageEntry } from "./src/usage/types.js";
 import { createDefaultDependencies } from "./src/dependencies.js";
 import { createUsageController, type UsageUpdate } from "./src/usage/controller.js";
 import { fetchUsageEntries, getCachedUsageEntries } from "./src/usage/fetch.js";
-import { onCacheUpdate } from "./src/cache.js";
+import { onCacheSnapshot, onCacheUpdate, watchCacheUpdates, type Cache } from "./src/cache.js";
+import { isExpectedMissingData } from "./src/errors.js";
 import { getStorage } from "./src/storage.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
@@ -79,6 +80,27 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		providerCycleIndex: 0,
 	};
 
+	let lastAllSnapshot = "";
+	const unsubscribeCacheSnapshot = onCacheSnapshot((cache: Cache) => {
+		const ttlMs = settings.behavior.refreshInterval * 1000;
+		const now = Date.now();
+		const entries: ProviderUsageEntry[] = [];
+		for (const provider of settings.providerOrder) {
+			const entry = cache[provider];
+			if (!entry || !entry.usage) continue;
+			if (now - entry.fetchedAt >= ttlMs) continue;
+			const usage = { ...entry.usage, status: entry.status };
+			if (usage.error && isExpectedMissingData(usage.error)) continue;
+			entries.push({ provider, usage });
+		}
+		const payload = JSON.stringify({ provider: controllerState.currentProvider, entries });
+		if (payload === lastAllSnapshot) return;
+		lastAllSnapshot = payload;
+		pi.events.emit("sub-core:update-all", {
+			state: { provider: controllerState.currentProvider, entries },
+		});
+	});
+
 	const unsubscribeCache = onCacheUpdate((provider, entry) => {
 		if (!controllerState.currentProvider || provider !== controllerState.currentProvider) return;
 		const usage = entry?.usage ? { ...entry.usage, status: entry.status } : undefined;
@@ -87,15 +109,17 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 			provider: controllerState.currentProvider,
 			usage,
 		};
-		pi.events.emit("sub-core:update", { state: lastState });
+		pi.events.emit("sub-core:update-current", { state: lastState });
 	});
+
+	const stopCacheWatch = watchCacheUpdates();
 
 	function emitUpdate(update: UsageUpdate): void {
 		lastState = {
 			provider: update.provider,
 			usage: update.usage,
 		};
-		pi.events.emit("sub-core:update", { state: lastState });
+		pi.events.emit("sub-core:update-current", { state: lastState });
 	}
 
 	async function refresh(ctx: ExtensionContext, options?: { force?: boolean }) {
@@ -289,6 +313,8 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 			refreshInterval = undefined;
 		}
 		unsubscribeCache();
+		unsubscribeCacheSnapshot();
+		stopCacheWatch();
 		lastContext = undefined;
 	});
 }

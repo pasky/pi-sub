@@ -4,6 +4,7 @@
  */
 
 import * as path from "node:path";
+import * as fs from "node:fs";
 import type { ProviderName, ProviderStatus, UsageSnapshot } from "./types.js";
 import { isExpectedMissingData } from "./errors.js";
 import { getStorage } from "./storage.js";
@@ -27,13 +28,22 @@ export interface Cache {
 }
 
 export type CacheUpdateListener = (provider: ProviderName, entry?: CacheEntry) => void;
+export type CacheSnapshotListener = (cache: Cache) => void;
 
 const cacheUpdateListeners = new Set<CacheUpdateListener>();
+const cacheSnapshotListeners = new Set<CacheSnapshotListener>();
 
 export function onCacheUpdate(listener: CacheUpdateListener): () => void {
 	cacheUpdateListeners.add(listener);
 	return () => {
 		cacheUpdateListeners.delete(listener);
+	};
+}
+
+export function onCacheSnapshot(listener: CacheSnapshotListener): () => void {
+	cacheSnapshotListeners.add(listener);
+	return () => {
+		cacheSnapshotListeners.delete(listener);
 	};
 }
 
@@ -43,6 +53,16 @@ function emitCacheUpdate(provider: ProviderName, entry?: CacheEntry): void {
 			listener(provider, entry);
 		} catch (error) {
 			console.error("Failed to notify cache update:", error);
+		}
+	}
+}
+
+function emitCacheSnapshot(cache: Cache): void {
+	for (const listener of cacheSnapshotListeners) {
+		try {
+			listener(cache);
+		} catch (error) {
+			console.error("Failed to notify cache snapshot:", error);
 		}
 	}
 }
@@ -101,6 +121,62 @@ function writeCache(cache: Cache): void {
 	} catch (error) {
 		console.error("Failed to write cache:", error);
 	}
+}
+
+export interface CacheWatchOptions {
+	debounceMs?: number;
+	pollIntervalMs?: number;
+}
+
+export function watchCacheUpdates(options?: CacheWatchOptions): () => void {
+	const debounceMs = options?.debounceMs ?? 250;
+	const pollIntervalMs = options?.pollIntervalMs ?? 5000;
+	let debounceTimer: NodeJS.Timeout | undefined;
+	let pollTimer: NodeJS.Timeout | undefined;
+	let lastSnapshot = "";
+	let lastMtimeMs = 0;
+	let stopped = false;
+
+	const emitFromCache = () => {
+		try {
+			const stat = fs.statSync(CACHE_PATH, { throwIfNoEntry: false });
+			if (!stat || !stat.mtimeMs) return;
+			if (stat.mtimeMs === lastMtimeMs) return;
+			lastMtimeMs = stat.mtimeMs;
+			const content = fs.readFileSync(CACHE_PATH, "utf-8");
+			if (content === lastSnapshot) return;
+			lastSnapshot = content;
+			const cache = JSON.parse(content) as Cache;
+			emitCacheSnapshot(cache);
+			for (const [provider, entry] of Object.entries(cache)) {
+				emitCacheUpdate(provider as ProviderName, entry);
+			}
+		} catch {
+			// Ignore parse or read errors (likely mid-write)
+		}
+	};
+
+	const scheduleEmit = () => {
+		if (stopped) return;
+		if (debounceTimer) clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => emitFromCache(), debounceMs);
+	};
+
+	let watcher: fs.FSWatcher | undefined;
+	try {
+		watcher = fs.watch(CACHE_PATH, scheduleEmit);
+	} catch {
+		watcher = undefined;
+	}
+
+	pollTimer = setInterval(() => emitFromCache(), pollIntervalMs);
+
+	return () => {
+		stopped = true;
+		if (debounceTimer) clearTimeout(debounceTimer);
+		if (pollTimer) clearInterval(pollTimer);
+		watcher?.close();
+	};
 }
 
 /**
@@ -198,12 +274,14 @@ export async function fetchWithCache<T extends { usage?: UsageSnapshot; status?:
 			};
 			writeCache(cache);
 			emitCacheUpdate(provider, cache[provider]);
+			emitCacheSnapshot(cache);
 		} else if (hasCredentialError) {
 			// Remove from cache if no credentials
 			if (cache[provider]) {
 				delete cache[provider];
 				writeCache(cache);
 				emitCacheUpdate(provider, undefined);
+				emitCacheSnapshot(cache);
 			}
 		}
 		

@@ -212,7 +212,7 @@ export default function createExtension(pi: ExtensionAPI) {
 		});
 	}
 
-	pi.events.on("sub-core:update", (payload) => {
+	pi.events.on("sub-core:update-current", (payload) => {
 		coreAvailable = true;
 		const state = payload as { state?: SubCoreState };
 		updateUsage(state.state?.usage);
