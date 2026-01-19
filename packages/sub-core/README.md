@@ -39,8 +39,8 @@ The plan in pi-mono issue #645 expects packages to declare extension entry point
 
 Sub-core stores a shared cache and lock file:
 
-- `~/.pi/agent/extensions/sub-core/cache.json`
-- `~/.pi/agent/extensions/sub-core/cache.lock`
+- `cache.json` (next to the extension entry)
+- `cache.lock` (next to the extension entry)
 
 ## Provider Comparison
 

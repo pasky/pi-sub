@@ -84,7 +84,7 @@ The extension loads automatically. Use:
 - `Ctrl+Alt+P` - Cycle through available providers
 
 **Caching:**
-- Handled by sub-core at `~/.pi/agent/extensions/sub-core/cache.json`
+- Handled by sub-core at `cache.json` next to the sub-core extension entry
 - Cache TTL matches your auto-refresh interval setting
 - Lock file prevents race conditions between multiple pi windows
 
@@ -96,7 +96,7 @@ When you change settings in `sub-bar:settings`, it sends a `sub-core:settings:pa
 
 ## Settings
 
-Settings are persisted to `~/.pi/agent/extensions/sub-bar/settings.json` and forwarded to sub-core when needed.
+Settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`) and forwarded to sub-core when needed.
 
 ### Provider Settings
 

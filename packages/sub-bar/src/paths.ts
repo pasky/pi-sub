@@ -2,17 +2,11 @@
  * Shared path helpers for sub-bar settings storage.
  */
 
-import { homedir } from "node:os";
-import { join } from "node:path";
-
-const AGENT_DIR_ENV = "PI_CODING_AGENT_DIR";
-
-export function getAgentDir(): string {
-	return process.env[AGENT_DIR_ENV] || join(homedir(), ".pi", "agent");
-}
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export function getExtensionDir(): string {
-	return join(getAgentDir(), "extensions", "sub-bar");
+	return join(dirname(fileURLToPath(import.meta.url)), "..");
 }
 
 export function getSettingsPath(): string {

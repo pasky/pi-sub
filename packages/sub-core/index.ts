@@ -10,7 +10,6 @@ import type { ProviderUsageEntry } from "./src/usage/types.js";
 import { createDefaultDependencies } from "./src/dependencies.js";
 import { createUsageController, type UsageUpdate } from "./src/usage/controller.js";
 import { fetchUsageEntries, getCachedUsageEntries } from "./src/usage/fetch.js";
-import { getAgentDir } from "./src/paths.js";
 import { getStorage } from "./src/storage.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 
@@ -36,19 +35,6 @@ type SubCoreAction = {
 	provider?: ProviderName;
 	force?: boolean;
 };
-
-function cleanupLegacyCache(): void {
-	const storage = getStorage();
-	const legacyDir = join(getAgentDir(), "extensions", "sub-bar");
-	const legacyCache = join(legacyDir, "cache.json");
-	const legacyLock = join(legacyDir, "cache.lock");
-	if (storage.exists(legacyCache)) {
-		storage.removeFile(legacyCache);
-	}
-	if (storage.exists(legacyLock)) {
-		storage.removeFile(legacyLock);
-	}
-}
 
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 	const result = { ...target } as T;
@@ -180,7 +166,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 	});
 
 	pi.on("session_start", async (_event, ctx) => {
-		cleanupLegacyCache();
 		lastContext = ctx;
 		settings = loadSettings();
 		setupRefreshInterval();
@@ -211,7 +196,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		await refresh(ctx);
 	});
 
-	pi.on("session_branch", async (_event, ctx) => {
+	pi.on("session_branch" as unknown as "session_start", async (_event: unknown, ctx: ExtensionContext) => {
 		controllerState.currentProvider = undefined;
 		controllerState.pinnedProvider = undefined;
 		controllerState.cachedUsage = undefined;
