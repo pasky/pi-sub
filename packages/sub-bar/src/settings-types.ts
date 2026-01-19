@@ -13,7 +13,7 @@ export type BarStyle = "bar" | "percentage" | "both";
 /**
  * Color scheme for usage bars
  */
-export type ColorScheme = "monochrome" | "text-warning-error" | "success-text-warning-error" | "muted-warning-error";
+export type ColorScheme = "monochrome" | "base-warning-error" | "success-base-warning-error";
 
 /**
  * Progress bar character style
@@ -23,12 +23,37 @@ export type BarCharacter = "light" | "heavy" | "double" | "block";
 /**
  * Divider character style
  */
-export type DividerCharacter = "blank" | "|" | "•" | "●" | "○" | "◇";
+export type DividerCharacter = "none" | "blank" | "|" | "•" | "●" | "○" | "◇";
 
 /**
  * Widget line wrapping mode
  */
 export type WidgetWrapping = "truncate" | "wrap";
+
+/**
+ * Alignment for the widget
+ */
+export type DisplayAlignment = "left" | "center" | "right" | "split";
+
+/**
+ * Provider label prefix
+ */
+export type ProviderLabel = "plan" | "subscription" | "sub" | "none";
+
+/**
+ * Base text color for widget labels
+ */
+export type BaseTextColor = "dim" | "muted" | "text";
+
+/**
+ * Bar width configuration
+ */
+export type BarWidth = 4 | 6 | 8 | 10 | 12 | "fill";
+
+/**
+ * Divider blank spacing configuration
+ */
+export type DividerBlanks = 0 | 1 | 2 | 3 | "fill";
 
 /**
  * Base provider settings (shared by all providers)
@@ -135,10 +160,12 @@ export interface ProviderSettingsMap {
  * Display settings
  */
 export interface DisplaySettings {
+	/** Alignment */
+	alignment: DisplayAlignment;
 	/** Bar display style */
 	barStyle: BarStyle;
 	/** Width of the progress bar in characters */
-	barWidth: number;
+	barWidth: BarWidth;
 	/** Progress bar character */
 	barCharacter: BarCharacter;
 	/** Color scheme for bars */
@@ -147,12 +174,18 @@ export interface DisplaySettings {
 	resetTimePosition: "off" | "front" | "back" | "integrated";
 	/** Show provider display name */
 	showProviderName: boolean;
+	/** Provider label prefix */
+	providerLabel: ProviderLabel;
+	/** Show colon after provider label */
+	providerLabelColon: boolean;
+	/** Base text color for widget labels */
+	baseTextColor: BaseTextColor;
 	/** Show usage labels (used/rem.) */
 	showUsageLabels: boolean;
 	/** Divider character */
 	dividerCharacter: DividerCharacter;
-	/** Blanks before and after divider (0, 1, 2, or 3) */
-	dividerBlanks: 0 | 1 | 2 | 3;
+	/** Blanks before and after divider */
+	dividerBlanks: DividerBlanks;
 	/** Show divider line above the bar */
 	showTopDivider: boolean;
 	/** Widget line wrapping */
@@ -264,12 +297,16 @@ export function getDefaultSettings(): Settings {
 			},
 		},
 		display: {
+			alignment: "left",
 			barStyle: "both",
 			barWidth: 6,
 			barCharacter: "heavy",
-			colorScheme: "muted-warning-error",
+			colorScheme: "base-warning-error",
 			resetTimePosition: "front",
 			showProviderName: true,
+			providerLabel: "none",
+			providerLabelColon: true,
+			baseTextColor: "dim",
 			showUsageLabels: true,
 			dividerCharacter: "•",
 			dividerBlanks: 1,
@@ -279,6 +316,7 @@ export function getDefaultSettings(): Settings {
 			widgetWrapping: "truncate",
 			successThreshold: 75,
 		},
+
 		behavior: {
 			refreshInterval: 60,
 			refreshOnTurnStart: true,
@@ -379,14 +417,30 @@ export function migrateSettings(loaded: Partial<Settings> & { copilot?: { showMu
 	// Migrate old colorScheme values
 	if (loaded.display?.colorScheme) {
 		const oldToNew: Record<string, ColorScheme> = {
-			"traffic-light": "muted-warning-error",
-			"gradient": "success-text-warning-error",
+			"traffic-light": "base-warning-error",
+			"gradient": "success-base-warning-error",
+			"muted-warning-error": "base-warning-error",
+			"text-warning-error": "base-warning-error",
+			"success-text-warning-error": "success-base-warning-error",
 			"monochrome": "monochrome",
 		};
 		const oldValue = loaded.display.colorScheme as string;
 		if (oldValue in oldToNew) {
 			loaded.display.colorScheme = oldToNew[oldValue];
 		}
+	}
+
+	// Migrate old fill-priority values
+	if (loaded.display && (loaded.display as { barWidth?: string }).barWidth === "fill-priority") {
+		loaded.display.barWidth = "fill" as BarWidth;
+	}
+	if (loaded.display && (loaded.display as { dividerBlanks?: string }).dividerBlanks === "fill-priority") {
+		loaded.display.dividerBlanks = "fill" as DividerBlanks;
+	}
+
+	// Remove deprecated displayMode
+	if (loaded.display && "displayMode" in loaded.display) {
+		delete (loaded.display as { displayMode?: unknown }).displayMode;
 	}
 
 	// Migrate showResetTime to resetTimePosition

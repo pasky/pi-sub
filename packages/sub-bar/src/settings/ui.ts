@@ -7,16 +7,19 @@ import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-age
 import { Container, type SelectItem, SelectList, type SettingItem, SettingsList, Spacer, Text } from "@mariozechner/pi-tui";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
+import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings, resetSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
-import { buildDisplayItems, applyDisplayChange } from "./display.js";
+import { buildDisplayLayoutItems, buildDisplayColorItems, buildDisplayBarItems, buildDisplayProviderItems, buildDisplayDividerItems, applyDisplayChange } from "./display.js";
 import { buildBehaviorItems, applyBehaviorChange } from "./behavior.js";
 import {
 	buildDefaultProviderItems,
 	buildMainMenuItems,
 	buildProviderListItems,
 	buildProviderOrderItems,
+	buildDisplayMenuItems,
+	buildDisplayPresetItems,
 } from "./menu.js";
 
 /**
@@ -29,8 +32,33 @@ type SettingsCategory =
 	| "providers"
 	| ProviderCategory
 	| "display"
+	| "display-layout"
+	| "display-color"
+	| "display-bar"
+	| "display-provider"
+	| "display-divider"
+	| "display-presets"
 	| "behavior"
 	| "provider-order";
+
+function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Settings["display"] {
+	return {
+		...defaultDisplay,
+		alignment: "left",
+		widgetWrapping: "truncate",
+		resetTimePosition: "off",
+		showUsageLabels: false,
+		barStyle: "bar",
+		barWidth: 4,
+		showProviderName: false,
+		providerLabel: "none",
+		providerLabelColon: false,
+		baseTextColor: "dim",
+		dividerCharacter: "none",
+		dividerBlanks: 0,
+		showTopDivider: false,
+	};
+}
 
 
 /**
@@ -73,6 +101,12 @@ export async function showSettingsUI(
 					main: "sub-bar Settings",
 					providers: "Provider Settings",
 					display: "Display Settings",
+					"display-layout": "Layout & Content",
+					"display-color": "Color Scheme",
+					"display-bar": "Bar",
+					"display-provider": "Provider",
+					"display-divider": "Divider",
+					"display-presets": "Load Presets",
 					behavior: "Behavior Settings",
 					"provider-order": "Provider Order",
 				};
@@ -130,6 +164,58 @@ export async function showSettingsUI(
 					};
 					selectList.onCancel = () => {
 						currentCategory = "main";
+						rebuild();
+						tui.requestRender();
+					};
+					activeList = selectList;
+					container.addChild(selectList);
+				} else if (currentCategory === "display") {
+					const items = buildDisplayMenuItems();
+					const selectList = new SelectList(items, Math.min(items.length, 10), {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					selectList.onSelect = (item) => {
+						currentCategory = item.value as SettingsCategory;
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						currentCategory = "main";
+						rebuild();
+						tui.requestRender();
+					};
+					activeList = selectList;
+					container.addChild(selectList);
+				} else if (currentCategory === "display-presets") {
+					const items = buildDisplayPresetItems();
+					const selectList = new SelectList(items, Math.min(items.length, 6), {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					selectList.onSelect = (item) => {
+						const defaults = getDefaultSettings();
+						if (item.value === "default") {
+							settings.display = { ...defaults.display };
+							ctx.ui.notify("Display settings reset to defaults", "info");
+						} else if (item.value === "minimal") {
+							settings.display = buildMinimalDisplaySettings(defaults.display);
+							ctx.ui.notify("Display settings set to minimal", "info");
+						}
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						currentCategory = "display";
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						currentCategory = "display";
 						rebuild();
 						tui.requestRender();
 					};
@@ -227,35 +313,57 @@ export async function showSettingsUI(
 						backCategory = "providers";
 					} else {
 						switch (currentCategory) {
-							case "display":
-								items = buildDisplayItems(settings);
-								handleChange = (id, value) => {
-									settings = applyDisplayChange(settings, id, value);
-									saveSettings(settings);
-									if (onSettingsChange) void onSettingsChange(settings);
-								};
+							case "display-layout":
+								items = buildDisplayLayoutItems(settings);
+								backCategory = "display";
+								break;
+							case "display-color":
+								items = buildDisplayColorItems(settings);
+								backCategory = "display";
+								break;
+							case "display-bar":
+								items = buildDisplayBarItems(settings);
+								backCategory = "display";
+								break;
+							case "display-provider":
+								items = buildDisplayProviderItems(settings);
+								backCategory = "display";
+								break;
+							case "display-divider":
+								items = buildDisplayDividerItems(settings);
+								backCategory = "display";
 								break;
 							case "behavior":
 								items = buildBehaviorItems(settings);
-								handleChange = (id, value) => {
-									settings = applyBehaviorChange(settings, id, value);
-									saveSettings(settings);
-									// Don't refresh for auto-refresh interval changes
-									if (id !== "refreshInterval" && onSettingsChange) {
-										void onSettingsChange(settings);
-									}
-								};
 								break;
 							default:
 								items = [];
-								handleChange = () => {};
 						}
+
+						handleChange = (id, value) => {
+							if (currentCategory === "behavior") {
+								settings = applyBehaviorChange(settings, id, value);
+								saveSettings(settings);
+								if (id !== "refreshInterval" && onSettingsChange) {
+									void onSettingsChange(settings);
+								}
+								return;
+							}
+							settings = applyDisplayChange(settings, id, value);
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+						};
 					}
 
-					const settingsHint = theme.fg("dim", "↑↓ navigate • Enter/Space to change • Esc to cancel");
+					const settingsHintText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
-						hint: () => settingsHint,
+						hint: (text: string) => {
+							if (text.includes("Enter/Space")) {
+								return theme.fg("dim", settingsHintText);
+							}
+							return theme.fg("dim", text);
+						},
 					};
 					const settingsList = new SettingsList(
 						items,
@@ -274,12 +382,21 @@ export async function showSettingsUI(
 
 				// Help text
 				const usesSettingsList =
-					currentCategory === "display" ||
 					currentCategory === "behavior" ||
+					currentCategory === "display-layout" ||
+					currentCategory === "display-color" ||
+					currentCategory === "display-bar" ||
+					currentCategory === "display-provider" ||
+					currentCategory === "display-divider" ||
 					getProviderFromCategory(currentCategory) !== null;
 				if (!usesSettingsList) {
 					let helpText: string;
-					if (currentCategory === "main" || currentCategory === "providers") {
+					if (
+						currentCategory === "main" ||
+						currentCategory === "providers" ||
+						currentCategory === "display" ||
+						currentCategory === "display-presets"
+					) {
 						helpText = "↑↓ navigate • Enter/Space select • Esc back";
 					} else if (currentCategory === "provider-order") {
 						helpText = providerOrderReordering

@@ -5,11 +5,11 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
-import { truncateToWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
+import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
 import type { ProviderUsageEntry } from "./src/usage/types.js";
-import { formatUsageStatus } from "./src/formatting.js";
+import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { loadSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
 import { showUsageComparison } from "./src/ui/compare.js";
@@ -56,13 +56,29 @@ export default function createExtension(pi: ExtensionAPI) {
 				const safeWidth = Math.max(1, width);
 				const showTopDivider = settings.display.showTopDivider ?? true;
 				const divider = showTopDivider ? theme.fg("borderMuted", "─".repeat(safeWidth)) : undefined;
-				const formatted = formatUsageStatus(theme, usage, ctx.model?.id, settings);
+				const alignment = settings.display.alignment ?? "left";
+				const hasFill = settings.display.barWidth === "fill" || settings.display.dividerBlanks === "fill";
+				const wantsSplit = alignment === "split";
+				const shouldAlign = !hasFill && !wantsSplit && (alignment === "center" || alignment === "right");
+				const formatted = (hasFill || wantsSplit)
+					? formatUsageStatusWithWidth(theme, usage, safeWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
+					: formatUsageStatus(theme, usage, ctx.model?.id, settings);
 				if (!formatted) return divider ? [divider] : [];
+
+				const alignLine = (line: string) => {
+					if (!shouldAlign) return line;
+					const lineWidth = visibleWidth(line);
+					if (lineWidth >= safeWidth) return line;
+					const padding = safeWidth - lineWidth;
+					const leftPad = alignment === "center" ? Math.floor(padding / 2) : padding;
+					return " ".repeat(leftPad) + line;
+				};
+
 				if (settings.display.widgetWrapping === "wrap") {
-					const wrapped = wrapTextWithAnsi(formatted, safeWidth);
+					const wrapped = wrapTextWithAnsi(formatted, safeWidth).map(alignLine);
 					return divider ? [divider, ...wrapped] : wrapped;
 				}
-				const trimmed = truncateToWidth(formatted, safeWidth, theme.fg("dim", "..."));
+				const trimmed = alignLine(truncateToWidth(formatted, safeWidth, theme.fg("dim", "...")));
 				return divider ? [divider, trimmed] : [trimmed];
 			},
 			invalidate() {},
@@ -177,7 +193,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	});
 
 	// Register command to open settings
-	pi.registerCommand("/sub-bar:settings", {
+	pi.registerCommand("sub-bar:settings", {
 		description: "Open sub-bar settings",
 		handler: async (_args, ctx) => {
 			const newSettings = await showSettingsUI(ctx, async (updatedSettings) => {
@@ -196,7 +212,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	});
 
 	// Register command to show all providers
-	pi.registerCommand("/sub-bar:compare-all", {
+	pi.registerCommand("sub-bar:compare-all", {
 		description: "Show all provider plans",
 		handler: async (_args, ctx) => {
 			await showAllProviders(ctx);

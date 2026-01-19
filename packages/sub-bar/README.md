@@ -10,7 +10,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 - Auto-detects provider from current model (via sub-core)
 - Shows rate limit windows with visual progress bars
 - Status indicators from provider status pages
-- **Extensive settings UI** via `/sub-bar:settings`
+- **Extensive settings UI** via `sub-bar:settings`
 - Cycle through providers with `Ctrl+Alt+P`
 
 ## Supported Providers
@@ -80,7 +80,7 @@ Until then, manual paths/symlinks work as documented above.
 
 The extension loads automatically. Use:
 
-- `/sub-bar:settings` - Open the settings UI
+- `sub-bar:settings` - Open the settings UI
 - `Ctrl+Alt+P` - Cycle through available providers
 
 **Caching:**
@@ -92,7 +92,7 @@ The extension loads automatically. Use:
 
 `sub-bar` is a display client. It listens for `sub-core:update`/`sub-core:ready` events and renders the widget. On startup it requests the current state via `sub-core:request`.
 
-When you change settings in `/sub-bar:settings`, it sends a `sub-core:settings:patch` so core refresh behavior stays in sync. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
+When you change settings in `sub-bar:settings`, it sends a `sub-core:settings:patch` so core refresh behavior stays in sync. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
 
 ## Settings
 
@@ -118,20 +118,24 @@ Each provider has its own settings page accessible via Provider Settings menu:
 
 | Setting | Options | Default | Description |
 |---------|---------|---------|-------------|
+| Alignment | left, center, right, split | left | Alignment for the widget (split fills the gap after the provider name) |
 | Bar Style | bar, percentage, both | both | How to display usage |
-| Bar Width | 4-12 | 6 | Width of progress bar in characters |
+| Bar Width | 4, 6, 8, 10, 12, fill | 6 | Width of progress bar in characters |
 | Bar Character | light, heavy, double, block | heavy | Character used for progress bar (─, ━, ═, █) |
-| Color Scheme | muted-warning-error, text-warning-error, success-text-warning-error, monochrome | muted-warning-error | Color coding for usage levels |
+| Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
 | Show Provider Name | on/off | on | Show provider label in status |
+| Provider Label | none, plan, subscription, sub | none | Suffix after provider name (replaces existing Plan/Subscription suffix if present) |
+| Provider Label Colon | on/off | on | Show colon after provider label |
+| Base Color | dim, muted, text | dim | Base color for widget labels/dividers |
 | Show Usage Labels | on/off | on | Show "used/rem." labels |
-| Divider Character | blank, \|, •, ●, ○, ◇ | • | Character between usage entries |
-| Divider Blanks | 0, 1, 2, 3 | 1 | Padding around divider |
+| Divider Character | none, blank, \|, •, ●, ○, ◇ | • | Character between usage entries |
+| Divider Blanks | 0, 1, 2, 3, fill | 1 | Padding around divider |
 | Show Top Divider | on/off | on | Show horizontal divider line above bar |
 | Widget Wrapping | truncate, wrap | truncate | Wrap usage line to multiple lines or truncate |
 | Error Threshold (%) | 10-40 | 25 | Percentage remaining below which shows red |
 | Warning Threshold (%) | 30-70 | 50 | Percentage remaining below which shows yellow |
-| Success Threshold (%) | 60-90 | 75 | Percentage remaining above which shows green/success - success-text-warning-error only |
+| Success Threshold (%) | 60-90 | 75 | Percentage remaining above which shows green/success - success-base-warning-error only |
 
 ### Behavior Settings
 
