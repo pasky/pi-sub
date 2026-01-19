@@ -1,5 +1,5 @@
 # pi-sub-shared
 
-Shared types and event contract for the `sub-*` ecosystem.
+Shared types, metadata, and event contracts for the `sub-*` ecosystem.
 
-> Note: This package is a placeholder while sub-core/sub-bar migrate shared types here.
+This package is consumed by `sub-core` and `sub-bar` to keep provider metadata, usage types, and model multipliers consistent.

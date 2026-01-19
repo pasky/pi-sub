@@ -26,6 +26,27 @@ export interface Cache {
 	[provider: string]: CacheEntry;
 }
 
+export type CacheUpdateListener = (provider: ProviderName, entry?: CacheEntry) => void;
+
+const cacheUpdateListeners = new Set<CacheUpdateListener>();
+
+export function onCacheUpdate(listener: CacheUpdateListener): () => void {
+	cacheUpdateListeners.add(listener);
+	return () => {
+		cacheUpdateListeners.delete(listener);
+	};
+}
+
+function emitCacheUpdate(provider: ProviderName, entry?: CacheEntry): void {
+	for (const listener of cacheUpdateListeners) {
+		try {
+			listener(provider, entry);
+		} catch (error) {
+			console.error("Failed to notify cache update:", error);
+		}
+	}
+}
+
 /**
  * Cache file path
  */
@@ -176,11 +197,13 @@ export async function fetchWithCache<T extends { usage?: UsageSnapshot; status?:
 				status: result.status,
 			};
 			writeCache(cache);
+			emitCacheUpdate(provider, cache[provider]);
 		} else if (hasCredentialError) {
 			// Remove from cache if no credentials
 			if (cache[provider]) {
 				delete cache[provider];
 				writeCache(cache);
+				emitCacheUpdate(provider, undefined);
 			}
 		}
 		

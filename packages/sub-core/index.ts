@@ -4,20 +4,17 @@
 
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
-import type { Dependencies, ProviderName, UsageSnapshot } from "./src/types.js";
+import type { Dependencies, ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
 import type { ProviderUsageEntry } from "./src/usage/types.js";
 import { createDefaultDependencies } from "./src/dependencies.js";
 import { createUsageController, type UsageUpdate } from "./src/usage/controller.js";
 import { fetchUsageEntries, getCachedUsageEntries } from "./src/usage/fetch.js";
+import { onCacheUpdate } from "./src/cache.js";
 import { getStorage } from "./src/storage.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
 
-interface SubCoreState {
-	provider?: ProviderName;
-	usage?: UsageSnapshot;
-}
 
 type SubCoreRequest =
 	| {
@@ -81,6 +78,17 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		pinnedProvider: undefined as ProviderName | undefined,
 		providerCycleIndex: 0,
 	};
+
+	const unsubscribeCache = onCacheUpdate((provider, entry) => {
+		if (!controllerState.currentProvider || provider !== controllerState.currentProvider) return;
+		const usage = entry?.usage ? { ...entry.usage, status: entry.status } : undefined;
+		controllerState.cachedUsage = usage;
+		lastState = {
+			provider: controllerState.currentProvider,
+			usage,
+		};
+		pi.events.emit("sub-core:update", { state: lastState });
+	});
 
 	function emitUpdate(update: UsageUpdate): void {
 		lastState = {
@@ -280,6 +288,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 			clearInterval(refreshInterval);
 			refreshInterval = undefined;
 		}
+		unsubscribeCache();
 		lastContext = undefined;
 	});
 }

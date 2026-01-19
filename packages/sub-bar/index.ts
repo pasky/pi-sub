@@ -6,7 +6,7 @@
 
 import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
-import type { ProviderName, UsageSnapshot } from "./src/types.js";
+import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
 import type { ProviderUsageEntry } from "./src/usage/types.js";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
@@ -15,11 +15,6 @@ import { showSettingsUI } from "./src/settings-ui.js";
 import { showUsageComparison } from "./src/ui/compare.js";
 
 type CoreSettings = Pick<Settings, "providers" | "behavior" | "providerOrder" | "defaultProvider">;
-
-type SubCoreState = {
-	provider?: ProviderName;
-	usage?: UsageSnapshot;
-};
 
 type SubCoreRequest =
 	| {

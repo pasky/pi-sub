@@ -2,30 +2,19 @@
  * Provider metadata shared across the extension.
  */
 
-import type { RateWindow, UsageSnapshot } from "../types.js";
-import { PROVIDERS, type ProviderName } from "../types.js";
+import type { RateWindow, UsageSnapshot, ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import { getModelMultiplier } from "../utils.js";
+import { PROVIDER_METADATA as BASE_METADATA, type ProviderMetadata as BaseProviderMetadata } from "pi-sub-shared";
 
-export { PROVIDERS } from "../types.js";
-
-export type ProviderStatusConfig =
-	| { type: "statuspage"; url: string }
-	| { type: "google-workspace" };
-
-export interface ProviderDetectionConfig {
-	providerTokens: string[];
-	modelTokens: string[];
-}
+export { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "pi-sub-shared";
+export type { ProviderStatusConfig, ProviderDetectionConfig } from "pi-sub-shared";
 
 export interface UsageExtra {
 	label: string;
 }
 
-export interface ProviderMetadata {
-	displayName: string;
-	detection?: ProviderDetectionConfig;
-	status?: ProviderStatusConfig;
+export interface ProviderMetadata extends BaseProviderMetadata {
 	isWindowVisible?: (usage: UsageSnapshot, window: RateWindow, settings?: Settings) => boolean;
 	getExtras?: (usage: UsageSnapshot, settings?: Settings, modelId?: string) => UsageExtra[];
 }
@@ -108,43 +97,29 @@ const copilotExtras: ProviderMetadata["getExtras"] = (usage, settings, modelId) 
 
 export const PROVIDER_METADATA: Record<ProviderName, ProviderMetadata> = {
 	anthropic: {
-		displayName: "Anthropic (Claude)",
-		status: { type: "statuspage", url: "https://status.anthropic.com/api/v2/status.json" },
-		detection: { providerTokens: ["anthropic"], modelTokens: ["claude"] },
+		...BASE_METADATA.anthropic,
 		isWindowVisible: anthropicWindowVisible,
 		getExtras: anthropicExtras,
 	},
 	copilot: {
-		displayName: "GitHub Copilot",
-		status: { type: "statuspage", url: "https://www.githubstatus.com/api/v2/status.json" },
-		detection: { providerTokens: ["copilot", "github"], modelTokens: [] },
+		...BASE_METADATA.copilot,
 		isWindowVisible: copilotWindowVisible,
 		getExtras: copilotExtras,
 	},
 	gemini: {
-		displayName: "Google Gemini",
-		status: { type: "google-workspace" },
-		detection: { providerTokens: ["google", "gemini"], modelTokens: ["gemini"] },
+		...BASE_METADATA.gemini,
 		isWindowVisible: geminiWindowVisible,
 	},
 	codex: {
-		displayName: "OpenAI Codex",
-		status: { type: "statuspage", url: "https://status.openai.com/api/v2/status.json" },
-		detection: { providerTokens: ["openai", "codex"], modelTokens: ["gpt", "o1", "o3"] },
+		...BASE_METADATA.codex,
 		isWindowVisible: codexWindowVisible,
 	},
 	kiro: {
-		displayName: "AWS Kiro",
-		detection: { providerTokens: ["kiro", "aws"], modelTokens: [] },
+		...BASE_METADATA.kiro,
 		isWindowVisible: kiroWindowVisible,
 	},
 	zai: {
-		displayName: "z.ai",
-		detection: { providerTokens: ["zai", "z.ai", "xai"], modelTokens: [] },
+		...BASE_METADATA.zai,
 		isWindowVisible: zaiWindowVisible,
 	},
 };
-
-export const PROVIDER_DISPLAY_NAMES = Object.fromEntries(
-	PROVIDERS.map((provider) => [provider, PROVIDER_METADATA[provider].displayName])
-) as Record<ProviderName, string>;
