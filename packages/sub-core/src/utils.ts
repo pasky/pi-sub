@@ -20,7 +20,8 @@ export function formatReset(date: Date): string {
 	if (hours < 24) return mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
 
 	const days = Math.floor(hours / 24);
-	return `${days}d`;
+	const remHours = hours % 24;
+	return remHours > 0 ? `${days}d${remHours}h` : `${days}d`;
 }
 
 /**
