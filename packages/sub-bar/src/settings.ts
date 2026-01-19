@@ -40,8 +40,9 @@ export function loadSettings(): Settings {
 		if (storage.exists(SETTINGS_PATH)) {
 			const content = storage.readFile(SETTINGS_PATH);
 			if (content) {
-				const loaded = JSON.parse(content) as Partial<Settings>;
-				cachedSettings = migrateSettings(loaded);
+				const loaded = JSON.parse(content) as Partial<Settings> & { display?: Partial<Settings["display"]> };
+				const display = "display" in loaded ? loaded.display : loaded;
+				cachedSettings = migrateSettings({ version: loaded.version, display } as Partial<Settings>);
 				return cachedSettings;
 			}
 		}
@@ -61,7 +62,7 @@ export function saveSettings(settings: Settings): boolean {
 	const storage = getStorage();
 	try {
 		ensureSettingsDir();
-		const content = JSON.stringify(settings, null, 2);
+		const content = JSON.stringify({ version: settings.version, display: settings.display }, null, 2);
 		storage.writeFile(SETTINGS_PATH, content);
 		cachedSettings = settings;
 		return true;
@@ -76,8 +77,10 @@ export function saveSettings(settings: Settings): boolean {
  */
 export function resetSettings(): Settings {
 	const defaults = getDefaultSettings();
-	saveSettings(defaults);
-	return defaults;
+	const current = getSettings();
+	const next = { ...current, display: defaults.display, version: defaults.version };
+	saveSettings(next);
+	return next;
 }
 
 /**

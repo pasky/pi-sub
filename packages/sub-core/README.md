@@ -15,6 +15,10 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 - `sub_get_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
 - `sub_get_all_usage` – refreshes and returns all enabled provider entries.
 
+## Settings
+
+Use `sub-core:settings` to configure shared provider + behavior settings.
+
 ## Installation
 
 Clone the repo and register the extension with pi. `sub-core` can power multiple `sub-*` extensions (some with UI, some without), so you typically install it alongside whichever clients you want:

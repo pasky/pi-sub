@@ -12,6 +12,7 @@ import { createUsageController, type UsageUpdate } from "./src/usage/controller.
 import { fetchUsageEntries, getCachedUsageEntries } from "./src/usage/fetch.js";
 import { getStorage } from "./src/storage.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
+import { showSettingsUI } from "./src/settings-ui.js";
 
 interface SubCoreState {
 	provider?: ProviderName;
@@ -166,6 +167,25 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 				content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
 				details: { entries: payload },
 			};
+		},
+	});
+
+	pi.registerCommand("sub-core:settings", {
+		description: "Open sub-core settings",
+		handler: async (_args, ctx) => {
+			const handleSettingsChange = async (updatedSettings: Settings) => {
+				applySettingsPatch(updatedSettings);
+				if (lastContext) {
+					await refresh(lastContext);
+				}
+			};
+
+			const newSettings = await showSettingsUI(ctx, handleSettingsChange);
+			settings = newSettings;
+			applySettingsPatch(newSettings);
+			if (lastContext) {
+				await refresh(lastContext);
+			}
 		},
 	});
 

@@ -80,7 +80,8 @@ Until then, manual paths/symlinks work as documented above.
 
 The extension loads automatically. Use:
 
-- `sub-bar:settings` - Open the settings UI
+- `sub-bar:settings` - Open the display settings UI
+- `sub-core:settings` - Configure provider + behavior settings
 - `Ctrl+Alt+P` - Cycle through available providers
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
 
@@ -93,27 +94,15 @@ The extension loads automatically. Use:
 
 `sub-bar` is a display client. It listens for `sub-core:update`/`sub-core:ready` events and renders the widget. On startup it requests the current state via `sub-core:request`.
 
-When you change settings in `sub-bar:settings`, it sends a `sub-core:settings:patch` so core refresh behavior stays in sync. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
+`sub-bar` only manages display settings. Provider + behavior settings are configured in `sub-core:settings`, and sub-core broadcasts updates that sub-bar consumes. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
 
 ## Settings
 
-Settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`) and forwarded to sub-core when needed.
+Display settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Provider + behavior settings are managed by sub-core.
 
-### Provider Settings
+### Provider + Behavior Settings
 
-Each provider has its own settings page accessible via Provider Settings menu:
-
-**All Providers:**
-- Enabled: Enable/disable the provider
-- Show Status: Show status page indicator
-
-**Anthropic (Claude):**
-- Show Extra Usage: Display overage/extra usage info
-- Extra Usage Currency: EUR or USD
-
-**GitHub Copilot:**
-- Show Model Multiplier: Display request cost multiplier
-- Show Requests Remaining: Calculate remaining requests based on multiplier
+Use `sub-core:settings` to configure provider visibility, window toggles, quotas, refresh behavior, provider order, and pinned provider.
 
 ### Display Settings
 
@@ -144,23 +133,6 @@ Each provider has its own settings page accessible via Provider Settings menu:
 | Error Threshold (%) | 10-40 | 25 | Percentage remaining below which shows red |
 | Warning Threshold (%) | 30-70 | 50 | Percentage remaining below which shows yellow |
 | Success Threshold (%) | 60-90 | 75 | Percentage remaining above which shows green/success - success-base-warning-error only |
-
-### Behavior Settings
-
-| Setting | Options | Description |
-|---------|---------|-------------|
-| Auto-refresh Interval | off, 30s, 60s, 120s, 300s | Automatic refresh frequency |
-| Refresh on Turn Start | on/off | Refresh when a new turn begins |
-| Refresh on Tool Result | on/off | Refresh after each tool execution |
-| Auto-detect Provider | on/off | Detect provider from current model |
-
-### Provider Order
-
-Customize the order when cycling through providers with `Ctrl+Alt+P`.
-
-### Pinned Provider
-
-Pin a specific provider to always show, or use none (auto-detect from current model).
 
 ## Credentials
 

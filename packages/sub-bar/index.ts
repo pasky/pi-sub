@@ -14,6 +14,8 @@ import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
 import { showUsageComparison } from "./src/ui/compare.js";
 
+type CoreSettings = Pick<Settings, "providers" | "behavior" | "providerOrder" | "defaultProvider">;
+
 type SubCoreState = {
 	provider?: ProviderName;
 	usage?: UsageSnapshot;
@@ -23,7 +25,7 @@ type SubCoreRequest =
 	| {
 			type?: "current";
 			includeSettings?: boolean;
-			reply: (payload: { state: SubCoreState; settings?: unknown }) => void;
+			reply: (payload: { state: SubCoreState; settings?: CoreSettings }) => void;
 	  }
 	| {
 			type: "entries";
@@ -128,17 +130,12 @@ export default function createExtension(pi: ExtensionAPI) {
 		}
 	}
 
-	function buildCoreSettingsPatch(current: Settings): Partial<Settings> {
-		return {
-			providers: current.providers,
-			behavior: current.behavior,
-			providerOrder: current.providerOrder,
-			defaultProvider: current.defaultProvider,
-		};
-	}
-
-	function syncCoreSettings(current: Settings): void {
-		pi.events.emit("sub-core:settings:patch", { patch: buildCoreSettingsPatch(current) });
+	function applyCoreSettings(coreSettings?: CoreSettings): void {
+		if (!coreSettings) return;
+		settings.providers = coreSettings.providers ?? settings.providers;
+		settings.behavior = coreSettings.behavior ?? settings.behavior;
+		settings.providerOrder = coreSettings.providerOrder ?? settings.providerOrder;
+		settings.defaultProvider = coreSettings.defaultProvider ?? settings.defaultProvider;
 	}
 
 	function emitCoreAction(action: SubCoreAction): void {
@@ -157,10 +154,12 @@ export default function createExtension(pi: ExtensionAPI) {
 
 			const request: SubCoreRequest = {
 				type: "current",
+				includeSettings: true,
 				reply: (payload) => {
 					if (resolved) return;
 					resolved = true;
 					clearTimeout(timer);
+					applyCoreSettings(payload.settings);
 					resolve(payload.state);
 				},
 			};
@@ -226,8 +225,17 @@ export default function createExtension(pi: ExtensionAPI) {
 
 	pi.events.on("sub-core:ready", (payload) => {
 		coreAvailable = true;
-		const state = payload as { state?: SubCoreState };
+		const state = payload as { state?: SubCoreState; settings?: CoreSettings };
+		applyCoreSettings(state.settings);
 		updateUsage(state.state?.usage);
+	});
+
+	pi.events.on("sub-core:settings:updated", (payload) => {
+		const update = payload as { settings?: CoreSettings };
+		applyCoreSettings(update.settings);
+		if (lastContext) {
+			renderCurrent(lastContext);
+		}
 	});
 
 	// Register command to open settings
@@ -236,13 +244,11 @@ export default function createExtension(pi: ExtensionAPI) {
 		handler: async (_args, ctx) => {
 			const newSettings = await showSettingsUI(ctx, async (updatedSettings) => {
 				settings = updatedSettings;
-				syncCoreSettings(settings);
 				if (lastContext) {
 					renderUsageWidget(lastContext, currentUsage);
 				}
 			});
 			settings = newSettings;
-			syncCoreSettings(settings);
 			if (lastContext) {
 				renderUsageWidget(lastContext, currentUsage);
 			}
@@ -280,7 +286,6 @@ export default function createExtension(pi: ExtensionAPI) {
 	pi.on("session_start", async (_event, ctx) => {
 		lastContext = ctx;
 		settings = loadSettings();
-		syncCoreSettings(settings);
 		const state = await requestCoreState();
 		if (state) {
 			coreAvailable = true;
