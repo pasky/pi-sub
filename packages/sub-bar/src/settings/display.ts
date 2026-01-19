@@ -3,7 +3,7 @@
  */
 
 import type { SettingItem } from "@mariozechner/pi-tui";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor } from "../settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement } from "../settings-types.js";
 
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
@@ -30,6 +30,18 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			label: "Show Usage Labels",
 			currentValue: settings.display.showUsageLabels ? "on" : "off",
 			values: ["on", "off"],
+		},
+		{
+			id: "paddingX",
+			label: "Padding X",
+			currentValue: String(settings.display.paddingX ?? 0),
+			values: ["0", "1", "2", "3", "4"],
+		},
+		{
+			id: "widgetPlacement",
+			label: "Widget Placement",
+			currentValue: settings.display.widgetPlacement ?? "aboveEditor",
+			values: ["aboveEditor", "belowEditor"] as WidgetPlacement[],
 		},
 	];
 }
@@ -175,6 +187,13 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			currentValue: settings.display.showTopDivider ? "on" : "off",
 			values: ["on", "off"],
 		},
+		{
+			id: "showBottomDivider",
+			label: "Show Bottom Divider",
+			currentValue: settings.display.showBottomDivider ? "on" : "off",
+			values: ["on", "off"],
+		},
+
 	];
 }
 
@@ -225,6 +244,12 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "showUsageLabels":
 			settings.display.showUsageLabels = value === "on";
 			break;
+		case "widgetPlacement":
+			settings.display.widgetPlacement = value as WidgetPlacement;
+			break;
+		case "paddingX":
+			settings.display.paddingX = parseInt(value, 10) as 0 | 1 | 2 | 3 | 4;
+			break;
 		case "dividerCharacter":
 			settings.display.dividerCharacter = value as DividerCharacter;
 			break;
@@ -236,6 +261,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		}
 		case "showTopDivider":
 			settings.display.showTopDivider = value === "on";
+			break;
+		case "showBottomDivider":
+			settings.display.showBottomDivider = value === "on";
 			break;
 		case "widgetWrapping":
 			settings.display.widgetWrapping = value as WidgetWrapping;

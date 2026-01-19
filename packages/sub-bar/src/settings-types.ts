@@ -36,6 +36,11 @@ export type DividerCharacter = "none" | "blank" | "|" | "•" | "●" | "○" | 
 export type WidgetWrapping = "truncate" | "wrap";
 
 /**
+ * Widget placement
+ */
+export type WidgetPlacement = "aboveEditor" | "belowEditor";
+
+/**
  * Alignment for the widget
  */
 export type DisplayAlignment = "left" | "center" | "right" | "split";
@@ -199,8 +204,14 @@ export interface DisplaySettings {
 	dividerBlanks: DividerBlanks;
 	/** Show divider line above the bar */
 	showTopDivider: boolean;
+	/** Show divider line below the bar */
+	showBottomDivider: boolean;
 	/** Widget line wrapping */
 	widgetWrapping: WidgetWrapping;
+	/** Left/right padding inside widget */
+	paddingX: 0 | 1 | 2 | 3 | 4;
+	/** Widget placement */
+	widgetPlacement: WidgetPlacement;
 	/** Error threshold (percentage remaining below this = red) */
 	errorThreshold: number;
 	/** Warning threshold (percentage remaining below this = yellow) */
@@ -325,6 +336,9 @@ export function getDefaultSettings(): Settings {
 			dividerCharacter: "•",
 			dividerBlanks: 1,
 			showTopDivider: true,
+			showBottomDivider: false,
+			paddingX: 0,
+			widgetPlacement: "aboveEditor",
 			errorThreshold: 25,
 			warningThreshold: 50,
 			widgetWrapping: "truncate",

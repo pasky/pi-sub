@@ -4,7 +4,7 @@
  * Only shows stats for the currently selected provider.
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
@@ -51,38 +51,62 @@ export default function createExtension(pi: ExtensionAPI) {
 			return;
 		}
 
-		ctx.ui.setWidget("usage", (_tui, theme) => ({
-			render(width: number) {
-				const safeWidth = Math.max(1, width);
-				const showTopDivider = settings.display.showTopDivider ?? true;
-				const divider = showTopDivider ? theme.fg("borderMuted", "─".repeat(safeWidth)) : undefined;
-				const alignment = settings.display.alignment ?? "left";
-				const hasFill = settings.display.barWidth === "fill" || settings.display.dividerBlanks === "fill";
-				const wantsSplit = alignment === "split";
-				const shouldAlign = !hasFill && !wantsSplit && (alignment === "center" || alignment === "right");
-				const formatted = (hasFill || wantsSplit)
-					? formatUsageStatusWithWidth(theme, usage, safeWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
-					: formatUsageStatus(theme, usage, ctx.model?.id, settings);
-				if (!formatted) return divider ? [divider] : [];
+		const setWidgetWithPlacement = (ctx.ui as unknown as { setWidget: (...args: unknown[]) => void }).setWidget;
+		setWidgetWithPlacement(
+			"usage",
+			(_tui: unknown, theme: Theme) => ({
+				render(width: number) {
+					const safeWidth = Math.max(1, width);
+					const paddingX = settings.display.paddingX ?? 0;
+					const contentWidth = Math.max(1, safeWidth - paddingX * 2);
+					const showTopDivider = settings.display.showTopDivider ?? true;
+					const showBottomDivider = settings.display.showBottomDivider ?? false;
+					const dividerLine = theme.fg("borderMuted", "─".repeat(safeWidth));
+					const alignment = settings.display.alignment ?? "left";
+					const hasFill = settings.display.barWidth === "fill" || settings.display.dividerBlanks === "fill";
+					const wantsSplit = alignment === "split";
+					const shouldAlign = !hasFill && !wantsSplit && (alignment === "center" || alignment === "right");
+					const formatted = (hasFill || wantsSplit)
+						? formatUsageStatusWithWidth(theme, usage, contentWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
+						: formatUsageStatus(theme, usage, ctx.model?.id, settings);
 
-				const alignLine = (line: string) => {
-					if (!shouldAlign) return line;
-					const lineWidth = visibleWidth(line);
-					if (lineWidth >= safeWidth) return line;
-					const padding = safeWidth - lineWidth;
-					const leftPad = alignment === "center" ? Math.floor(padding / 2) : padding;
-					return " ".repeat(leftPad) + line;
-				};
+					const alignLine = (line: string) => {
+						if (!shouldAlign) return line;
+						const lineWidth = visibleWidth(line);
+						if (lineWidth >= contentWidth) return line;
+						const padding = contentWidth - lineWidth;
+						const leftPad = alignment === "center" ? Math.floor(padding / 2) : padding;
+						return " ".repeat(leftPad) + line;
+					};
 
-				if (settings.display.widgetWrapping === "wrap") {
-					const wrapped = wrapTextWithAnsi(formatted, safeWidth).map(alignLine);
-					return divider ? [divider, ...wrapped] : wrapped;
-				}
-				const trimmed = alignLine(truncateToWidth(formatted, safeWidth, theme.fg("dim", "...")));
-				return divider ? [divider, trimmed] : [trimmed];
-			},
-			invalidate() {},
-		}));
+					let lines: string[] = [];
+					if (!formatted) {
+						lines = [];
+					} else if (settings.display.widgetWrapping === "wrap") {
+						lines = wrapTextWithAnsi(formatted, contentWidth).map(alignLine);
+					} else {
+						const trimmed = alignLine(truncateToWidth(formatted, contentWidth, theme.fg("dim", "...")));
+						lines = [trimmed];
+					}
+
+					if (paddingX > 0) {
+						const pad = " ".repeat(paddingX);
+						lines = lines.map((line) => pad + line + pad);
+					}
+
+					if (showTopDivider) {
+						lines = [dividerLine, ...lines];
+					}
+					if (showBottomDivider) {
+						lines = [...lines, dividerLine];
+					}
+					return lines;
+				},
+				invalidate() {},
+			}),
+			{ placement: settings.display.widgetPlacement ?? "aboveEditor" },
+		);
+		
 	}
 
 	function updateUsage(usage: UsageSnapshot | undefined): void {

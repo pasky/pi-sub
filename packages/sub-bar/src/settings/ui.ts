@@ -48,6 +48,8 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
 		widgetWrapping: "truncate",
 		resetTimePosition: "off",
 		showUsageLabels: false,
+		paddingX: 0,
+		widgetPlacement: "aboveEditor",
 		barStyle: "bar",
 		barType: "horizontal-bar",
 		barWidth: 4,
@@ -59,6 +61,7 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
 		dividerCharacter: "none",
 		dividerBlanks: 0,
 		showTopDivider: false,
+		showBottomDivider: false,
 	};
 }
 
