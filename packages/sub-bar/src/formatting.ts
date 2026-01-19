@@ -5,7 +5,7 @@
 import type { Theme } from "@mariozechner/pi-coding-agent";
 import { visibleWidth } from "@mariozechner/pi-tui";
 import type { RateWindow, UsageSnapshot } from "./types.js";
-import type { Settings, BarStyle, ColorScheme, BarCharacter, BarWidth, DividerBlanks } from "./settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, BarWidth, DividerBlanks } from "./settings-types.js";
 import { formatErrorForDisplay } from "./errors.js";
 import { getStatusEmoji } from "./status.js";
 import { shouldShowWindow } from "./providers/windows.js";
@@ -68,6 +68,52 @@ function getUsageColor(
 	if (effectivePercent < errorThreshold) return "error";
 	if (effectivePercent < warningThreshold) return "warning";
 	return "base";
+}
+
+function getBarTypeLevels(barType: BarType): string[] | null {
+	switch (barType) {
+		case "horizontal-single":
+			return ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"];
+		case "vertical":
+			return ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+		case "braille":
+			return ["⡀", "⣀", "⣄", "⣆", "⣇", "⣧", "⣷", "⣿"];
+		case "shade":
+			return ["░", "▒", "▓", "█"];
+		default:
+			return null;
+	}
+}
+
+function renderBarSegments(
+	percent: number,
+	width: number,
+	levels: string[],
+	options?: { allowMinimum?: boolean; emptyChar?: string }
+): { segments: Array<{ char: string; filled: boolean }>; minimal: boolean } {
+	const totalUnits = Math.max(1, width) * levels.length;
+	let filledUnits = Math.round((percent / 100) * totalUnits);
+	let minimal = false;
+	if (options?.allowMinimum && percent > 0 && filledUnits === 0) {
+		filledUnits = 1;
+		minimal = true;
+	}
+	const emptyChar = options?.emptyChar ?? " ";
+	const segments: Array<{ char: string; filled: boolean }> = [];
+	for (let i = 0; i < Math.max(1, width); i++) {
+		if (filledUnits >= levels.length) {
+			segments.push({ char: levels[levels.length - 1], filled: true });
+			filledUnits -= levels.length;
+			continue;
+		}
+		if (filledUnits > 0) {
+			segments.push({ char: levels[Math.min(levels.length - 1, filledUnits - 1)], filled: true });
+			filledUnits = 0;
+			continue;
+		}
+		segments.push({ char: emptyChar, filled: false });
+	}
+	return { segments, minimal };
 }
 
 function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Settings): string {
@@ -152,7 +198,10 @@ export function formatUsageWindowParts(
 ): UsageWindowParts {
 	const barStyle: BarStyle = settings?.display.barStyle ?? "both";
 	const barWidthSetting = settings?.display.barWidth;
+	const containBar = settings?.display.containBar ?? false;
 	const barWidth = options?.barWidthOverride ?? (typeof barWidthSetting === "number" ? barWidthSetting : 6);
+	const barType: BarType = settings?.display.barType ?? "horizontal-bar";
+	const brailleFillEmpty = settings?.display.brailleFillEmpty ?? false;
 	const barCharacter: BarCharacter = settings?.display.barCharacter ?? "heavy";
 	const colorScheme: ColorScheme = settings?.display.colorScheme ?? "base-warning-error";
 	const resetTimePosition = settings?.display.resetTimePosition ?? "front";
@@ -182,7 +231,34 @@ export function formatUsageWindowParts(
 	
 	let barStr = "";
 	if (barStyle === "bar" || barStyle === "both") {
-		barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], char.repeat(filled)) + theme.fg(emptyColor, char.repeat(empty));
+		const levels = getBarTypeLevels(barType);
+		if (!levels || barType === "horizontal-bar") {
+			barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], char.repeat(filled)) + theme.fg(emptyColor, char.repeat(empty));
+		} else {
+			const emptyChar = barType === "braille" && brailleFillEmpty && barWidth > 1 ? "⣿" : " ";
+			const { segments, minimal } = renderBarSegments(displayPct, barWidth, levels, {
+				allowMinimum: true,
+				emptyChar,
+			});
+			const filledColor = minimal ? "dim" : barColor;
+			barStr = segments
+				.map((segment) => {
+					if (segment.filled) {
+						return theme.fg(filledColor as Parameters<typeof theme.fg>[0], segment.char);
+					}
+					if (segment.char === " ") {
+						return segment.char;
+					}
+					return theme.fg("dim", segment.char);
+				})
+				.join("");
+		}
+
+		if (settings?.display.containBar && barStr) {
+			const leftCap = theme.fg(baseTextColor, "▕");
+			const rightCap = theme.fg(baseTextColor, "▏");
+			barStr = leftCap + barStr + rightCap;
+		}
 	}
 
 	let pctStr = "";
@@ -310,11 +386,16 @@ export function formatUsageStatusWithWidth(
 	const hasBar = barStyle === "bar" || barStyle === "both";
 	const barWidthSetting = settings?.display.barWidth ?? 6;
 	const dividerBlanksSetting = settings?.display.dividerBlanks ?? 1;
-
-	const barBaseWidth = typeof barWidthSetting === "number" ? barWidthSetting : (hasBar ? 1 : 0);
-	const baseDividerBlanks = typeof dividerBlanksSetting === "number" ? dividerBlanksSetting : 1;
+	const containBar = settings?.display.containBar ?? false;
 
 	const barFill = barWidthSetting === "fill";
+	const barBaseWidth = typeof barWidthSetting === "number" ? barWidthSetting : (hasBar ? 1 : 0);
+	const barContainerExtra = containBar && hasBar ? 2 : 0;
+	const barBaseContentWidth = barFill ? 0 : barBaseWidth;
+	const barBaseWidthCalc = barFill ? 0 : barBaseContentWidth + barContainerExtra;
+	const barTotalBaseWidth = barBaseWidthCalc;
+	const baseDividerBlanks = typeof dividerBlanksSetting === "number" ? dividerBlanksSetting : 1;
+
 	const dividerFill = dividerBlanksSetting === "fill";
 
 	// Build usage windows
@@ -352,12 +433,15 @@ export function formatUsageStatusWithWidth(
 		labelGapBaseWidth +
 		baseWindowWidths.reduce((sum, w) => sum + w, 0) +
 		extraWidths.reduce((sum, w) => sum + w, 0) +
-		(barEligibleCount * barBaseWidth) +
+		(barEligibleCount * barTotalBaseWidth) +
 		(dividerCount * dividerBaseWidth);
 
 	let remainingWidth = width - baseTotalWidth;
 	if (remainingWidth < 0) {
 		remainingWidth = 0;
+	}
+	if (barFill && containBar && barEligibleCount > 0) {
+		remainingWidth += barContainerExtra * barEligibleCount;
 	}
 
 	const useBars = barFill && barEligibleCount > 0;
@@ -377,12 +461,12 @@ export function formatUsageStatusWithWidth(
 		}
 	}
 
-	const barWidths: number[] = windows.map(() => barBaseWidth);
+	const barWidths: number[] = windows.map(() => barBaseWidthCalc);
 	if (useBars && barEligibleCount > 0) {
 		const perBar = Math.floor(barExtraTotal / barEligibleCount);
 		let remainder = barExtraTotal % barEligibleCount;
 		for (let i = 0; i < barWidths.length; i++) {
-			barWidths[i] = barBaseWidth + perBar + (remainder > 0 ? 1 : 0);
+			barWidths[i] = barBaseWidthCalc + perBar + (remainder > 0 ? 1 : 0);
 			if (remainder > 0) remainder -= 1;
 		}
 	}
@@ -409,7 +493,9 @@ export function formatUsageStatusWithWidth(
 
 	const parts: string[] = [];
 	for (let i = 0; i < windows.length; i++) {
-		parts.push(formatUsageWindow(theme, windows[i], invertUsage, settings, usage, { barWidthOverride: barWidths[i] }));
+		const totalWidth = barWidths[i] ?? barBaseWidthCalc;
+		const contentWidth = barFill && containBar ? Math.max(0, totalWidth - barContainerExtra) : totalWidth;
+		parts.push(formatUsageWindow(theme, windows[i], invertUsage, settings, usage, { barWidthOverride: contentWidth }));
 	}
 	for (const extra of extraParts) {
 		parts.push(extra);

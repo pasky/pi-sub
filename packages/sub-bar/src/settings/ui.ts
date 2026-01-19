@@ -49,7 +49,9 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
 		resetTimePosition: "off",
 		showUsageLabels: false,
 		barStyle: "bar",
+		barType: "horizontal-bar",
 		barWidth: 4,
+		brailleFillEmpty: false,
 		showProviderName: false,
 		providerLabel: "none",
 		providerLabelColon: false,
@@ -352,6 +354,10 @@ export async function showSettingsUI(
 							settings = applyDisplayChange(settings, id, value);
 							saveSettings(settings);
 							if (onSettingsChange) void onSettingsChange(settings);
+							if (currentCategory === "display-bar" && id === "barType") {
+								rebuild();
+								tui.requestRender();
+							}
 						};
 					}
 

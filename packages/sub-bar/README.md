@@ -119,9 +119,12 @@ Each provider has its own settings page accessible via Provider Settings menu:
 | Setting | Options | Default | Description |
 |---------|---------|---------|-------------|
 | Alignment | left, center, right, split | left | Alignment for the widget (split fills the gap after the provider name) |
+| Bar Type | horizontal-bar, horizontal-single, vertical, braille, shade | horizontal-bar | Bar rendering style |
+| H. Bar Character | light, heavy, double, block | heavy | Character used for horizontal bar (─, ━, ═, █) |
+| Bar Width | 1, 4, 6, 8, 10, 12, fill | 6 | Width of progress bar in characters |
+| Contain Bar | on/off | off | Wrap bar with ▕ and ▏ |
+| Braille Empty Fill | on/off | off | Fill empty braille segments with dim ⣿ |
 | Bar Style | bar, percentage, both | both | How to display usage |
-| Bar Width | 4, 6, 8, 10, 12, fill | 6 | Width of progress bar in characters |
-| Bar Character | light, heavy, double, block | heavy | Character used for progress bar (─, ━, ═, █) |
 | Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
 | Show Provider Name | on/off | on | Show provider label in status |

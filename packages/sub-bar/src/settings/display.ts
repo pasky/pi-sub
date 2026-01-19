@@ -3,7 +3,7 @@
  */
 
 import type { SettingItem } from "@mariozechner/pi-tui";
-import type { Settings, BarStyle, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor } from "../settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor } from "../settings-types.js";
 
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
@@ -74,26 +74,62 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 }
 
 export function buildDisplayBarItems(settings: Settings): SettingItem[] {
-	return [
+	const items: SettingItem[] = [
 		{
-			id: "barStyle",
-			label: "Bar Style",
-			currentValue: settings.display.barStyle,
-			values: ["bar", "percentage", "both"] as BarStyle[],
+			id: "barType",
+			label: "Bar Type",
+			currentValue: settings.display.barType,
+			values: [
+				"horizontal-bar",
+				"horizontal-single",
+				"vertical",
+				"braille",
+				"shade",
+			] as BarType[],
 		},
+	];
+
+	if (settings.display.barType === "horizontal-bar") {
+		items.push({
+			id: "barCharacter",
+			label: "H. Bar Character",
+			currentValue: settings.display.barCharacter,
+			values: ["light", "heavy", "double", "block"],
+		});
+	}
+
+	items.push(
 		{
 			id: "barWidth",
 			label: "Bar Width",
 			currentValue: String(settings.display.barWidth),
-			values: ["4", "6", "8", "10", "12", "fill"],
+			values: ["1", "4", "6", "8", "10", "12", "fill"],
 		},
 		{
-			id: "barCharacter",
-			label: "Bar Character",
-			currentValue: settings.display.barCharacter,
-			values: ["light", "heavy", "double", "block"],
+			id: "containBar",
+			label: "Contain Bar",
+			currentValue: settings.display.containBar ? "on" : "off",
+			values: ["on", "off"],
 		},
-	];
+	);
+
+	if (settings.display.barType === "braille") {
+		items.push({
+			id: "brailleFillEmpty",
+			label: "Braille Empty Fill",
+			currentValue: settings.display.brailleFillEmpty ? "on" : "off",
+			values: ["on", "off"],
+		});
+	}
+
+	items.push({
+		id: "barStyle",
+		label: "Bar Style",
+		currentValue: settings.display.barStyle,
+		values: ["bar", "percentage", "both"] as BarStyle[],
+	});
+
+	return items;
 }
 
 export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
@@ -147,6 +183,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "alignment":
 			settings.display.alignment = value as DisplayAlignment;
 			break;
+		case "barType":
+			settings.display.barType = value as BarType;
+			break;
 		case "barStyle":
 			settings.display.barStyle = value as BarStyle;
 			break;
@@ -156,8 +195,14 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 				: parseInt(value, 10) as BarWidth;
 			break;
 		}
+		case "containBar":
+			settings.display.containBar = value === "on";
+			break;
 		case "barCharacter":
 			settings.display.barCharacter = value as BarCharacter;
+			break;
+		case "brailleFillEmpty":
+			settings.display.brailleFillEmpty = value === "on";
 			break;
 		case "colorScheme":
 			settings.display.colorScheme = value as ColorScheme;

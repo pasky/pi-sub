@@ -11,6 +11,11 @@ import { PROVIDERS } from "./providers/metadata.js";
 export type BarStyle = "bar" | "percentage" | "both";
 
 /**
+ * Bar rendering type
+ */
+export type BarType = "horizontal-bar" | "horizontal-single" | "vertical" | "braille" | "shade";
+
+/**
  * Color scheme for usage bars
  */
 export type ColorScheme = "monochrome" | "base-warning-error" | "success-base-warning-error";
@@ -48,7 +53,7 @@ export type BaseTextColor = "dim" | "muted" | "text";
 /**
  * Bar width configuration
  */
-export type BarWidth = 4 | 6 | 8 | 10 | 12 | "fill";
+export type BarWidth = 1 | 4 | 6 | 8 | 10 | 12 | "fill";
 
 /**
  * Divider blank spacing configuration
@@ -164,10 +169,16 @@ export interface DisplaySettings {
 	alignment: DisplayAlignment;
 	/** Bar display style */
 	barStyle: BarStyle;
+	/** Bar type */
+	barType: BarType;
 	/** Width of the progress bar in characters */
 	barWidth: BarWidth;
 	/** Progress bar character */
 	barCharacter: BarCharacter;
+	/** Contain bar within ▕ and ▏ */
+	containBar: boolean;
+	/** Fill empty braille segments with dim full blocks */
+	brailleFillEmpty: boolean;
 	/** Color scheme for bars */
 	colorScheme: ColorScheme;
 	/** Reset time display position */
@@ -299,8 +310,11 @@ export function getDefaultSettings(): Settings {
 		display: {
 			alignment: "left",
 			barStyle: "both",
+			barType: "horizontal-bar",
 			barWidth: 6,
 			barCharacter: "heavy",
+			containBar: false,
+			brailleFillEmpty: false,
 			colorScheme: "base-warning-error",
 			resetTimePosition: "front",
 			showProviderName: true,
