@@ -44,9 +44,10 @@ export default function createExtension(pi: ExtensionAPI) {
 	let lastContext: ExtensionContext | undefined;
 	let settings: Settings = loadSettings();
 	let currentUsage: UsageSnapshot | undefined;
+	let coreAvailable = false;
 
-	function renderUsageWidget(ctx: ExtensionContext, usage: UsageSnapshot | undefined): void {
-		if (!usage) {
+	function renderUsageWidget(ctx: ExtensionContext, usage: UsageSnapshot | undefined, message?: string): void {
+		if (!usage && !message) {
 			ctx.ui.setWidget("usage", undefined);
 			return;
 		}
@@ -66,9 +67,12 @@ export default function createExtension(pi: ExtensionAPI) {
 					const hasFill = settings.display.barWidth === "fill" || settings.display.dividerBlanks === "fill";
 					const wantsSplit = alignment === "split";
 					const shouldAlign = !hasFill && !wantsSplit && (alignment === "center" || alignment === "right");
-					const formatted = (hasFill || wantsSplit)
-						? formatUsageStatusWithWidth(theme, usage, contentWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
-						: formatUsageStatus(theme, usage, ctx.model?.id, settings);
+					const baseTextColor = settings.display.baseTextColor ?? "muted";
+					const formatted = message
+						? theme.fg(baseTextColor, message)
+						: (hasFill || wantsSplit)
+							? formatUsageStatusWithWidth(theme, usage!, contentWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
+							: formatUsageStatus(theme, usage!, ctx.model?.id, settings);
 
 					const alignLine = (line: string) => {
 						if (!shouldAlign) return line;
@@ -109,10 +113,18 @@ export default function createExtension(pi: ExtensionAPI) {
 		
 	}
 
+	function renderCurrent(ctx: ExtensionContext): void {
+		if (!coreAvailable) {
+			renderUsageWidget(ctx, undefined, "sub-core not installed");
+			return;
+		}
+		renderUsageWidget(ctx, currentUsage);
+	}
+
 	function updateUsage(usage: UsageSnapshot | undefined): void {
 		currentUsage = usage;
 		if (lastContext) {
-			renderUsageWidget(lastContext, usage);
+			renderCurrent(lastContext);
 		}
 	}
 
@@ -207,11 +219,13 @@ export default function createExtension(pi: ExtensionAPI) {
 	}
 
 	pi.events.on("sub-core:update", (payload) => {
+		coreAvailable = true;
 		const state = payload as { state?: SubCoreState };
 		updateUsage(state.state?.usage);
 	});
 
 	pi.events.on("sub-core:ready", (payload) => {
+		coreAvailable = true;
 		const state = payload as { state?: SubCoreState };
 		updateUsage(state.state?.usage);
 	});
@@ -268,8 +282,12 @@ export default function createExtension(pi: ExtensionAPI) {
 		settings = loadSettings();
 		syncCoreSettings(settings);
 		const state = await requestCoreState();
-		if (state?.usage) {
+		if (state) {
+			coreAvailable = true;
 			updateUsage(state.usage);
+		} else if (lastContext) {
+			coreAvailable = false;
+			renderCurrent(lastContext);
 		}
 	});
 
