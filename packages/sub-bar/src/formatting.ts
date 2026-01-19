@@ -242,7 +242,7 @@ export function formatUsageWindowParts(
 	const emptyColor = "dim";
 	
 	let barStr = "";
-	if (barStyle === "bar" || barStyle === "both") {
+	if ((barStyle === "bar" || barStyle === "both") && barWidth > 0) {
 		const levels = getBarTypeLevels(barType);
 		if (!levels || barType === "horizontal-bar") {
 			barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], char.repeat(filled)) + theme.fg(emptyColor, char.repeat(empty));
@@ -433,8 +433,9 @@ export function formatUsageStatusWithWidth(
 	const extras = getUsageExtras(usage, settings, modelId);
 	const extraParts = extras.map((extra) => theme.fg(baseTextColor, extra.label));
 
+	const barSpacerWidth = hasBar ? 1 : 0;
 	const baseWindowWidths = windows.map((w) =>
-		visibleWidth(formatUsageWindow(theme, w, invertUsage, settings, usage, { barWidthOverride: 0 }))
+		visibleWidth(formatUsageWindow(theme, w, invertUsage, settings, usage, { barWidthOverride: 0 })) + barSpacerWidth
 	);
 	const extraWidths = extraParts.map((part) => visibleWidth(part));
 
@@ -458,9 +459,6 @@ export function formatUsageStatusWithWidth(
 	let remainingWidth = width - baseTotalWidth;
 	if (remainingWidth < 0) {
 		remainingWidth = 0;
-	}
-	if (barFill && containBar && barEligibleCount > 0) {
-		remainingWidth += barContainerExtra * barEligibleCount;
 	}
 
 	const useBars = barFill && barEligibleCount > 0;
@@ -513,7 +511,7 @@ export function formatUsageStatusWithWidth(
 	const parts: string[] = [];
 	for (let i = 0; i < windows.length; i++) {
 		const totalWidth = barWidths[i] ?? barBaseWidthCalc;
-		const contentWidth = barFill && containBar ? Math.max(0, totalWidth - barContainerExtra) : totalWidth;
+		const contentWidth = containBar ? Math.max(0, totalWidth - barContainerExtra) : totalWidth;
 		parts.push(formatUsageWindow(theme, windows[i], invertUsage, settings, usage, { barWidthOverride: contentWidth }));
 	}
 	for (const extra of extraParts) {
