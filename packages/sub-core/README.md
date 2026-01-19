@@ -8,6 +8,13 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 - Deduplicates requests via shared cache/lock
 - Emits updates for display-focused extensions (e.g. `sub-bar`) and non-UI tooling extensions
 
+## Tool Access
+
+`sub-core` registers tools to expose usage snapshots to Pi:
+
+- `sub_get_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
+- `sub_get_all_usage` – refreshes and returns all enabled provider entries.
+
 ## Installation
 
 Clone the repo and register the extension with pi. `sub-core` can power multiple `sub-*` extensions (some with UI, some without), so you typically install it alongside whichever clients you want:

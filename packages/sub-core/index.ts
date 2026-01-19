@@ -3,7 +3,7 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
-import { join } from "node:path";
+import { Type } from "@sinclair/typebox";
 import type { Dependencies, ProviderName, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
 import type { ProviderUsageEntry } from "./src/usage/types.js";
@@ -56,6 +56,12 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 		}
 	}
 	return result;
+}
+
+function stripUsageProvider(usage?: UsageSnapshot): Omit<UsageSnapshot, "provider"> | undefined {
+	if (!usage) return undefined;
+	const { provider: _provider, ...rest } = usage;
+	return rest;
 }
 
 /**
@@ -123,6 +129,45 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		}
 		return getCachedUsageEntries(enabledProviders, settings);
 	}
+
+	pi.registerTool({
+		name: "sub_get_usage",
+		label: "Sub Usage",
+		description: "Refresh and return the latest subscription usage snapshot.",
+		parameters: Type.Object({
+			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
+		}),
+		async execute(_toolCallId, params, _onUpdate, ctx) {
+			const { force } = params as { force?: boolean };
+			await refresh(ctx, { force: force ?? true });
+			const payload = { provider: lastState.provider, usage: stripUsageProvider(lastState.usage) };
+			return {
+				content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+				details: payload,
+			};
+		},
+	});
+
+	pi.registerTool({
+		name: "sub_get_all_usage",
+		label: "Sub All Usage",
+		description: "Refresh and return usage snapshots for all enabled providers.",
+		parameters: Type.Object({
+			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
+		}),
+		async execute(_toolCallId, params) {
+			const { force } = params as { force?: boolean };
+			const entries = await getEntries(force ?? true);
+			const payload = entries.map((entry) => ({
+				provider: entry.provider,
+				usage: stripUsageProvider(entry.usage),
+			}));
+			return {
+				content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+				details: { entries: payload },
+			};
+		},
+	});
 
 	pi.events.on("sub-core:request", async (payload) => {
 		const request = payload as SubCoreRequest;
