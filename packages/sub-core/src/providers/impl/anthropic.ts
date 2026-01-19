@@ -84,22 +84,22 @@ export class AnthropicProvider extends BaseProvider {
 			const windows: RateWindow[] = [];
 
 			if (data.five_hour?.utilization !== undefined) {
+				const resetAt = data.five_hour.resets_at ? new Date(data.five_hour.resets_at) : undefined;
 				windows.push({
 					label: "5h",
 					usedPercent: data.five_hour.utilization,
-					resetDescription: data.five_hour.resets_at
-						? formatReset(new Date(data.five_hour.resets_at))
-						: undefined,
+					resetDescription: resetAt ? formatReset(resetAt) : undefined,
+					resetAt: resetAt?.toISOString(),
 				});
 			}
 
 			if (data.seven_day?.utilization !== undefined) {
+				const resetAt = data.seven_day.resets_at ? new Date(data.seven_day.resets_at) : undefined;
 				windows.push({
 					label: "7d",
 					usedPercent: data.seven_day.utilization,
-					resetDescription: data.seven_day.resets_at
-						? formatReset(new Date(data.seven_day.resets_at))
-						: undefined,
+					resetDescription: resetAt ? formatReset(resetAt) : undefined,
+					resetAt: resetAt?.toISOString(),
 				});
 			}
 

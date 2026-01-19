@@ -141,8 +141,13 @@ export class CopilotProvider extends BaseProvider {
 			if (data.quota_snapshots?.premium_interactions) {
 				const pi = data.quota_snapshots.premium_interactions;
 				const monthUsedPercent = Math.max(0, 100 - (pi.percent_remaining || 0));
-				windows.push({ label: "Month", usedPercent: monthUsedPercent, resetDescription: resetDesc });
-				
+				windows.push({
+					label: "Month",
+					usedPercent: monthUsedPercent,
+					resetDescription: resetDesc,
+					resetAt: resetDate?.toISOString(),
+				});
+
 				const remaining = pi.remaining ?? 0;
 				const entitlement = pi.entitlement ?? 0;
 				requestsRemaining = remaining;

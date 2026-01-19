@@ -13,6 +13,7 @@ export interface RateWindow {
 	label: string;
 	usedPercent: number;
 	resetDescription?: string;
+	resetAt?: string;
 }
 
 export interface UsageSnapshot {

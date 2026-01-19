@@ -3,7 +3,7 @@
  */
 
 import type { SettingItem } from "@mariozechner/pi-tui";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement } from "../settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement, ResetTimeFormat } from "../settings-types.js";
 
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
@@ -24,6 +24,12 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			label: "Reset Timer",
 			currentValue: settings.display.resetTimePosition,
 			values: ["off", "front", "back", "integrated"],
+		},
+		{
+			id: "resetTimeFormat",
+			label: "Reset Timer Format",
+			currentValue: settings.display.resetTimeFormat ?? "relative",
+			values: ["relative", "datetime"] as ResetTimeFormat[],
 		},
 		{
 			id: "showUsageLabels",
@@ -228,6 +234,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "resetTimePosition":
 			settings.display.resetTimePosition = value as "off" | "front" | "back" | "integrated";
+			break;
+		case "resetTimeFormat":
+			settings.display.resetTimeFormat = value as ResetTimeFormat;
 			break;
 		case "showProviderName":
 			settings.display.showProviderName = value === "on";

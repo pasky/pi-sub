@@ -51,6 +51,11 @@ export type DisplayAlignment = "left" | "center" | "right" | "split";
 export type ProviderLabel = "plan" | "subscription" | "sub" | "none";
 
 /**
+ * Reset timer format
+ */
+export type ResetTimeFormat = "relative" | "datetime";
+
+/**
  * Base text color for widget labels
  */
 export type BaseTextColor = "dim" | "muted" | "text";
@@ -188,6 +193,8 @@ export interface DisplaySettings {
 	colorScheme: ColorScheme;
 	/** Reset time display position */
 	resetTimePosition: "off" | "front" | "back" | "integrated";
+	/** Reset time format */
+	resetTimeFormat: ResetTimeFormat;
 	/** Show provider display name */
 	showProviderName: boolean;
 	/** Provider label prefix */
@@ -328,6 +335,7 @@ export function getDefaultSettings(): Settings {
 			brailleFillEmpty: false,
 			colorScheme: "base-warning-error",
 			resetTimePosition: "front",
+			resetTimeFormat: "relative",
 			showProviderName: true,
 			providerLabel: "none",
 			providerLabelColon: true,

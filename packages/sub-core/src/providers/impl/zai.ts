@@ -90,12 +90,14 @@ export class ZaiProvider extends BaseProvider {
 						label: "Tokens",
 						usedPercent: percent,
 						resetDescription: nextReset ? formatReset(nextReset) : undefined,
+						resetAt: nextReset?.toISOString(),
 					});
 				} else if (limit.type === "TIME_LIMIT") {
 					windows.push({
 						label: "Monthly",
 						usedPercent: percent,
 						resetDescription: nextReset ? formatReset(nextReset) : undefined,
+						resetAt: nextReset?.toISOString(),
 					});
 				}
 			}

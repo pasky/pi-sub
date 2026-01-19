@@ -70,6 +70,17 @@ function getUsageColor(
 	return "base";
 }
 
+function formatResetDateTime(resetAt: string): string {
+	const date = new Date(resetAt);
+	if (Number.isNaN(date.getTime())) return resetAt;
+	return new Intl.DateTimeFormat(undefined, {
+		month: "short",
+		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+	}).format(date);
+}
+
 function getBarTypeLevels(barType: BarType): string[] | null {
 	switch (barType) {
 		case "horizontal-single":
@@ -205,6 +216,7 @@ export function formatUsageWindowParts(
 	const barCharacter: BarCharacter = settings?.display.barCharacter ?? "heavy";
 	const colorScheme: ColorScheme = settings?.display.colorScheme ?? "base-warning-error";
 	const resetTimePosition = settings?.display.resetTimePosition ?? "front";
+	const resetTimeFormat = settings?.display.resetTimeFormat ?? "relative";
 	const showUsageLabels = settings?.display.showUsageLabels ?? true;
 	const baseTextColor = settings?.display.baseTextColor ?? "muted";
 	const errorThreshold = settings?.display.errorThreshold ?? 25;
@@ -283,13 +295,20 @@ export function formatUsageWindowParts(
 		}
 	}
 
+	const isActiveReset = window.resetDescription === "__ACTIVE__";
+	const resetText = isActiveReset
+		? undefined
+		: resetTimeFormat === "datetime"
+			? (window.resetAt ? formatResetDateTime(window.resetAt) : window.resetDescription)
+			: window.resetDescription;
+	const leftSuffix = resetText && resetTimeFormat === "relative" && showUsageLabels ? " left" : "";
+
 	let labelValue = window.label;
-	if (window.resetDescription && window.resetDescription !== "__ACTIVE__") {
-		const leftSuffix = showUsageLabels ? " left" : "";
+	if (resetText) {
 		if (resetTimePosition === "front") {
-			labelValue = `${window.label} (${window.resetDescription}${leftSuffix})`;
+			labelValue = `${window.label} (${resetText}${leftSuffix})`;
 		} else if (resetTimePosition === "integrated") {
-			labelValue = `${window.resetDescription}/${window.label}`;
+			labelValue = `${resetText}/${window.label}`;
 		}
 	}
 
@@ -297,8 +316,8 @@ export function formatUsageWindowParts(
 		? theme.fg(textColor, window.label)
 		: theme.fg(textColor, labelValue);
 	const resetPart =
-		resetTimePosition === "back" && window.resetDescription && window.resetDescription !== "__ACTIVE__"
-			? theme.fg(textColor, `(${window.resetDescription}${showUsageLabels ? " left" : ""})`)
+		resetTimePosition === "back" && resetText
+			? theme.fg(textColor, `(${resetText}${leftSuffix})`)
 			: "";
 
 	return {

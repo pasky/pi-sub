@@ -68,6 +68,7 @@ export class KiroProvider extends BaseProvider {
 				label: "Credits",
 				usedPercent: creditsPercent,
 				resetDescription: resetsAt ? formatReset(resetsAt) : undefined,
+				resetAt: resetsAt?.toISOString(),
 			});
 
 			return this.snapshot({ windows });

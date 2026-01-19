@@ -82,6 +82,7 @@ The extension loads automatically. Use:
 
 - `sub-bar:settings` - Open the settings UI
 - `Ctrl+Alt+P` - Cycle through available providers
+- `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
 
 **Caching:**
 - Handled by sub-core at `cache.json` next to the sub-core extension entry
@@ -127,6 +128,7 @@ Each provider has its own settings page accessible via Provider Settings menu:
 | Bar Style | bar, percentage, both | both | How to display usage |
 | Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
+| Reset Timer Format | relative, datetime | relative | Show relative countdown or reset datetime |
 | Show Provider Name | on/off | on | Show provider label in status |
 | Provider Label | none, plan, subscription, sub | none | Suffix after provider name (replaces existing Plan/Subscription suffix if present) |
 | Provider Label Colon | on/off | on | Show colon after provider label |

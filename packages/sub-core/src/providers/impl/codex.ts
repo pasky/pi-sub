@@ -108,6 +108,7 @@ export class CodexProvider extends BaseProvider {
 					label: `${windowHours}h`,
 					usedPercent: pw.used_percent || 0,
 					resetDescription: resetDate ? formatReset(resetDate) : undefined,
+					resetAt: resetDate?.toISOString(),
 				});
 			}
 
@@ -120,6 +121,7 @@ export class CodexProvider extends BaseProvider {
 					label,
 					usedPercent: sw.used_percent || 0,
 					resetDescription: resetDate ? formatReset(resetDate) : undefined,
+					resetAt: resetDate?.toISOString(),
 				});
 			}
 

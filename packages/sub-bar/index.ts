@@ -10,7 +10,7 @@ import type { ProviderName, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
 import type { ProviderUsageEntry } from "./src/usage/types.js";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
-import { loadSettings } from "./src/settings.js";
+import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
 import { showUsageComparison } from "./src/ui/compare.js";
 
@@ -248,6 +248,18 @@ export default function createExtension(pi: ExtensionAPI) {
 		description: "Cycle usage provider",
 		handler: async () => {
 			emitCoreAction({ type: "cycleProvider" });
+		},
+	});
+
+	// Register shortcut to toggle reset timer format
+	pi.registerShortcut("ctrl+alt+r", {
+		description: "Toggle reset timer format",
+		handler: async () => {
+			settings.display.resetTimeFormat = settings.display.resetTimeFormat === "datetime" ? "relative" : "datetime";
+			saveSettings(settings);
+			if (lastContext && currentUsage) {
+				renderUsageWidget(lastContext, currentUsage);
+			}
 		},
 	});
 

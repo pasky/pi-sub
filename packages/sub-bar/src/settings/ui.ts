@@ -47,6 +47,7 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
 		alignment: "left",
 		widgetWrapping: "truncate",
 		resetTimePosition: "off",
+		resetTimeFormat: "relative",
 		showUsageLabels: false,
 		paddingX: 0,
 		widgetPlacement: "aboveEditor",
