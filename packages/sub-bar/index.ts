@@ -8,25 +8,17 @@ import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-cod
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
-import type { ProviderUsageEntry } from "./src/usage/types.js";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
-import { showUsageComparison } from "./src/ui/compare.js";
 
 type CoreSettings = Pick<Settings, "providers" | "behavior" | "providerOrder" | "defaultProvider">;
 
-type SubCoreRequest =
-	| {
-			type?: "current";
-			includeSettings?: boolean;
-			reply: (payload: { state: SubCoreState; settings?: CoreSettings }) => void;
-	  }
-	| {
-			type: "entries";
-			force?: boolean;
-			reply: (payload: { entries: ProviderUsageEntry[] }) => void;
-	  };
+type SubCoreRequest = {
+	type?: "current";
+	includeSettings?: boolean;
+	reply: (payload: { state: SubCoreState; settings?: CoreSettings }) => void;
+};
 
 type SubCoreAction = {
 	type: "refresh" | "cycleProvider" | "pinProvider";
@@ -163,54 +155,6 @@ export default function createExtension(pi: ExtensionAPI) {
 		});
 	}
 
-	function requestCoreEntries(force: boolean, timeoutMs = 2000): Promise<ProviderUsageEntry[] | null> {
-		return new Promise((resolve) => {
-			let resolved = false;
-			const timer = setTimeout(() => {
-				if (!resolved) {
-					resolved = true;
-					resolve(null);
-				}
-			}, timeoutMs);
-
-			const request: SubCoreRequest = {
-				type: "entries",
-				force,
-				reply: (payload) => {
-					if (resolved) return;
-					resolved = true;
-					clearTimeout(timer);
-					resolve(payload.entries);
-				},
-			};
-
-			pi.events.emit("sub-core:request", request);
-		});
-	}
-
-	async function showAllProviders(ctx: ExtensionContext): Promise<void> {
-		if (!ctx.hasUI) {
-			return;
-		}
-
-		const snapshots = await requestCoreEntries(false);
-		if (!snapshots) {
-			ctx.ui.notify("sub-core not available", "warning");
-			return;
-		}
-
-		if (snapshots.length === 0) {
-			ctx.ui.notify("No providers with credentials found", "warning");
-			return;
-		}
-
-		await showUsageComparison(ctx, {
-			settings,
-			modelId: ctx.model?.id,
-			snapshots,
-			fetchLatest: async () => (await requestCoreEntries(true)) ?? [],
-		});
-	}
 
 	pi.events.on("sub-core:update-current", (payload) => {
 		coreAvailable = true;
@@ -247,14 +191,6 @@ export default function createExtension(pi: ExtensionAPI) {
 			if (lastContext) {
 				renderUsageWidget(lastContext, currentUsage);
 			}
-		},
-	});
-
-	// Register command to show all providers
-	pi.registerCommand("sub-bar:compare-all", {
-		description: "Show all provider plans",
-		handler: async (_args, ctx) => {
-			await showAllProviders(ctx);
 		},
 	});
 

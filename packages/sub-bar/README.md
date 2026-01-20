@@ -156,7 +156,6 @@ sub-bar/
 │   ├── settings/         # Settings UI helpers
 │   ├── settings-types.ts # Settings type definitions
 │   ├── settings.ts       # Settings persistence
-│   ├── ui/compare.ts     # Usage comparison UI
 │   └── usage/types.ts    # Shared usage types
 ├── package.json
 └── tsconfig.json
