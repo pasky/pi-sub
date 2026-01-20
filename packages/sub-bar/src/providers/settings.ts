@@ -19,7 +19,7 @@ function buildBaseProviderItems(ps: BaseProviderSettings): SettingItem[] {
 	return [
 		{
 			id: "showStatus",
-			label: "Show Status",
+			label: "Show Status Indicator",
 			currentValue: ps.showStatus ? "on" : "off",
 			values: ["on", "off"],
 		},

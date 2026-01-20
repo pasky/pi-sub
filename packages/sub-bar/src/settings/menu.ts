@@ -19,21 +19,11 @@ export function buildMainMenuItems(settings: Settings): SelectItem[] {
 			label: "Display Settings",
 			description: `${settings.display.barStyle} style, divider: ${settings.display.dividerCharacter}`,
 		},
-		{
-			value: "reset-display",
-			label: "Reset Display Defaults",
-			description: "restore display settings",
-		},
-		{
-			value: "reset-providers",
-			label: "Reset Provider Defaults",
-			description: "restore provider settings",
-		},
 	];
 }
 
 export function buildProviderListItems(settings: Settings): SelectItem[] {
-	return PROVIDERS.map((provider) => {
+	const items = PROVIDERS.map((provider) => {
 		const ps = settings.providers[provider];
 		const status = ps.showStatus ? "status on" : "status off";
 		return {
@@ -42,6 +32,14 @@ export function buildProviderListItems(settings: Settings): SelectItem[] {
 			description: status,
 		};
 	});
+
+	items.push({
+		value: "reset-providers",
+		label: "Reset Provider Defaults",
+		description: "restore provider settings",
+	});
+
+	return items;
 }
 
 export function buildDisplayMenuItems(): SelectItem[] {
@@ -75,6 +73,11 @@ export function buildDisplayMenuItems(): SelectItem[] {
 			value: "display-presets",
 			label: "Load Presets",
 			description: "default or minimal",
+		},
+		{
+			value: "reset-display",
+			label: "Reset Display Defaults",
+			description: "restore display settings",
 		},
 	];
 }

@@ -123,16 +123,6 @@ export async function showSettingsUI(
 							tui.requestRender();
 							return;
 						}
-						if (item.value === "reset-providers") {
-							const defaults = getDefaultSettings();
-							settings.providers = { ...defaults.providers };
-							saveSettings(settings);
-							if (onSettingsChange) void onSettingsChange(settings);
-							ctx.ui.notify("Provider settings reset to defaults", "info");
-							rebuild();
-							tui.requestRender();
-							return;
-						}
 						currentCategory = item.value as SettingsCategory;
 						rebuild();
 						tui.requestRender();
@@ -153,6 +143,16 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					selectList.onSelect = (item) => {
+						if (item.value === "reset-providers") {
+							const defaults = getDefaultSettings();
+							settings.providers = { ...defaults.providers };
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+							ctx.ui.notify("Provider settings reset to defaults", "info");
+							rebuild();
+							tui.requestRender();
+							return;
+						}
 						currentCategory = item.value as SettingsCategory;
 						rebuild();
 						tui.requestRender();
