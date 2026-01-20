@@ -89,8 +89,6 @@ export interface BaseProviderSettings {
 }
 
 export interface AnthropicProviderSettings extends BaseProviderSettings {
-	showExtraUsage: boolean;
-	extraUsageCurrency: "EUR" | "USD";
 	windows: {
 		show5h: boolean;
 		show7d: boolean;
@@ -236,8 +234,6 @@ export function getDefaultSettings(): Settings {
 		providers: {
 			anthropic: {
 				showStatus: true,
-				showExtraUsage: true,
-				extraUsageCurrency: "EUR",
 				windows: {
 					show5h: true,
 					show7d: true,

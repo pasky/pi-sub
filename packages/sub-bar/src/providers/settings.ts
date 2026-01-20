@@ -47,18 +47,6 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 		const anthroSettings = ps as AnthropicProviderSettings;
 		items.push(
 			{
-				id: "showExtraUsage",
-				label: "Show Extra Usage",
-				currentValue: anthroSettings.showExtraUsage ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "extraUsageCurrency",
-				label: "Extra Usage Currency",
-				currentValue: anthroSettings.extraUsageCurrency,
-				values: ["EUR", "USD"],
-			},
-			{
 				id: "show5h",
 				label: "Show 5h Window",
 				currentValue: anthroSettings.windows.show5h ? "on" : "off",
@@ -199,12 +187,6 @@ export function applyProviderSettingsChange(
 	if (provider === "anthropic") {
 		const anthroSettings = ps as AnthropicProviderSettings;
 		switch (id) {
-			case "showExtraUsage":
-				anthroSettings.showExtraUsage = value === "on";
-				break;
-			case "extraUsageCurrency":
-				anthroSettings.extraUsageCurrency = value as "EUR" | "USD";
-				break;
 			case "show5h":
 				anthroSettings.windows.show5h = value === "on";
 				break;

@@ -60,6 +60,7 @@ export interface CoreProviderSettings {
 	enabled: ProviderEnabledSetting;
 	displayName?: string;
 	fetchStatus: boolean;
+	overageCurrency?: string;
 }
 
 export interface CoreProviderSettingsMap {

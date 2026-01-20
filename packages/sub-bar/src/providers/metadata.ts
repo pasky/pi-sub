@@ -68,9 +68,8 @@ const zaiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, s
 
 const anthropicExtras: ProviderMetadata["getExtras"] = (usage, settings) => {
 	const extras: UsageExtra[] = [];
-	const showExtraUsage = settings?.providers.anthropic.showExtraUsage ?? true;
 	const showExtraWindow = settings?.providers.anthropic.windows.showExtra ?? true;
-	if (showExtraUsage && showExtraWindow && usage.extraUsageEnabled === false) {
+	if (showExtraWindow && usage.extraUsageEnabled === false) {
 		extras.push({ label: "Extra [off]" });
 	}
 	return extras;
