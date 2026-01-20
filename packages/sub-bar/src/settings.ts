@@ -4,7 +4,7 @@
 
 import * as path from "node:path";
 import type { Settings } from "./settings-types.js";
-import { getDefaultSettings, migrateSettings } from "./settings-types.js";
+import { getDefaultSettings, mergeSettings } from "./settings-types.js";
 import { getStorage } from "./storage.js";
 import { getSettingsPath } from "./paths.js";
 
@@ -40,9 +40,8 @@ export function loadSettings(): Settings {
 		if (storage.exists(SETTINGS_PATH)) {
 			const content = storage.readFile(SETTINGS_PATH);
 			if (content) {
-				const loaded = JSON.parse(content) as Partial<Settings> & { display?: Partial<Settings["display"]> };
-				const display = "display" in loaded ? loaded.display : loaded;
-				cachedSettings = migrateSettings({ version: loaded.version, display } as Partial<Settings>);
+				const loaded = JSON.parse(content) as Partial<Settings>;
+				cachedSettings = mergeSettings({ version: loaded.version, display: loaded.display } as Partial<Settings>);
 				return cachedSettings;
 			}
 		}

@@ -2,7 +2,7 @@
  * Settings types and defaults for sub-bar
  */
 
-import type { ProviderName, ProviderSettingsMap, BehaviorSettings, CoreSettings } from "pi-sub-shared";
+import type { CoreSettings } from "pi-sub-shared";
 import { PROVIDERS } from "pi-sub-shared";
 
 /**
@@ -283,114 +283,8 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 }
 
 /**
- * Migrate settings from older versions
+ * Merge settings with defaults (no legacy migrations).
  */
-export function migrateSettings(loaded: Partial<Settings> & { copilot?: { showMultiplier?: boolean; showRequestsLeft?: boolean }; anthropic?: { showExtraUsage?: boolean; extraUsageCurrency?: "EUR" | "USD" } }): Settings {
-	const defaults = getDefaultSettings();
-
-	// If no version, it's either new or very old
-	if (!loaded.version) {
-		return deepMerge(defaults, loaded as Partial<Settings>);
-	}
-
-	// Migrate from version 1 to version 2
-	if (loaded.version === 1) {
-		// Move root-level copilot/anthropic settings into providers
-		if (loaded.copilot) {
-			if (!loaded.providers) {
-				loaded.providers = {} as ProviderSettingsMap;
-			}
-			if (!loaded.providers.copilot) {
-				loaded.providers.copilot = { ...defaults.providers.copilot };
-			}
-			if (loaded.copilot.showMultiplier !== undefined) {
-				loaded.providers.copilot.showMultiplier = loaded.copilot.showMultiplier;
-			}
-			if (loaded.copilot.showRequestsLeft !== undefined) {
-				loaded.providers.copilot.showRequestsLeft = loaded.copilot.showRequestsLeft;
-			}
-			delete loaded.copilot;
-		}
-		if (loaded.anthropic) {
-			if (!loaded.providers) {
-				loaded.providers = {} as ProviderSettingsMap;
-			}
-			if (!loaded.providers.anthropic) {
-				loaded.providers.anthropic = { ...defaults.providers.anthropic };
-			}
-			if (loaded.anthropic.showExtraUsage !== undefined) {
-				loaded.providers.anthropic.showExtraUsage = loaded.anthropic.showExtraUsage;
-			}
-			if (loaded.anthropic.extraUsageCurrency !== undefined) {
-				loaded.providers.anthropic.extraUsageCurrency = loaded.anthropic.extraUsageCurrency;
-			}
-			delete loaded.anthropic;
-		}
-		loaded.version = 2;
-	}
-
-	// Migrate old barCharacter values (hyphen/equals/double-line -> light/heavy/double)
-	if (loaded.display?.barCharacter) {
-		const oldToNew: Record<string, BarCharacter> = {
-			"hyphen": "light",
-			"equals": "heavy",
-			"double-line": "double",
-			"block": "block",
-		};
-		const oldValue = loaded.display.barCharacter as string;
-		if (oldValue in oldToNew) {
-			loaded.display.barCharacter = oldToNew[oldValue];
-		}
-	}
-
-	// Migrate old colorScheme values
-	if (loaded.display?.colorScheme) {
-		const oldToNew: Record<string, ColorScheme> = {
-			"traffic-light": "base-warning-error",
-			"gradient": "success-base-warning-error",
-			"muted-warning-error": "base-warning-error",
-			"text-warning-error": "base-warning-error",
-			"success-text-warning-error": "success-base-warning-error",
-			"monochrome": "monochrome",
-		};
-		const oldValue = loaded.display.colorScheme as string;
-		if (oldValue in oldToNew) {
-			loaded.display.colorScheme = oldToNew[oldValue];
-		}
-	}
-
-	// Migrate old fill-priority values
-	if (loaded.display && (loaded.display as { barWidth?: string }).barWidth === "fill-priority") {
-		loaded.display.barWidth = "fill" as BarWidth;
-	}
-	if (loaded.display && (loaded.display as { dividerBlanks?: string }).dividerBlanks === "fill-priority") {
-		loaded.display.dividerBlanks = "fill" as DividerBlanks;
-	}
-
-	// Remove deprecated displayMode
-	if (loaded.display && "displayMode" in loaded.display) {
-		delete (loaded.display as { displayMode?: unknown }).displayMode;
-	}
-
-	// Migrate showResetTime to resetTimePosition
-	if (loaded.display) {
-		const legacyDisplay = loaded.display as {
-			showResetTime?: boolean;
-			leadingDivider?: boolean;
-			trailingDivider?: boolean;
-		};
-		if (legacyDisplay.showResetTime !== undefined) {
-			loaded.display.resetTimePosition = legacyDisplay.showResetTime ? "front" : "off";
-			delete legacyDisplay.showResetTime;
-		}
-		if (legacyDisplay.leadingDivider !== undefined) {
-			delete legacyDisplay.leadingDivider;
-		}
-		if (legacyDisplay.trailingDivider !== undefined) {
-			delete legacyDisplay.trailingDivider;
-		}
-	}
-
-	// Version-specific migrations would go here for future versions
-	return deepMerge(defaults, loaded as Partial<Settings>);
+export function mergeSettings(loaded: Partial<Settings>): Settings {
+	return deepMerge(getDefaultSettings(), loaded);
 }

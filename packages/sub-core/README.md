@@ -89,9 +89,11 @@ Sub-core uses `pi.events` as an in-process pub/sub bus. Any `sub-*` extension ca
 ### Broadcasts
 - `sub-core:ready` → `{ state, settings }` (first load)
 - `sub-core:update-current` → `{ state }` (cache hit or fresh fetch)
+- `sub-core:update-all` → `{ state }` (cached entries + current provider)
 - `sub-core:settings:updated` → `{ settings }`
 
-`state` is `{ provider, usage }`, where `usage` includes windows, status, and error info.
+`update-current` state is `{ provider, usage }`.
+`update-all` state is `{ provider, entries }`, where entries are cached provider snapshots.
 
 ### Requests (pull current state)
 - `sub-core:request` → `{ reply, includeSettings? }`

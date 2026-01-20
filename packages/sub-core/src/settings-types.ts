@@ -2,19 +2,7 @@
  * Settings types and defaults for sub-core
  */
 
-import type {
-	ProviderName,
-	ProviderSettingsMap,
-	BehaviorSettings,
-	CoreSettings,
-	BaseProviderSettings,
-	AnthropicProviderSettings,
-	CopilotProviderSettings,
-	GeminiProviderSettings,
-	CodexProviderSettings,
-	KiroProviderSettings,
-	ZaiProviderSettings,
-} from "pi-sub-shared";
+import type { CoreSettings } from "pi-sub-shared";
 import { PROVIDERS } from "pi-sub-shared";
 
 export type {
@@ -141,56 +129,8 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 }
 
 /**
- * Migrate settings from older versions
+ * Merge settings with defaults (no legacy migrations).
  */
-export function migrateSettings(
-	loaded: Partial<Settings> & {
-		copilot?: { showMultiplier?: boolean; showRequestsLeft?: boolean };
-		anthropic?: { showExtraUsage?: boolean; extraUsageCurrency?: "EUR" | "USD" };
-	}
-): Settings {
-	const defaults = getDefaultSettings();
-
-	// If no version, it's either new or very old
-	if (!loaded.version) {
-		return deepMerge(defaults, loaded as Partial<Settings>);
-	}
-
-	// Migrate from version 1 to version 2
-	if (loaded.version === 1) {
-		// Move root-level copilot/anthropic settings into providers
-		if (loaded.copilot) {
-			if (!loaded.providers) {
-				loaded.providers = {} as ProviderSettingsMap;
-			}
-			if (!loaded.providers.copilot) {
-				loaded.providers.copilot = { ...defaults.providers.copilot } as CopilotProviderSettings;
-			}
-			if (loaded.copilot.showMultiplier !== undefined) {
-				loaded.providers.copilot.showMultiplier = loaded.copilot.showMultiplier;
-			}
-			if (loaded.copilot.showRequestsLeft !== undefined) {
-				loaded.providers.copilot.showRequestsLeft = loaded.copilot.showRequestsLeft;
-			}
-			delete loaded.copilot;
-		}
-		if (loaded.anthropic) {
-			if (!loaded.providers) {
-				loaded.providers = {} as ProviderSettingsMap;
-			}
-			if (!loaded.providers.anthropic) {
-				loaded.providers.anthropic = { ...defaults.providers.anthropic } as AnthropicProviderSettings;
-			}
-			if (loaded.anthropic.showExtraUsage !== undefined) {
-				loaded.providers.anthropic.showExtraUsage = loaded.anthropic.showExtraUsage;
-			}
-			if (loaded.anthropic.extraUsageCurrency !== undefined) {
-				loaded.providers.anthropic.extraUsageCurrency = loaded.anthropic.extraUsageCurrency;
-			}
-			delete loaded.anthropic;
-		}
-		loaded.version = 2;
-	}
-
-	return deepMerge(defaults, loaded as Partial<Settings>);
+export function mergeSettings(loaded: Partial<Settings>): Settings {
+	return deepMerge(getDefaultSettings(), loaded);
 }

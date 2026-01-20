@@ -4,7 +4,7 @@
 
 import * as path from "node:path";
 import type { Settings } from "./settings-types.js";
-import { getDefaultSettings, migrateSettings } from "./settings-types.js";
+import { getDefaultSettings, mergeSettings } from "./settings-types.js";
 import { getStorage } from "./storage.js";
 import { getSettingsPath } from "./paths.js";
 
@@ -41,7 +41,7 @@ export function loadSettings(): Settings {
 			const content = storage.readFile(SETTINGS_PATH);
 			if (content) {
 				const loaded = JSON.parse(content) as Partial<Settings>;
-				cachedSettings = migrateSettings(loaded);
+				cachedSettings = mergeSettings(loaded);
 				return cachedSettings;
 			}
 		}
