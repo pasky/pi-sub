@@ -95,7 +95,7 @@ Sub-core uses `pi.events` as an in-process pub/sub bus. Any `sub-*` extension ca
 
 ### Requests (pull current state)
 - `sub-core:request` → `{ reply, includeSettings? }`
-- `sub-core:request` → `{ type: "entries", reply, force? }` (for compare views)
+- `sub-core:request` → `{ type: "entries", reply, force? }` (bulk usage entries)
 
 The `reply` callback receives `{ state }` or `{ entries }` immediately if available.
 
