@@ -13,7 +13,7 @@ import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
-import { buildDisplayLayoutItems, buildDisplayColorItems, buildDisplayBarItems, buildDisplayProviderItems, buildDisplayDividerItems, applyDisplayChange } from "./display.js";
+import { buildDisplayLayoutItems, buildDisplayColorItems, buildDisplayBarItems, buildDisplayProviderItems, buildDisplayStatusItems, buildDisplayDividerItems, applyDisplayChange } from "./display.js";
 import {
 	buildMainMenuItems,
 	buildProviderListItems,
@@ -36,6 +36,7 @@ type SettingsCategory =
 	| "display-color"
 	| "display-bar"
 	| "display-provider"
+	| "display-status"
 	| "display-divider"
 	| "display-presets";
 
@@ -102,6 +103,7 @@ export async function showSettingsUI(
 					"display-color": "Color Scheme",
 					"display-bar": "Bar",
 					"display-provider": "Provider",
+					"display-status": "Status Indicator",
 					"display-divider": "Divider",
 					"display-presets": "Load Presets",
 				};
@@ -305,6 +307,9 @@ export async function showSettingsUI(
 						case "display-provider":
 							items = buildDisplayProviderItems(settings);
 							break;
+						case "display-status":
+							items = buildDisplayStatusItems(settings);
+							break;
 						case "display-divider":
 							items = buildDisplayDividerItems(settings);
 							break;
@@ -317,6 +322,11 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 						if (currentCategory === "display-bar" && id === "barType") {
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						if (currentCategory === "display-status" && id === "statusIndicatorMode") {
 							rebuild();
 							tui.requestRender();
 						}
@@ -354,6 +364,7 @@ export async function showSettingsUI(
 					currentCategory === "display-color" ||
 					currentCategory === "display-bar" ||
 					currentCategory === "display-provider" ||
+					currentCategory === "display-status" ||
 					currentCategory === "display-divider";
 				if (!usesSettingsList) {
 					let helpText: string;

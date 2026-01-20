@@ -122,6 +122,10 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 | Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
 | Reset Timer Format | relative, datetime | relative | Show relative countdown or reset datetime |
+| Status Mode | icon, color, icon+color | icon | Show status as icons, color tint, or both |
+| Status Icon Pack | minimal, emoji, shapes | emoji | Icon set for status indicators |
+| Show Status Text | on/off | off | Show textual status description |
+| Dismiss Operational Status | on/off | on | Hide status when there are no incidents |
 | Show Provider Name | on/off | on | Show provider label in status |
 | Provider Label | none, plan, subscription, sub | none | Suffix after provider name (replaces existing Plan/Subscription suffix if present) |
 | Provider Label Colon | on/off | on | Show colon after provider label |
@@ -154,7 +158,7 @@ sub-bar/
 ├── index.ts              # Extension entry point (display client)
 ├── src/
 │   ├── formatting.ts     # UI formatting
-│   ├── status.ts         # Status emoji helpers
+│   ├── status.ts         # Status indicator helpers
 │   ├── utils.ts          # Display helpers
 │   ├── providers/        # Display metadata + visibility rules
 │   ├── settings/         # Settings UI helpers

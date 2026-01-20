@@ -3,7 +3,7 @@
  */
 
 import type { SettingItem } from "@mariozechner/pi-tui";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement, ResetTimeFormat } from "../settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement, ResetTimeFormat, StatusIndicatorMode, StatusIconPack } from "../settings-types.js";
 
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
@@ -173,6 +173,44 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 	];
 }
 
+export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
+	const mode = settings.display.statusIndicatorMode ?? "icon";
+	const items: SettingItem[] = [
+		{
+			id: "statusIndicatorMode",
+			label: "Status Mode",
+			currentValue: mode,
+			values: ["icon", "color", "icon+color"] as StatusIndicatorMode[],
+		},
+	];
+
+	if (mode === "icon" || mode === "icon+color") {
+		items.push({
+			id: "statusIconPack",
+			label: "Status Icon Pack",
+			currentValue: settings.display.statusIconPack ?? "emoji",
+			values: ["minimal", "emoji", "shapes"] as StatusIconPack[],
+		});
+	}
+
+	items.push(
+		{
+			id: "statusText",
+			label: "Show Status Text",
+			currentValue: settings.display.statusText ? "on" : "off",
+			values: ["on", "off"],
+		},
+		{
+			id: "statusDismissOk",
+			label: "Dismiss Operational Status",
+			currentValue: settings.display.statusDismissOk ? "on" : "off",
+			values: ["on", "off"],
+		}
+	);
+
+	return items;
+}
+
 export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 	return [
 		{
@@ -237,6 +275,18 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "resetTimeFormat":
 			settings.display.resetTimeFormat = value as ResetTimeFormat;
+			break;
+		case "statusIndicatorMode":
+			settings.display.statusIndicatorMode = value as StatusIndicatorMode;
+			break;
+		case "statusIconPack":
+			settings.display.statusIconPack = value as StatusIconPack;
+			break;
+		case "statusText":
+			settings.display.statusText = value === "on";
+			break;
+		case "statusDismissOk":
+			settings.display.statusDismissOk = value === "on";
 			break;
 		case "showProviderName":
 			settings.display.showProviderName = value === "on";

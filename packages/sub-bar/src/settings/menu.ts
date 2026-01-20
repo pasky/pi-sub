@@ -79,6 +79,11 @@ export function buildDisplayMenuItems(): SelectItem[] {
 			description: "label controls",
 		},
 		{
+			value: "display-status",
+			label: "Status Indicator",
+			description: "mode, icons, text",
+		},
+		{
 			value: "display-divider",
 			label: "Divider",
 			description: "character, blanks, top divider",

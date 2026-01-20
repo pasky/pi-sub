@@ -56,6 +56,16 @@ export type ProviderLabel = "plan" | "subscription" | "sub" | "none";
 export type ResetTimeFormat = "relative" | "datetime";
 
 /**
+ * Status indicator display mode
+ */
+export type StatusIndicatorMode = "icon" | "color" | "icon+color";
+
+/**
+ * Status icon pack selection
+ */
+export type StatusIconPack = "minimal" | "emoji" | "shapes";
+
+/**
  * Base text color for widget labels
  */
 export type BaseTextColor = "dim" | "muted" | "text";
@@ -160,6 +170,14 @@ export interface DisplaySettings {
 	resetTimePosition: "off" | "front" | "back" | "integrated";
 	/** Reset time format */
 	resetTimeFormat: ResetTimeFormat;
+	/** Status indicator mode */
+	statusIndicatorMode: StatusIndicatorMode;
+	/** Status icon pack */
+	statusIconPack: StatusIconPack;
+	/** Show textual status */
+	statusText: boolean;
+	/** Dismiss status when operational */
+	statusDismissOk: boolean;
 	/** Show provider display name */
 	showProviderName: boolean;
 	/** Provider label prefix */
@@ -275,6 +293,10 @@ export function getDefaultSettings(): Settings {
 			colorScheme: "base-warning-error",
 			resetTimePosition: "front",
 			resetTimeFormat: "relative",
+			statusIndicatorMode: "icon",
+			statusIconPack: "emoji",
+			statusText: false,
+			statusDismissOk: true,
 			showProviderName: true,
 			providerLabel: "none",
 			providerLabelColon: true,

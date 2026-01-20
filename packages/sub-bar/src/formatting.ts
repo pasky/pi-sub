@@ -5,9 +5,9 @@
 import type { Theme } from "@mariozechner/pi-coding-agent";
 import { visibleWidth } from "@mariozechner/pi-tui";
 import type { RateWindow, UsageSnapshot } from "./types.js";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, BarWidth, DividerBlanks } from "./settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, BarWidth, DividerBlanks, BaseTextColor } from "./settings-types.js";
 import { formatErrorForDisplay } from "./errors.js";
-import { getStatusEmoji } from "./status.js";
+import { getStatusIcon, getStatusLabel } from "./status.js";
 import { shouldShowWindow } from "./providers/windows.js";
 import { getUsageExtras } from "./providers/extras.js";
 
@@ -70,6 +70,29 @@ function getUsageColor(
 	return "base";
 }
 
+function getStatusColor(
+	indicator: NonNullable<UsageSnapshot["status"]>["indicator"],
+	colorScheme: ColorScheme
+): "error" | "warning" | "success" | "base" {
+	if (colorScheme === "monochrome") {
+		return "base";
+	}
+	if (indicator === "minor" || indicator === "maintenance") {
+		return "warning";
+	}
+	if (indicator === "major" || indicator === "critical") {
+		return "error";
+	}
+	if (indicator === "none") {
+		return colorScheme === "success-base-warning-error" ? "success" : "base";
+	}
+	return "base";
+}
+
+function resolveStatusTintColor(color: "error" | "warning" | "success" | "base", baseTextColor: BaseTextColor): BaseTextColor | "error" | "warning" | "success" {
+	return color === "base" ? baseTextColor : color;
+}
+
 function formatResetDateTime(resetAt: string): string {
 	const date = new Date(resetAt);
 	if (Number.isNaN(date.getTime())) return resetAt;
@@ -129,16 +152,21 @@ function renderBarSegments(
 
 function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Settings): string {
 	const showProviderName = settings?.display.showProviderName ?? true;
-	if (!showProviderName) return "";
-
 	const showStatus = settings?.providers[usage.provider]?.showStatus ?? true;
-	const statusIndicator =
-		showStatus && usage.status && usage.status.indicator !== "none" && usage.status.indicator !== "unknown"
-			? getStatusEmoji(usage.status)
-			: "";
+	const status = showStatus ? usage.status : undefined;
+	const statusDismissOk = settings?.display.statusDismissOk ?? true;
+	const statusMode = settings?.display.statusIndicatorMode ?? "icon";
+	const statusIconPack = settings?.display.statusIconPack ?? "emoji";
+	const showStatusText = settings?.display.statusText ?? false;
 	const providerLabelSetting = settings?.display.providerLabel ?? "none";
 	const showColon = settings?.display.providerLabelColon ?? true;
 	const baseTextColor = settings?.display.baseTextColor ?? "muted";
+
+	const statusActive = Boolean(status && (!statusDismissOk || status.indicator !== "none"));
+	const showIcon = statusActive && (statusMode === "icon" || statusMode === "icon+color");
+	const showColor = statusActive && (statusMode === "color" || statusMode === "icon+color");
+	const showText = statusActive && showStatusText;
+
 	const labelSuffix = providerLabelSetting === "plan"
 		? "Plan"
 		: providerLabelSetting === "subscription"
@@ -150,14 +178,19 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const rawName = usage.displayName?.trim() ?? "";
 	const baseName = rawName.replace(/\s+(plan|subscription|sub\.?)[\s]*$/i, "").trim();
 	const providerName = baseName || rawName;
+	const providerLabel = showProviderName
+		? [providerName, labelSuffix].filter(Boolean).join(" ")
+		: "";
+	const providerLabelWithColon = providerLabel && showColon ? `${providerLabel}:` : providerLabel;
 
-	const parts = [statusIndicator, providerName, labelSuffix].filter(Boolean);
+	const icon = showIcon && status ? getStatusIcon(status, statusIconPack) : "";
+	const statusText = showText && status ? getStatusLabel(status) : "";
+	const statusColor = showColor && status ? getStatusColor(status.indicator, settings?.display.colorScheme ?? "base-warning-error") : "base";
+	const labelColor = showColor ? resolveStatusTintColor(statusColor, baseTextColor) : baseTextColor;
+
+	const parts = [icon, statusText, providerLabelWithColon].filter(Boolean);
 	if (parts.length === 0) return "";
-	let labelText = parts.join(" ");
-	if (showColon) {
-		labelText += ":";
-	}
-	return theme.fg(baseTextColor, labelText);
+	return parts.map((part) => theme.fg(labelColor, part)).join(" ");
 }
 
 /**

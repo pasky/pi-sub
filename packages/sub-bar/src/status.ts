@@ -3,24 +3,56 @@
  */
 
 import type { ProviderStatus } from "./types.js";
+import type { StatusIconPack } from "./settings-types.js";
 
-/**
- * Get emoji for a status indicator
- */
-export function getStatusEmoji(status?: ProviderStatus): string {
+const STATUS_ICON_PACKS: Record<StatusIconPack, Record<ProviderStatus["indicator"], string>> = {
+	minimal: {
+		none: "•",
+		minor: "!",
+		major: "!!",
+		critical: "×",
+		maintenance: "~",
+		unknown: "?",
+	},
+	emoji: {
+		none: "✅",
+		minor: "⚠️",
+		major: "🟠",
+		critical: "🔴",
+		maintenance: "🔧",
+		unknown: "❓",
+	},
+	shapes: {
+		none: "●",
+		minor: "◔",
+		major: "◑",
+		critical: "◕",
+		maintenance: "○",
+		unknown: "◌",
+	},
+};
+
+export function getStatusIcon(status: ProviderStatus | undefined, pack: StatusIconPack): string {
 	if (!status) return "";
+	return STATUS_ICON_PACKS[pack][status.indicator] ?? "";
+}
+
+export function getStatusLabel(status: ProviderStatus | undefined): string {
+	if (!status) return "";
+	if (status.description) return status.description;
 	switch (status.indicator) {
 		case "none":
-			return "✅";
+			return "Operational";
 		case "minor":
-			return "⚠️";
+			return "Degraded";
 		case "major":
-			return "🟠";
+			return "Outage";
 		case "critical":
-			return "🔴";
+			return "Outage";
 		case "maintenance":
-			return "🔧";
+			return "Maintenance";
+		case "unknown":
 		default:
-			return "";
+			return "Unknown";
 	}
 }
