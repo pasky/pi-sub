@@ -5,7 +5,7 @@
 import type { SelectItem } from "@mariozechner/pi-tui";
 import type { Settings } from "../settings-types.js";
 import type { ProviderName } from "../types.js";
-import { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
+import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 
 export function buildMainMenuItems(settings: Settings): SelectItem[] {
 	const enabledCount = Object.values(settings.providers).filter((p) => p.enabled !== "off" && p.enabled !== false).length;
@@ -41,7 +41,7 @@ export function buildMainMenuItems(settings: Settings): SelectItem[] {
 }
 
 export function buildProviderListItems(settings: Settings): SelectItem[] {
-	return PROVIDERS.map((provider) => {
+	return settings.providerOrder.map((provider) => {
 		const ps = settings.providers[provider];
 		const enabledValue = ps.enabled === "auto" ? "auto" : ps.enabled === true || ps.enabled === "on" ? "on" : "off";
 		const statusIcon = ps.fetchStatus ? ", status fetch on" : "";

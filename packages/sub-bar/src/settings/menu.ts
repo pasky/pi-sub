@@ -29,7 +29,8 @@ export function buildMainMenuItems(settings: Settings): SelectItem[] {
 }
 
 export function buildProviderListItems(settings: Settings, coreProviders?: CoreProviderSettingsMap): SelectItem[] {
-	const items = PROVIDERS.map((provider) => {
+	const orderedProviders = settings.providerOrder.length > 0 ? settings.providerOrder : PROVIDERS;
+	const items = orderedProviders.map((provider) => {
 		const ps = settings.providers[provider];
 		const core = coreProviders?.[provider];
 		const enabledValue = core
