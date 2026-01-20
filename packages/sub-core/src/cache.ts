@@ -126,20 +126,37 @@ function writeCache(cache: Cache): void {
 export interface CacheWatchOptions {
 	debounceMs?: number;
 	pollIntervalMs?: number;
+	lockRetryMs?: number;
 }
 
 export function watchCacheUpdates(options?: CacheWatchOptions): () => void {
 	const debounceMs = options?.debounceMs ?? 250;
 	const pollIntervalMs = options?.pollIntervalMs ?? 5000;
+	const lockRetryMs = options?.lockRetryMs ?? 1000;
 	let debounceTimer: NodeJS.Timeout | undefined;
 	let pollTimer: NodeJS.Timeout | undefined;
+	let lockRetryPending = false;
 	let lastSnapshot = "";
 	let lastMtimeMs = 0;
 	let stopped = false;
 
+	const scheduleLockRetry = () => {
+		if (lockRetryPending || stopped) return;
+		lockRetryPending = true;
+		void waitForLockRelease(LOCK_PATH, lockRetryMs).then((released) => {
+			lockRetryPending = false;
+			if (released) {
+				emitFromCache();
+			}
+		});
+	};
+
 	const emitFromCache = () => {
 		try {
-			if (fs.existsSync(LOCK_PATH)) return;
+			if (fs.existsSync(LOCK_PATH)) {
+				scheduleLockRetry();
+				return;
+			}
 			const stat = fs.statSync(CACHE_PATH, { throwIfNoEntry: false });
 			if (!stat || !stat.mtimeMs) return;
 			if (stat.mtimeMs === lastMtimeMs) return;
