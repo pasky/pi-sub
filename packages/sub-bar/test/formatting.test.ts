@@ -91,7 +91,7 @@ test("status indicator layout includes icon text provider colon", () => {
 		settings,
 	);
 	assert.ok(output);
-	assert.ok(output.startsWith("!! Outage Codex:"));
+	assert.ok(output.startsWith("⚠ Outage Codex:"));
 });
 
 test("status dismiss ok hides operational text", () => {

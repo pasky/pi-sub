@@ -7,9 +7,9 @@ import type { StatusIconPack } from "./settings-types.js";
 
 const STATUS_ICON_PACKS: Record<StatusIconPack, Record<ProviderStatus["indicator"], string>> = {
 	minimal: {
-		none: "•",
-		minor: "!",
-		major: "!!",
+		none: "✓",
+		minor: "⚠",
+		major: "⚠",
 		critical: "×",
 		maintenance: "~",
 		unknown: "?",
@@ -21,14 +21,6 @@ const STATUS_ICON_PACKS: Record<StatusIconPack, Record<ProviderStatus["indicator
 		critical: "🔴",
 		maintenance: "🔧",
 		unknown: "❓",
-	},
-	shapes: {
-		none: "●",
-		minor: "◔",
-		major: "◑",
-		critical: "◕",
-		maintenance: "○",
-		unknown: "◌",
 	},
 };
 

@@ -194,6 +194,20 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 	];
 }
 
+const STATUS_ICON_PACK_PREVIEW: Record<Exclude<StatusIconPack, "shapes">, string> = {
+	minimal: "minimal (✓ ⚠ ×)",
+	emoji: "emoji (✅ ⚠️ 🔴)",
+};
+
+function formatStatusIconPack(pack: Exclude<StatusIconPack, "shapes">): string {
+	return STATUS_ICON_PACK_PREVIEW[pack] ?? pack;
+}
+
+function parseStatusIconPack(value: string): Exclude<StatusIconPack, "shapes"> {
+	if (value.startsWith("minimal")) return "minimal";
+	return "emoji";
+}
+
 export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
 	const mode = settings.display.statusIndicatorMode ?? "icon";
 	const items: SettingItem[] = [
@@ -210,8 +224,11 @@ export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
 		items.push({
 			id: "statusIconPack",
 			label: "Status Icon Pack",
-			currentValue: settings.display.statusIconPack ?? "emoji",
-			values: ["minimal", "emoji", "shapes"] as StatusIconPack[],
+			currentValue: formatStatusIconPack((settings.display.statusIconPack === "minimal" ? "minimal" : "emoji")),
+			values: [
+				formatStatusIconPack("minimal"),
+				formatStatusIconPack("emoji"),
+			],
 			description: "Pick the icon set used for status indicators.",
 		});
 	}
@@ -309,7 +326,7 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.statusIndicatorMode = value as StatusIndicatorMode;
 			break;
 		case "statusIconPack":
-			settings.display.statusIconPack = value as StatusIconPack;
+			settings.display.statusIconPack = parseStatusIconPack(value);
 			break;
 		case "statusText":
 			settings.display.statusText = value === "on";

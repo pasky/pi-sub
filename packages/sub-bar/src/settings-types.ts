@@ -63,7 +63,7 @@ export type StatusIndicatorMode = "icon" | "color" | "icon+color";
 /**
  * Status icon pack selection
  */
-export type StatusIconPack = "minimal" | "emoji" | "shapes";
+export type StatusIconPack = "minimal" | "emoji";
 
 /**
  * Base text color for widget labels
