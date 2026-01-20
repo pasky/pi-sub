@@ -7,7 +7,8 @@ import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-age
 import { Container, SelectList, type SettingItem, SettingsList, Spacer, Text } from "@mariozechner/pi-tui";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
-import { getDefaultCoreSettings, type CoreSettings } from "pi-sub-shared";
+import type { CoreSettings } from "pi-sub-shared";
+import { getFallbackCoreSettings } from "../core-settings.js";
 import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
@@ -72,13 +73,13 @@ export async function showSettingsUI(
 	options?: {
 		coreSettings?: CoreSettings;
 		onSettingsChange?: (settings: Settings) => void | Promise<void>;
-		onCoreSettingsChange?: (settings: CoreSettings) => void | Promise<void>;
+		onCoreSettingsChange?: (patch: Partial<CoreSettings>, next: CoreSettings) => void | Promise<void>;
 	}
 ): Promise<Settings> {
 	const onSettingsChange = options?.onSettingsChange;
 	const onCoreSettingsChange = options?.onCoreSettingsChange;
 	let settings = getSettings();
-	let coreSettings = options?.coreSettings ?? getDefaultCoreSettings();
+	let coreSettings = options?.coreSettings ?? getFallbackCoreSettings(settings);
 	let currentCategory: SettingsCategory = "main";
 
 	return new Promise((resolve) => {
@@ -184,8 +185,16 @@ export async function showSettingsUI(
 					});
 					const handleChange = (id: string, value: string) => {
 						if (id === "enabled") {
-							coreProvider.enabled = value === "auto" ? "auto" : value === "on";
-							if (onCoreSettingsChange) void onCoreSettingsChange(coreSettings);
+							const nextEnabled = value === "auto" ? "auto" : value === "on";
+							coreProvider.enabled = nextEnabled;
+							if (onCoreSettingsChange) {
+								const patch = {
+									providers: {
+										[providerCategory]: { enabled: nextEnabled },
+									},
+								} as unknown as Partial<CoreSettings>;
+								void onCoreSettingsChange(patch, coreSettings);
+							}
 							return;
 						}
 						settings = applyProviderSettingsChange(settings, providerCategory, id, value);

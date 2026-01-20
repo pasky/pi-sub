@@ -8,10 +8,11 @@ import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-cod
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
-import { getDefaultCoreSettings, type CoreSettings } from "pi-sub-shared";
+import type { CoreSettings } from "pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
+import { getFallbackCoreSettings } from "./src/core-settings.js";
 
 type SubCoreRequest = {
 	type?: "current";
@@ -33,7 +34,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	let settings: Settings = loadSettings();
 	let currentUsage: UsageSnapshot | undefined;
 	let coreAvailable = false;
-	let coreSettings: CoreSettings = getDefaultCoreSettings();
+	let coreSettings: CoreSettings = getFallbackCoreSettings(settings);
 
 	function renderUsageWidget(ctx: ExtensionContext, usage: UsageSnapshot | undefined, message?: string): void {
 		if (!usage && !message) {
@@ -125,6 +126,26 @@ export default function createExtension(pi: ExtensionAPI) {
 		settings.defaultProvider = next.defaultProvider ?? settings.defaultProvider;
 	}
 
+	function applyCoreSettingsPatch(patch: Partial<CoreSettings>): void {
+		if (patch.providers) {
+			for (const [provider, value] of Object.entries(patch.providers)) {
+				const key = provider as ProviderName;
+				const current = coreSettings.providers[key];
+				if (!current) continue;
+				coreSettings.providers[key] = { ...current, ...value };
+			}
+		}
+		if (patch.behavior) {
+			coreSettings.behavior = { ...coreSettings.behavior, ...patch.behavior };
+		}
+		if (patch.providerOrder) {
+			coreSettings.providerOrder = [...patch.providerOrder];
+		}
+		if (patch.defaultProvider !== undefined) {
+			coreSettings.defaultProvider = patch.defaultProvider;
+		}
+	}
+
 	function emitCoreAction(action: SubCoreAction): void {
 		pi.events.emit("sub-core:action", action);
 	}
@@ -189,9 +210,9 @@ export default function createExtension(pi: ExtensionAPI) {
 						renderUsageWidget(lastContext, currentUsage);
 					}
 				},
-				onCoreSettingsChange: async (updatedCore) => {
-					coreSettings = updatedCore;
-					pi.events.emit("sub-core:settings:patch", { patch: { providers: updatedCore.providers } });
+				onCoreSettingsChange: async (patch, _next) => {
+					applyCoreSettingsPatch(patch);
+					pi.events.emit("sub-core:settings:patch", { patch });
 					if (lastContext) {
 						renderUsageWidget(lastContext, currentUsage);
 					}
@@ -227,6 +248,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	pi.on("session_start", async (_event, ctx) => {
 		lastContext = ctx;
 		settings = loadSettings();
+		coreSettings = getFallbackCoreSettings(settings);
 		const state = await requestCoreState();
 		if (state) {
 			coreAvailable = true;
