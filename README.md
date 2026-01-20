@@ -54,7 +54,8 @@ pi install npm:pi-sub-bar
 
 **Broadcasts**
 - `sub-core:ready` → `{ state, settings }` (first load)
-- `sub-core:update` → `{ state }` (cache hit or fresh fetch)
+- `sub-core:update-current` → `{ state }` (cache hit or fresh fetch)
+- `sub-core:update-all` → `{ state }` (cached entries + current provider)
 - `sub-core:settings:updated` → `{ settings }`
 
 **Requests (pull)**
@@ -65,14 +66,14 @@ pi install npm:pi-sub-bar
 - `sub-core:settings:patch` → `{ patch }` (persists core settings)
 - `sub-core:action` → `{ type: "refresh" | "cycleProvider" | "pinProvider", provider?, force? }`
 
-UI extensions like `sub-bar` listen for updates and render. They send settings patches (e.g., refresh interval) so the core stays in sync.
+UI extensions like `sub-bar` listen for updates and render the current provider state.
 
 ## Settings & Cache
 
-- **sub-core settings**: `~/.pi/agent/extensions/sub-core/settings.json`
-- **sub-bar settings**: `~/.pi/agent/extensions/sub-bar/settings.json`
-- **cache**: `~/.pi/agent/extensions/sub-core/cache.json`
-- **lock**: `~/.pi/agent/extensions/sub-core/cache.lock`
+- **sub-core settings**: `settings.json` next to the sub-core extension entry
+- **sub-bar settings**: `settings.json` next to the sub-bar extension entry
+- **cache**: `cache.json` next to the sub-core extension entry
+- **lock**: `cache.lock` next to the sub-core extension entry
 
 ## Adding a Provider (summary)
 
@@ -105,6 +106,13 @@ Per-package checks:
 npm run check -w pi-sub-core
 npm run check -w pi-sub-bar
 npm run check -w pi-sub-shared
+```
+
+Sub-bar tests:
+
+```bash
+cd packages/sub-bar
+npm run test
 ```
 
 ## Publishing (planned)

@@ -17,7 +17,7 @@
     "typescript": "^5.8.0"
   },
   "dependencies": {
-    "pi-sub-shared": "workspace:*"
+    "pi-sub-shared": "file:../sub-shared"
   },
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*"
