@@ -22,6 +22,7 @@ function buildBaseProviderItems(ps: BaseProviderSettings): SettingItem[] {
 			label: "Show Status Indicator",
 			currentValue: ps.showStatus ? "on" : "off",
 			values: ["on", "off"],
+			description: "Show status indicator for this provider.",
 		},
 	];
 }
@@ -51,18 +52,21 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 				label: "Show 5h Window",
 				currentValue: anthroSettings.windows.show5h ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the 5-hour usage window.",
 			},
 			{
 				id: "show7d",
 				label: "Show 7d Window",
 				currentValue: anthroSettings.windows.show7d ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the 7-day usage window.",
 			},
 			{
 				id: "showExtra",
 				label: "Show Extra Window",
 				currentValue: anthroSettings.windows.showExtra ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the extra usage window.",
 			},
 		);
 	}
@@ -75,24 +79,28 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 				label: "Show Model Multiplier",
 				currentValue: copilotSettings.showMultiplier ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show request cost multiplier for the current model.",
 			},
 			{
 				id: "showRequestsLeft",
 				label: "Show Requests Remaining",
 				currentValue: copilotSettings.showRequestsLeft ? "on" : "off",
 				values: ["on", "off"],
+				description: "Estimate requests remaining based on the multiplier.",
 			},
 			{
 				id: "quotaDisplay",
 				label: "Show Quota in",
 				currentValue: copilotSettings.quotaDisplay,
 				values: ["percentage", "requests"],
+				description: "Display Copilot usage as percentage or requests.",
 			},
 			{
 				id: "showMonth",
 				label: "Show Month Window",
 				currentValue: copilotSettings.windows.showMonth ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the monthly usage window.",
 			},
 		);
 	}
@@ -105,12 +113,14 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 				label: "Show Pro Window",
 				currentValue: geminiSettings.windows.showPro ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the Pro quota window.",
 			},
 			{
 				id: "showFlash",
 				label: "Show Flash Window",
 				currentValue: geminiSettings.windows.showFlash ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the Flash quota window.",
 			},
 		);
 	}
@@ -123,18 +133,21 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 				label: "Invert Usage",
 				currentValue: codexSettings.invertUsage ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show remaining-style usage for Codex.",
 			},
 			{
 				id: "showPrimary",
 				label: "Show Primary Window",
 				currentValue: codexSettings.windows.showPrimary ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the primary usage window.",
 			},
 			{
 				id: "showSecondary",
 				label: "Show Secondary Window",
 				currentValue: codexSettings.windows.showSecondary ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show secondary windows (day/week).",
 			},
 		);
 	}
@@ -146,6 +159,7 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 			label: "Show Credits Window",
 			currentValue: kiroSettings.windows.showCredits ? "on" : "off",
 			values: ["on", "off"],
+			description: "Show the credits usage window.",
 		});
 	}
 
@@ -157,12 +171,14 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 				label: "Show Tokens Window",
 				currentValue: zaiSettings.windows.showTokens ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the tokens usage window.",
 			},
 			{
 				id: "showMonthly",
 				label: "Show Monthly Window",
 				currentValue: zaiSettings.windows.showMonthly ? "on" : "off",
 				values: ["on", "off"],
+				description: "Show the monthly usage window.",
 			},
 		);
 	}

@@ -20,6 +20,7 @@ import {
 	buildDisplayMenuItems,
 	buildDisplayPresetItems,
 	getProviderFromCategory,
+	type TooltipSelectItem,
 } from "./menu.js";
 
 /**
@@ -90,6 +91,24 @@ export async function showSettingsUI(
 
 			function rebuild(): void {
 				container = new Container();
+				let tooltipText: Text | null = null;
+
+				const attachTooltip = (items: TooltipSelectItem[], selectList: SelectList): void => {
+					if (!items.some((item) => item.tooltip)) return;
+					const tooltipComponent = new Text("", 1, 0);
+					const setTooltip = (item?: TooltipSelectItem | null) => {
+						const tooltip = item?.tooltip?.trim();
+						tooltipComponent.setText(tooltip ? theme.fg("dim", tooltip) : "");
+					};
+					setTooltip(selectList.getSelectedItem() as TooltipSelectItem | null);
+					const existingHandler = selectList.onSelectionChange;
+					selectList.onSelectionChange = (item) => {
+						if (existingHandler) existingHandler(item);
+						setTooltip(item as TooltipSelectItem);
+						tui.requestRender();
+					};
+					tooltipText = tooltipComponent;
+				};
 
 				// Top border
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
@@ -123,6 +142,7 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
 						if (item.value === "open-core-settings") {
 							ctx.ui.notify("Run sub-core:settings to edit core settings", "info");
@@ -149,6 +169,7 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
 						if (item.value === "reset-providers") {
 							const defaults = getDefaultSettings();
@@ -235,6 +256,7 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
 						if (item.value === "reset-display") {
 							const defaults = getDefaultSettings();
@@ -266,6 +288,7 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
 						const defaults = getDefaultSettings();
 						if (item.value === "default") {
@@ -377,6 +400,10 @@ export async function showSettingsUI(
 						helpText = "↑↓ navigate • Enter/Space select • Esc back";
 					} else {
 						helpText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
+					}
+					if (tooltipText) {
+						container.addChild(new Spacer(1));
+						container.addChild(tooltipText);
 					}
 					container.addChild(new Spacer(1));
 					container.addChild(new Text(theme.fg("dim", helpText), 1, 0));

@@ -28,7 +28,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 
 | Provider | Usage Windows | Extra Info | Status Indicator | Notes |
 |----------|--------------|------------|------------------|-------|
-| Anthropic (Claude) | 5h, 7d, Extra | Extra usage toggle + currency | ✅ | Extra usage can show on/off state |
+| Anthropic (Claude) | 5h, 7d, Extra | Extra usage label (currency from sub-core) | ✅ | Extra usage can show on/off state |
 | GitHub Copilot | Month | Model multiplier + requests left | ✅ | Requests left uses model multiplier |
 | Google Gemini | Pro, Flash | - | ✅ | Quotas aggregated per model family |
 | OpenAI Codex | Primary, Secondary | Remaining-style display | ✅ | Primary label derived from window duration |
@@ -102,7 +102,7 @@ Display and provider UI settings are persisted next to the extension entry (`set
 
 ### Provider UI Settings
 
-Use `sub-bar:settings` → Provider Settings to control enabled state (auto/on/off), status indicators, and per-provider window visibility.
+Use `sub-bar:settings` → Provider Settings to control enabled state (auto/on/off), status indicators, and per-provider window visibility. Anthropic extra usage amounts use the currency from sub-core overage configuration (if present).
 
 ### Core Settings
 

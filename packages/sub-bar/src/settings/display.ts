@@ -12,42 +12,49 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			label: "Alignment",
 			currentValue: settings.display.alignment,
 			values: ["left", "center", "right", "split"] as DisplayAlignment[],
+			description: "Align the usage line inside the widget.",
 		},
 		{
 			id: "widgetWrapping",
 			label: "Widget Wrapping",
 			currentValue: settings.display.widgetWrapping,
 			values: ["truncate", "wrap"] as WidgetWrapping[],
+			description: "Wrap the usage line or truncate with ellipsis.",
 		},
 		{
 			id: "resetTimePosition",
 			label: "Reset Timer",
 			currentValue: settings.display.resetTimePosition,
 			values: ["off", "front", "back", "integrated"],
+			description: "Where to show the reset timer in each window.",
 		},
 		{
 			id: "resetTimeFormat",
 			label: "Reset Timer Format",
 			currentValue: settings.display.resetTimeFormat ?? "relative",
 			values: ["relative", "datetime"] as ResetTimeFormat[],
+			description: "Show relative countdown or reset datetime.",
 		},
 		{
 			id: "showUsageLabels",
 			label: "Show Usage Labels",
 			currentValue: settings.display.showUsageLabels ? "on" : "off",
 			values: ["on", "off"],
+			description: "Show “used/rem.” labels after percentages.",
 		},
 		{
 			id: "paddingX",
 			label: "Padding X",
 			currentValue: String(settings.display.paddingX ?? 0),
 			values: ["0", "1", "2", "3", "4"],
+			description: "Add left/right padding inside the widget.",
 		},
 		{
 			id: "widgetPlacement",
 			label: "Widget Placement",
 			currentValue: settings.display.widgetPlacement ?? "aboveEditor",
 			values: ["aboveEditor", "belowEditor"] as WidgetPlacement[],
+			description: "Place the widget above or below the editor.",
 		},
 	];
 }
@@ -59,6 +66,7 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 			label: "Base Color",
 			currentValue: settings.display.baseTextColor,
 			values: ["dim", "muted", "text"] as BaseTextColor[],
+			description: "Base color for neutral labels and dividers.",
 		},
 		{
 			id: "colorScheme",
@@ -69,24 +77,28 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 				"success-base-warning-error",
 				"monochrome",
 			] as ColorScheme[],
+			description: "Choose how usage levels are color-coded.",
 		},
 		{
 			id: "errorThreshold",
 			label: "Error Threshold (%)",
 			currentValue: String(settings.display.errorThreshold),
 			values: ["10", "15", "20", "25", "30", "35", "40"],
+			description: "Percent remaining below which usage is red.",
 		},
 		{
 			id: "warningThreshold",
 			label: "Warning Threshold (%)",
 			currentValue: String(settings.display.warningThreshold),
 			values: ["30", "40", "50", "60", "70"],
+			description: "Percent remaining below which usage is yellow.",
 		},
 		{
 			id: "successThreshold",
 			label: "Success Threshold (%)",
 			currentValue: String(settings.display.successThreshold),
 			values: ["60", "70", "75", "80", "90"],
+			description: "Percent remaining above which usage is green.",
 		},
 	];
 }
@@ -104,6 +116,7 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 				"braille",
 				"shade",
 			] as BarType[],
+			description: "Choose the bar glyph style for usage.",
 		},
 	];
 
@@ -113,6 +126,7 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 			label: "H. Bar Character",
 			currentValue: settings.display.barCharacter,
 			values: ["light", "heavy", "double", "block"],
+			description: "Select the horizontal bar line weight.",
 		});
 	}
 
@@ -122,12 +136,14 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 			label: "Bar Width",
 			currentValue: String(settings.display.barWidth),
 			values: ["1", "4", "6", "8", "10", "12", "fill"],
+			description: "Set the bar width or fill available space.",
 		},
 		{
 			id: "containBar",
 			label: "Contain Bar",
 			currentValue: settings.display.containBar ? "on" : "off",
 			values: ["on", "off"],
+			description: "Wrap the bar with ▕ and ▏ caps.",
 		},
 	);
 
@@ -137,6 +153,7 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 			label: "Braille Empty Fill",
 			currentValue: settings.display.brailleFillEmpty ? "on" : "off",
 			values: ["on", "off"],
+			description: "Fill empty braille cells with dim blocks.",
 		});
 	}
 
@@ -145,6 +162,7 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 		label: "Bar Style",
 		currentValue: settings.display.barStyle,
 		values: ["bar", "percentage", "both"] as BarStyle[],
+		description: "Show bar, percentage, or both.",
 	});
 
 	return items;
@@ -157,18 +175,21 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 			label: "Show Provider Name",
 			currentValue: settings.display.showProviderName ? "on" : "off",
 			values: ["on", "off"],
+			description: "Toggle the provider name prefix.",
 		},
 		{
 			id: "providerLabel",
 			label: "Provider Label",
 			currentValue: settings.display.providerLabel,
 			values: ["none", "plan", "subscription", "sub"] as ProviderLabel[],
+			description: "Suffix appended after the provider name.",
 		},
 		{
 			id: "providerLabelColon",
 			label: "Provider Label Colon",
 			currentValue: settings.display.providerLabelColon ? "on" : "off",
 			values: ["on", "off"],
+			description: "Show a colon after the provider label.",
 		},
 	];
 }
@@ -181,6 +202,7 @@ export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
 			label: "Status Mode",
 			currentValue: mode,
 			values: ["icon", "color", "icon+color"] as StatusIndicatorMode[],
+			description: "Use icons, color tint, or both for status indicators.",
 		},
 	];
 
@@ -190,6 +212,7 @@ export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
 			label: "Status Icon Pack",
 			currentValue: settings.display.statusIconPack ?? "emoji",
 			values: ["minimal", "emoji", "shapes"] as StatusIconPack[],
+			description: "Pick the icon set used for status indicators.",
 		});
 	}
 
@@ -199,12 +222,14 @@ export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
 			label: "Show Status Text",
 			currentValue: settings.display.statusText ? "on" : "off",
 			values: ["on", "off"],
+			description: "Show the textual status description next to the icon.",
 		},
 		{
 			id: "statusDismissOk",
 			label: "Dismiss Operational Status",
 			currentValue: settings.display.statusDismissOk ? "on" : "off",
 			values: ["on", "off"],
+			description: "Hide status text/icons when there are no incidents.",
 		}
 	);
 
@@ -218,24 +243,28 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			label: "Divider Character",
 			currentValue: settings.display.dividerCharacter,
 			values: ["none", "blank", "|", "•", "●", "○", "◇"] as DividerCharacter[],
+			description: "Choose the divider glyph between windows.",
 		},
 		{
 			id: "dividerBlanks",
 			label: "Blanks Before/After Divider",
 			currentValue: String(settings.display.dividerBlanks),
 			values: ["0", "1", "2", "3", "fill"],
+			description: "Padding around the divider character.",
 		},
 		{
 			id: "showTopDivider",
 			label: "Show Top Divider",
 			currentValue: settings.display.showTopDivider ? "on" : "off",
 			values: ["on", "off"],
+			description: "Show a divider line above the widget.",
 		},
 		{
 			id: "showBottomDivider",
 			label: "Show Bottom Divider",
 			currentValue: settings.display.showBottomDivider ? "on" : "off",
 			values: ["on", "off"],
+			description: "Show a divider line below the widget.",
 		},
 
 	];

@@ -14,12 +14,14 @@ function buildBaseProviderItems(ps: CoreProviderSettings): SettingItem[] {
 			label: "Enabled",
 			currentValue: enabledValue,
 			values: ["auto", "on", "off"],
+			description: "Auto enables if credentials are detected.",
 		},
 		{
 			id: "fetchStatus",
 			label: "Fetch Status",
 			currentValue: ps.fetchStatus ? "on" : "off",
 			values: ["on", "off"],
+			description: "Fetch status page indicator for this provider.",
 		},
 	];
 }

@@ -12,24 +12,28 @@ export function buildBehaviorItems(settings: Settings): SettingItem[] {
 			label: "Auto-refresh Interval",
 			currentValue: settings.behavior.refreshInterval === 0 ? "off" : `${settings.behavior.refreshInterval}s`,
 			values: ["off", "30s", "60s", "120s", "300s"],
+			description: "How often to refresh usage data automatically.",
 		},
 		{
 			id: "refreshOnTurnStart",
 			label: "Refresh on Turn Start",
 			currentValue: settings.behavior.refreshOnTurnStart ? "on" : "off",
 			values: ["on", "off"],
+			description: "Refresh usage when a new turn starts.",
 		},
 		{
 			id: "refreshOnToolResult",
 			label: "Refresh on Tool Result",
 			currentValue: settings.behavior.refreshOnToolResult ? "on" : "off",
 			values: ["on", "off"],
+			description: "Refresh usage after tool executions.",
 		},
 		{
 			id: "autoDetectProvider",
 			label: "Auto-detect Provider",
 			currentValue: settings.behavior.autoDetectProvider ? "on" : "off",
 			values: ["on", "off"],
+			description: "Detect provider from the active model.",
 		},
 	];
 }

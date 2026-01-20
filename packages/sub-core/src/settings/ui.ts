@@ -12,7 +12,7 @@ import { getSettings, saveSettings, resetSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
 import { buildBehaviorItems, applyBehaviorChange } from "./behavior.js";
-import { buildMainMenuItems, buildProviderListItems, buildProviderOrderItems, buildDefaultProviderItems } from "./menu.js";
+import { buildMainMenuItems, buildProviderListItems, buildProviderOrderItems, buildDefaultProviderItems, type TooltipSelectItem } from "./menu.js";
 
 /**
  * Settings category
@@ -57,6 +57,24 @@ export async function showSettingsUI(
 
 			function rebuild(): void {
 				container = new Container();
+				let tooltipText: Text | null = null;
+
+				const attachTooltip = (items: TooltipSelectItem[], selectList: SelectList): void => {
+					if (!items.some((item) => item.tooltip)) return;
+					const tooltipComponent = new Text("", 1, 0);
+					const setTooltip = (item?: TooltipSelectItem | null) => {
+						const tooltip = item?.tooltip?.trim();
+						tooltipComponent.setText(tooltip ? theme.fg("dim", tooltip) : "");
+					};
+					setTooltip(selectList.getSelectedItem() as TooltipSelectItem | null);
+					const existingHandler = selectList.onSelectionChange;
+					selectList.onSelectionChange = (item) => {
+						if (existingHandler) existingHandler(item);
+						setTooltip(item as TooltipSelectItem);
+						tui.requestRender();
+					};
+					tooltipText = tooltipComponent;
+				};
 
 				// Top border
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
@@ -84,6 +102,7 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
 						if (item.value === "reset") {
 							settings = resetSettings();
@@ -114,6 +133,7 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
 						currentCategory = item.value as SettingsCategory;
 						rebuild();
@@ -183,6 +203,8 @@ export async function showSettingsUI(
 						rebuild();
 						tui.requestRender();
 					};
+
+					attachTooltip(items, selectList);
 
 					selectList.onSelect = () => {
 						if (items.length === 0) return;
@@ -266,6 +288,10 @@ export async function showSettingsUI(
 					} else {
 						helpText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
 					}
+					if (tooltipText) {
+						container.addChild(new Spacer(1));
+						container.addChild(tooltipText);
+					}
 					container.addChild(new Spacer(1));
 					container.addChild(new Text(theme.fg("dim", helpText), 1, 0));
 				}
@@ -283,12 +309,30 @@ export async function showSettingsUI(
 					scrollInfo: (t: string) => theme.fg("dim", t),
 					noMatch: (t: string) => theme.fg("warning", t),
 				});
+				const hasTooltip = items.some((item) => item.tooltip);
+				const tooltipText = hasTooltip ? new Text("", 1, 0) : null;
+
+				if (tooltipText) {
+					const setTooltip = (item?: TooltipSelectItem | null) => {
+						const tooltip = item?.tooltip?.trim();
+						tooltipText.setText(tooltip ? theme.fg("dim", tooltip) : "");
+					};
+					setTooltip(selectList.getSelectedItem() as TooltipSelectItem | null);
+					selectList.onSelectionChange = (item) => {
+						setTooltip(item as TooltipSelectItem);
+						tui.requestRender();
+					};
+				}
 
 				container = new Container();
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 				container.addChild(new Text(theme.fg("accent", theme.bold("Pinned Provider")), 1, 0));
 				container.addChild(new Spacer(1));
 				container.addChild(selectList);
+				if (tooltipText) {
+					container.addChild(new Spacer(1));
+					container.addChild(tooltipText);
+				}
 				container.addChild(new Spacer(1));
 				container.addChild(new Text(theme.fg("dim", "↑↓ navigate • Enter/Space select • Esc back"), 1, 0));
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
