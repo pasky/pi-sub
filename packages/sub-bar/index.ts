@@ -8,11 +8,10 @@ import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-cod
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
+import type { CoreSettings } from "pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
-
-type CoreSettings = Pick<Settings, "providers" | "behavior" | "providerOrder" | "defaultProvider">;
 
 type SubCoreRequest = {
 	type?: "current";
@@ -119,7 +118,6 @@ export default function createExtension(pi: ExtensionAPI) {
 
 	function applyCoreSettings(coreSettings?: CoreSettings): void {
 		if (!coreSettings) return;
-		settings.providers = coreSettings.providers ?? settings.providers;
 		settings.behavior = coreSettings.behavior ?? settings.behavior;
 		settings.providerOrder = coreSettings.providerOrder ?? settings.providerOrder;
 		settings.defaultProvider = coreSettings.defaultProvider ?? settings.defaultProvider;

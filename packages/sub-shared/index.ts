@@ -54,66 +54,19 @@ export interface ProviderUsageEntry {
 	usage?: UsageSnapshot;
 }
 
-export interface BaseProviderSettings {
+export interface CoreProviderSettings {
 	enabled: boolean;
 	displayName?: string;
-	showStatus: boolean;
+	fetchStatus: boolean;
 }
 
-export interface AnthropicProviderSettings extends BaseProviderSettings {
-	showExtraUsage: boolean;
-	extraUsageCurrency: "EUR" | "USD";
-	windows: {
-		show5h: boolean;
-		show7d: boolean;
-		showExtra: boolean;
-	};
-}
-
-export interface CopilotProviderSettings extends BaseProviderSettings {
-	showMultiplier: boolean;
-	showRequestsLeft: boolean;
-	quotaDisplay: "percentage" | "requests";
-	windows: {
-		showMonth: boolean;
-	};
-}
-
-export interface GeminiProviderSettings extends BaseProviderSettings {
-	windows: {
-		showPro: boolean;
-		showFlash: boolean;
-	};
-}
-
-export interface CodexProviderSettings extends BaseProviderSettings {
-	invertUsage: boolean;
-	windows: {
-		showPrimary: boolean;
-		showSecondary: boolean;
-	};
-}
-
-export interface KiroProviderSettings extends BaseProviderSettings {
-	windows: {
-		showCredits: boolean;
-	};
-}
-
-export interface ZaiProviderSettings extends BaseProviderSettings {
-	windows: {
-		showTokens: boolean;
-		showMonthly: boolean;
-	};
-}
-
-export interface ProviderSettingsMap {
-	anthropic: AnthropicProviderSettings;
-	copilot: CopilotProviderSettings;
-	gemini: GeminiProviderSettings;
-	codex: CodexProviderSettings;
-	kiro: KiroProviderSettings;
-	zai: ZaiProviderSettings;
+export interface CoreProviderSettingsMap {
+	anthropic: CoreProviderSettings;
+	copilot: CoreProviderSettings;
+	gemini: CoreProviderSettings;
+	codex: CoreProviderSettings;
+	kiro: CoreProviderSettings;
+	zai: CoreProviderSettings;
 }
 
 export interface BehaviorSettings {
@@ -124,7 +77,7 @@ export interface BehaviorSettings {
 }
 
 export interface CoreSettings {
-	providers: ProviderSettingsMap;
+	providers: CoreProviderSettingsMap;
 	behavior: BehaviorSettings;
 	providerOrder: ProviderName[];
 	defaultProvider: ProviderName | null;

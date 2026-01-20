@@ -131,8 +131,9 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const showProviderName = settings?.display.showProviderName ?? true;
 	if (!showProviderName) return "";
 
+	const showStatus = settings?.providers[usage.provider]?.showStatus ?? true;
 	const statusIndicator =
-		usage.status && usage.status.indicator !== "none" && usage.status.indicator !== "unknown"
+		showStatus && usage.status && usage.status.indicator !== "none" && usage.status.indicator !== "unknown"
 			? getStatusEmoji(usage.status)
 			: "";
 	const providerLabelSetting = settings?.display.providerLabel ?? "none";

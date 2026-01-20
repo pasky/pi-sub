@@ -71,20 +71,70 @@ export type BarWidth = 1 | 4 | 6 | 8 | 10 | 12 | "fill";
 export type DividerBlanks = 0 | 1 | 2 | 3 | "fill";
 
 /**
- * Shared provider + behavior settings
+ * Provider settings (UI-only)
  */
-export type {
-	BaseProviderSettings,
-	AnthropicProviderSettings,
-	CopilotProviderSettings,
-	GeminiProviderSettings,
-	CodexProviderSettings,
-	KiroProviderSettings,
-	ZaiProviderSettings,
-	ProviderSettingsMap,
-	BehaviorSettings,
-	CoreSettings,
-} from "pi-sub-shared";
+export interface BaseProviderSettings {
+	/** Show status indicator */
+	showStatus: boolean;
+}
+
+export interface AnthropicProviderSettings extends BaseProviderSettings {
+	showExtraUsage: boolean;
+	extraUsageCurrency: "EUR" | "USD";
+	windows: {
+		show5h: boolean;
+		show7d: boolean;
+		showExtra: boolean;
+	};
+}
+
+export interface CopilotProviderSettings extends BaseProviderSettings {
+	showMultiplier: boolean;
+	showRequestsLeft: boolean;
+	quotaDisplay: "percentage" | "requests";
+	windows: {
+		showMonth: boolean;
+	};
+}
+
+export interface GeminiProviderSettings extends BaseProviderSettings {
+	windows: {
+		showPro: boolean;
+		showFlash: boolean;
+	};
+}
+
+export interface CodexProviderSettings extends BaseProviderSettings {
+	invertUsage: boolean;
+	windows: {
+		showPrimary: boolean;
+		showSecondary: boolean;
+	};
+}
+
+export interface KiroProviderSettings extends BaseProviderSettings {
+	windows: {
+		showCredits: boolean;
+	};
+}
+
+export interface ZaiProviderSettings extends BaseProviderSettings {
+	windows: {
+		showTokens: boolean;
+		showMonthly: boolean;
+	};
+}
+
+export interface ProviderSettingsMap {
+	anthropic: AnthropicProviderSettings;
+	copilot: CopilotProviderSettings;
+	gemini: GeminiProviderSettings;
+	codex: CodexProviderSettings;
+	kiro: KiroProviderSettings;
+	zai: ZaiProviderSettings;
+}
+
+export type { BehaviorSettings, CoreSettings } from "pi-sub-shared";
 
 /**
  * Display settings
@@ -145,9 +195,11 @@ export interface DisplaySettings {
 /**
  * All settings
  */
-export interface Settings extends CoreSettings {
+export interface Settings extends Omit<CoreSettings, "providers"> {
 	/** Version for migration */
 	version: number;
+	/** Provider-specific UI settings */
+	providers: ProviderSettingsMap;
 	/** Display settings */
 	display: DisplaySettings;
 }
@@ -165,7 +217,6 @@ export function getDefaultSettings(): Settings {
 		version: SETTINGS_VERSION,
 		providers: {
 			anthropic: {
-				enabled: true,
 				showStatus: true,
 				showExtraUsage: true,
 				extraUsageCurrency: "EUR",
@@ -176,7 +227,6 @@ export function getDefaultSettings(): Settings {
 				},
 			},
 			copilot: {
-				enabled: true,
 				showStatus: true,
 				showMultiplier: true,
 				showRequestsLeft: true,
@@ -186,7 +236,6 @@ export function getDefaultSettings(): Settings {
 				},
 			},
 			gemini: {
-				enabled: true,
 				showStatus: true,
 				windows: {
 					showPro: true,
@@ -194,7 +243,6 @@ export function getDefaultSettings(): Settings {
 				},
 			},
 			codex: {
-				enabled: true,
 				showStatus: true,
 				invertUsage: false,
 				windows: {
@@ -203,14 +251,12 @@ export function getDefaultSettings(): Settings {
 				},
 			},
 			kiro: {
-				enabled: true,
 				showStatus: false,
 				windows: {
 					showCredits: true,
 				},
 			},
 			zai: {
-				enabled: true,
 				showStatus: false,
 				windows: {
 					showTokens: true,

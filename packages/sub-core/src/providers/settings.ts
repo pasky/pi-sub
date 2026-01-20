@@ -4,18 +4,9 @@
 
 import type { SettingItem } from "@mariozechner/pi-tui";
 import type { ProviderName } from "../types.js";
-import type {
-	Settings,
-	BaseProviderSettings,
-	AnthropicProviderSettings,
-	CopilotProviderSettings,
-	GeminiProviderSettings,
-	CodexProviderSettings,
-	KiroProviderSettings,
-	ZaiProviderSettings,
-} from "../settings-types.js";
+import type { Settings, CoreProviderSettings } from "../settings-types.js";
 
-function buildBaseProviderItems(ps: BaseProviderSettings): SettingItem[] {
+function buildBaseProviderItems(ps: CoreProviderSettings): SettingItem[] {
 	return [
 		{
 			id: "enabled",
@@ -24,21 +15,21 @@ function buildBaseProviderItems(ps: BaseProviderSettings): SettingItem[] {
 			values: ["on", "off"],
 		},
 		{
-			id: "showStatus",
-			label: "Show Status",
-			currentValue: ps.showStatus ? "on" : "off",
+			id: "fetchStatus",
+			label: "Fetch Status",
+			currentValue: ps.fetchStatus ? "on" : "off",
 			values: ["on", "off"],
 		},
 	];
 }
 
-function applyBaseProviderSetting(ps: BaseProviderSettings, id: string, value: string): boolean {
+function applyBaseProviderSetting(ps: CoreProviderSettings, id: string, value: string): boolean {
 	switch (id) {
 		case "enabled":
 			ps.enabled = value === "on";
 			return true;
-		case "showStatus":
-			ps.showStatus = value === "on";
+		case "fetchStatus":
+			ps.fetchStatus = value === "on";
 			return true;
 		default:
 			return false;
@@ -50,145 +41,7 @@ function applyBaseProviderSetting(ps: BaseProviderSettings, id: string, value: s
  */
 export function buildProviderSettingsItems(settings: Settings, provider: ProviderName): SettingItem[] {
 	const ps = settings.providers[provider];
-	const items: SettingItem[] = [...buildBaseProviderItems(ps)];
-
-	if (provider === "anthropic") {
-		const anthroSettings = ps as AnthropicProviderSettings;
-		items.push(
-			{
-				id: "showExtraUsage",
-				label: "Show Extra Usage",
-				currentValue: anthroSettings.showExtraUsage ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "extraUsageCurrency",
-				label: "Extra Usage Currency",
-				currentValue: anthroSettings.extraUsageCurrency,
-				values: ["EUR", "USD"],
-			},
-			{
-				id: "show5h",
-				label: "Show 5h Window",
-				currentValue: anthroSettings.windows.show5h ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "show7d",
-				label: "Show 7d Window",
-				currentValue: anthroSettings.windows.show7d ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "showExtra",
-				label: "Show Extra Window",
-				currentValue: anthroSettings.windows.showExtra ? "on" : "off",
-				values: ["on", "off"],
-			},
-		);
-	}
-
-	if (provider === "copilot") {
-		const copilotSettings = ps as CopilotProviderSettings;
-		items.push(
-			{
-				id: "showMultiplier",
-				label: "Show Model Multiplier",
-				currentValue: copilotSettings.showMultiplier ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "showRequestsLeft",
-				label: "Show Requests Remaining",
-				currentValue: copilotSettings.showRequestsLeft ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "quotaDisplay",
-				label: "Show Quota in",
-				currentValue: copilotSettings.quotaDisplay,
-				values: ["percentage", "requests"],
-			},
-			{
-				id: "showMonth",
-				label: "Show Month Window",
-				currentValue: copilotSettings.windows.showMonth ? "on" : "off",
-				values: ["on", "off"],
-			},
-		);
-	}
-
-	if (provider === "gemini") {
-		const geminiSettings = ps as GeminiProviderSettings;
-		items.push(
-			{
-				id: "showPro",
-				label: "Show Pro Window",
-				currentValue: geminiSettings.windows.showPro ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "showFlash",
-				label: "Show Flash Window",
-				currentValue: geminiSettings.windows.showFlash ? "on" : "off",
-				values: ["on", "off"],
-			},
-		);
-	}
-
-	if (provider === "codex") {
-		const codexSettings = ps as CodexProviderSettings;
-		items.push(
-			{
-				id: "invertUsage",
-				label: "Invert Usage",
-				currentValue: codexSettings.invertUsage ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "showPrimary",
-				label: "Show Primary Window",
-				currentValue: codexSettings.windows.showPrimary ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "showSecondary",
-				label: "Show Secondary Window",
-				currentValue: codexSettings.windows.showSecondary ? "on" : "off",
-				values: ["on", "off"],
-			},
-		);
-	}
-
-	if (provider === "kiro") {
-		const kiroSettings = ps as KiroProviderSettings;
-		items.push({
-			id: "showCredits",
-			label: "Show Credits Window",
-			currentValue: kiroSettings.windows.showCredits ? "on" : "off",
-			values: ["on", "off"],
-		});
-	}
-
-	if (provider === "zai") {
-		const zaiSettings = ps as ZaiProviderSettings;
-		items.push(
-			{
-				id: "showTokens",
-				label: "Show Tokens Window",
-				currentValue: zaiSettings.windows.showTokens ? "on" : "off",
-				values: ["on", "off"],
-			},
-			{
-				id: "showMonthly",
-				label: "Show Monthly Window",
-				currentValue: zaiSettings.windows.showMonthly ? "on" : "off",
-				values: ["on", "off"],
-			},
-		);
-	}
-
-	return items;
+	return buildBaseProviderItems(ps);
 }
 
 /**
@@ -201,96 +54,6 @@ export function applyProviderSettingsChange(
 	value: string
 ): Settings {
 	const ps = settings.providers[provider];
-	if (applyBaseProviderSetting(ps, id, value)) {
-		return settings;
-	}
-
-	if (provider === "anthropic") {
-		const anthroSettings = ps as AnthropicProviderSettings;
-		switch (id) {
-			case "showExtraUsage":
-				anthroSettings.showExtraUsage = value === "on";
-				break;
-			case "extraUsageCurrency":
-				anthroSettings.extraUsageCurrency = value as "EUR" | "USD";
-				break;
-			case "show5h":
-				anthroSettings.windows.show5h = value === "on";
-				break;
-			case "show7d":
-				anthroSettings.windows.show7d = value === "on";
-				break;
-			case "showExtra":
-				anthroSettings.windows.showExtra = value === "on";
-				break;
-		}
-	}
-
-	if (provider === "copilot") {
-		const copilotSettings = ps as CopilotProviderSettings;
-		switch (id) {
-			case "showMultiplier":
-				copilotSettings.showMultiplier = value === "on";
-				break;
-			case "showRequestsLeft":
-				copilotSettings.showRequestsLeft = value === "on";
-				break;
-			case "quotaDisplay":
-				copilotSettings.quotaDisplay = value as "percentage" | "requests";
-				break;
-			case "showMonth":
-				copilotSettings.windows.showMonth = value === "on";
-				break;
-		}
-	}
-
-	if (provider === "gemini") {
-		const geminiSettings = ps as GeminiProviderSettings;
-		switch (id) {
-			case "showPro":
-				geminiSettings.windows.showPro = value === "on";
-				break;
-			case "showFlash":
-				geminiSettings.windows.showFlash = value === "on";
-				break;
-		}
-	}
-
-	if (provider === "codex") {
-		const codexSettings = ps as CodexProviderSettings;
-		switch (id) {
-			case "invertUsage":
-				codexSettings.invertUsage = value === "on";
-				break;
-			case "showPrimary":
-				codexSettings.windows.showPrimary = value === "on";
-				break;
-			case "showSecondary":
-				codexSettings.windows.showSecondary = value === "on";
-				break;
-		}
-	}
-
-	if (provider === "kiro") {
-		const kiroSettings = ps as KiroProviderSettings;
-		switch (id) {
-			case "showCredits":
-				kiroSettings.windows.showCredits = value === "on";
-				break;
-		}
-	}
-
-	if (provider === "zai") {
-		const zaiSettings = ps as ZaiProviderSettings;
-		switch (id) {
-			case "showTokens":
-				zaiSettings.windows.showTokens = value === "on";
-				break;
-			case "showMonthly":
-				zaiSettings.windows.showMonthly = value === "on";
-				break;
-		}
-	}
-
+	applyBaseProviderSetting(ps, id, value);
 	return settings;
 }

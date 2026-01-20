@@ -80,8 +80,8 @@ Until then, manual paths/symlinks work as documented above.
 
 The extension loads automatically. Use:
 
-- `sub-bar:settings` - Open the display settings UI
-- `sub-core:settings` - Configure provider + behavior settings
+- `sub-bar:settings` - Open display + provider UI settings
+- `sub-core:settings` - Configure provider enablement/order + behavior settings
 - `Ctrl+Alt+P` - Cycle through available providers
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
 
@@ -94,15 +94,19 @@ The extension loads automatically. Use:
 
 `sub-bar` is a display client. It listens for `sub-core:update-current`/`sub-core:ready` events and renders the widget. On startup it requests the current state via `sub-core:request`.
 
-`sub-bar` only manages display settings. Provider + behavior settings are configured in `sub-core:settings`, and sub-core broadcasts updates that sub-bar consumes. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
+`sub-bar` manages display settings and UI-only provider options (window visibility, labels, status indicator). Provider enablement, ordering, and refresh behavior are configured in `sub-core:settings`, and sub-core broadcasts updates that sub-bar consumes. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
 
 ## Settings
 
-Display settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Provider + behavior settings are managed by sub-core.
+Display and provider UI settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Core settings are managed by sub-core.
 
-### Provider + Behavior Settings
+### Provider UI Settings
 
-Use `sub-core:settings` to configure provider visibility, window toggles, quotas, refresh behavior, provider order, and pinned provider.
+Use `sub-bar:settings` → Provider Settings to control status indicators and per-provider window visibility.
+
+### Core Settings
+
+Use `sub-core:settings` to configure provider enablement, fetch status, refresh behavior, provider order, and pinned provider.
 
 ### Display Settings
 

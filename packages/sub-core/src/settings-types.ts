@@ -2,18 +2,12 @@
  * Settings types and defaults for sub-core
  */
 
-import type { CoreSettings } from "pi-sub-shared";
+import type { CoreSettings, CoreProviderSettingsMap, CoreProviderSettings, BehaviorSettings, ProviderName } from "pi-sub-shared";
 import { PROVIDERS } from "pi-sub-shared";
 
 export type {
-	BaseProviderSettings,
-	AnthropicProviderSettings,
-	CopilotProviderSettings,
-	GeminiProviderSettings,
-	CodexProviderSettings,
-	KiroProviderSettings,
-	ZaiProviderSettings,
-	ProviderSettingsMap,
+	CoreProviderSettings,
+	CoreProviderSettingsMap,
 	BehaviorSettings,
 	CoreSettings,
 } from "pi-sub-shared";
@@ -40,56 +34,27 @@ export function getDefaultSettings(): Settings {
 		providers: {
 			anthropic: {
 				enabled: true,
-				showStatus: true,
-				showExtraUsage: true,
-				extraUsageCurrency: "EUR",
-				windows: {
-					show5h: true,
-					show7d: true,
-					showExtra: true,
-				},
+				fetchStatus: true,
 			},
 			copilot: {
 				enabled: true,
-				showStatus: true,
-				showMultiplier: true,
-				showRequestsLeft: true,
-				quotaDisplay: "percentage",
-				windows: {
-					showMonth: true,
-				},
+				fetchStatus: true,
 			},
 			gemini: {
 				enabled: true,
-				showStatus: true,
-				windows: {
-					showPro: true,
-					showFlash: true,
-				},
+				fetchStatus: true,
 			},
 			codex: {
 				enabled: true,
-				showStatus: true,
-				invertUsage: false,
-				windows: {
-					showPrimary: true,
-					showSecondary: true,
-				},
+				fetchStatus: true,
 			},
 			kiro: {
 				enabled: true,
-				showStatus: false,
-				windows: {
-					showCredits: true,
-				},
+				fetchStatus: false,
 			},
 			zai: {
 				enabled: true,
-				showStatus: false,
-				windows: {
-					showTokens: true,
-					showMonthly: true,
-				},
+				fetchStatus: false,
 			},
 		},
 		behavior: {

@@ -5,19 +5,30 @@
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-agent";
 import { Container, SelectList, type SettingItem, SettingsList, Spacer, Text } from "@mariozechner/pi-tui";
+import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings } from "../settings.js";
+import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
+import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
 import { buildDisplayLayoutItems, buildDisplayColorItems, buildDisplayBarItems, buildDisplayProviderItems, buildDisplayDividerItems, applyDisplayChange } from "./display.js";
 import {
+	buildMainMenuItems,
+	buildProviderListItems,
 	buildDisplayMenuItems,
 	buildDisplayPresetItems,
+	getProviderFromCategory,
 } from "./menu.js";
 
 /**
  * Settings category
  */
+type ProviderCategory = `provider-${ProviderName}`;
+
 type SettingsCategory =
+	| "main"
+	| "providers"
+	| ProviderCategory
 	| "display"
 	| "display-layout"
 	| "display-color"
@@ -60,7 +71,7 @@ export async function showSettingsUI(
 	onSettingsChange?: (settings: Settings) => void | Promise<void>
 ): Promise<Settings> {
 	let settings = getSettings();
-	let currentCategory: SettingsCategory = "display";
+	let currentCategory: SettingsCategory = "main";
 
 	return new Promise((resolve) => {
 		ctx.ui.custom<Settings>((tui, theme, _kb, done) => {
@@ -75,7 +86,9 @@ export async function showSettingsUI(
 
 				// Title
 				const titles: Record<string, string> = {
-					display: "sub-bar Settings",
+					main: "sub-bar Settings",
+					providers: "Provider Settings",
+					display: "Display Settings",
 					"display-layout": "Layout & Content",
 					"display-color": "Color Scheme",
 					"display-bar": "Bar",
@@ -83,11 +96,105 @@ export async function showSettingsUI(
 					"display-divider": "Divider",
 					"display-presets": "Load Presets",
 				};
-				const title = titles[currentCategory] ?? "Display Settings";
+				const providerCategory = getProviderFromCategory(currentCategory);
+				const title = providerCategory
+					? `${PROVIDER_DISPLAY_NAMES[providerCategory]} Settings`
+					: (titles[currentCategory] ?? "sub-bar Settings");
 				container.addChild(new Text(theme.fg("accent", theme.bold(title)), 1, 0));
 				container.addChild(new Spacer(1));
 
-				if (currentCategory === "display") {
+				if (currentCategory === "main") {
+					const items = buildMainMenuItems(settings);
+					const selectList = new SelectList(items, Math.min(items.length, 10), {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					selectList.onSelect = (item) => {
+						if (item.value === "reset-display") {
+							const defaults = getDefaultSettings();
+							settings.display = { ...defaults.display };
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+							ctx.ui.notify("Display settings reset to defaults", "info");
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						if (item.value === "reset-providers") {
+							const defaults = getDefaultSettings();
+							settings.providers = { ...defaults.providers };
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+							ctx.ui.notify("Provider settings reset to defaults", "info");
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						currentCategory = item.value as SettingsCategory;
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						saveSettings(settings);
+						done(settings);
+					};
+					activeList = selectList;
+					container.addChild(selectList);
+				} else if (currentCategory === "providers") {
+					const items = buildProviderListItems(settings);
+					const selectList = new SelectList(items, Math.min(items.length, 10), {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					selectList.onSelect = (item) => {
+						currentCategory = item.value as SettingsCategory;
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						currentCategory = "main";
+						rebuild();
+						tui.requestRender();
+					};
+					activeList = selectList;
+					container.addChild(selectList);
+				} else if (providerCategory) {
+					const items = buildProviderSettingsItems(settings, providerCategory);
+					const handleChange = (id: string, value: string) => {
+						settings = applyProviderSettingsChange(settings, providerCategory, id, value);
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+					};
+					const settingsHintText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
+					const customTheme = {
+						...getSettingsListTheme(),
+						hint: (text: string) => {
+							if (text.includes("Enter/Space")) {
+								return theme.fg("dim", settingsHintText);
+							}
+							return theme.fg("dim", text);
+						},
+					};
+					const settingsList = new SettingsList(
+						items,
+						Math.min(items.length + 2, 15),
+						customTheme,
+						handleChange,
+						() => {
+							currentCategory = "providers";
+							rebuild();
+							tui.requestRender();
+						}
+					);
+					activeList = settingsList;
+					container.addChild(settingsList);
+				} else if (currentCategory === "display") {
 					const items = buildDisplayMenuItems();
 					const selectList = new SelectList(items, Math.min(items.length, 10), {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
@@ -102,8 +209,9 @@ export async function showSettingsUI(
 						tui.requestRender();
 					};
 					selectList.onCancel = () => {
-						saveSettings(settings);
-						done(settings);
+						currentCategory = "main";
+						rebuild();
+						tui.requestRender();
 					};
 					activeList = selectList;
 					container.addChild(selectList);
@@ -201,6 +309,7 @@ export async function showSettingsUI(
 
 				// Help text
 				const usesSettingsList =
+					Boolean(providerCategory) ||
 					currentCategory === "display-layout" ||
 					currentCategory === "display-color" ||
 					currentCategory === "display-bar" ||
@@ -209,6 +318,8 @@ export async function showSettingsUI(
 				if (!usesSettingsList) {
 					let helpText: string;
 					if (
+						currentCategory === "main" ||
+						currentCategory === "providers" ||
 						currentCategory === "display" ||
 						currentCategory === "display-presets"
 					) {

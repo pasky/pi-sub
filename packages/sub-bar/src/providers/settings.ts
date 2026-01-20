@@ -18,12 +18,6 @@ import type {
 function buildBaseProviderItems(ps: BaseProviderSettings): SettingItem[] {
 	return [
 		{
-			id: "enabled",
-			label: "Enabled",
-			currentValue: ps.enabled ? "on" : "off",
-			values: ["on", "off"],
-		},
-		{
 			id: "showStatus",
 			label: "Show Status",
 			currentValue: ps.showStatus ? "on" : "off",
@@ -34,9 +28,6 @@ function buildBaseProviderItems(ps: BaseProviderSettings): SettingItem[] {
 
 function applyBaseProviderSetting(ps: BaseProviderSettings, id: string, value: string): boolean {
 	switch (id) {
-		case "enabled":
-			ps.enabled = value === "on";
-			return true;
 		case "showStatus":
 			ps.showStatus = value === "on";
 			return true;

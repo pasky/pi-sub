@@ -41,7 +41,11 @@ export function loadSettings(): Settings {
 			const content = storage.readFile(SETTINGS_PATH);
 			if (content) {
 				const loaded = JSON.parse(content) as Partial<Settings>;
-				cachedSettings = mergeSettings({ version: loaded.version, display: loaded.display } as Partial<Settings>);
+				cachedSettings = mergeSettings({
+					version: loaded.version,
+					display: loaded.display,
+					providers: loaded.providers,
+				} as Partial<Settings>);
 				return cachedSettings;
 			}
 		}
@@ -61,7 +65,11 @@ export function saveSettings(settings: Settings): boolean {
 	const storage = getStorage();
 	try {
 		ensureSettingsDir();
-		const content = JSON.stringify({ version: settings.version, display: settings.display }, null, 2);
+		const content = JSON.stringify({
+			version: settings.version,
+			display: settings.display,
+			providers: settings.providers,
+		}, null, 2);
 		storage.writeFile(SETTINGS_PATH, content);
 		cachedSettings = settings;
 		return true;
@@ -77,7 +85,7 @@ export function saveSettings(settings: Settings): boolean {
 export function resetSettings(): Settings {
 	const defaults = getDefaultSettings();
 	const current = getSettings();
-	const next = { ...current, display: defaults.display, version: defaults.version };
+	const next = { ...current, display: defaults.display, providers: defaults.providers, version: defaults.version };
 	saveSettings(next);
 	return next;
 }

@@ -44,7 +44,7 @@ export function buildProviderListItems(settings: Settings): SelectItem[] {
 	return PROVIDERS.map((provider) => {
 		const ps = settings.providers[provider];
 		const status = ps.enabled ? "enabled" : "disabled";
-		const statusIcon = ps.showStatus ? ", status on" : "";
+		const statusIcon = ps.fetchStatus ? ", status fetch on" : "";
 		return {
 			value: `provider-${provider}`,
 			label: PROVIDER_DISPLAY_NAMES[provider],

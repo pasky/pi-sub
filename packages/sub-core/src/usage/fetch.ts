@@ -33,7 +33,7 @@ export async function fetchUsageForProvider(
 			const providerInstance = createProvider(provider);
 			const usage = await providerInstance.fetchUsage(deps);
 			let status;
-			if (settings.providers[provider].showStatus && providerHasStatus(provider, providerInstance)) {
+			if (settings.providers[provider].fetchStatus && providerHasStatus(provider, providerInstance)) {
 				status = await fetchProviderStatusWithFallback(provider, providerInstance, deps);
 			} else {
 				status = { indicator: "none" as const };
