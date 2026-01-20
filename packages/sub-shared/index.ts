@@ -54,6 +54,82 @@ export interface ProviderUsageEntry {
 	usage?: UsageSnapshot;
 }
 
+export interface BaseProviderSettings {
+	enabled: boolean;
+	displayName?: string;
+	showStatus: boolean;
+}
+
+export interface AnthropicProviderSettings extends BaseProviderSettings {
+	showExtraUsage: boolean;
+	extraUsageCurrency: "EUR" | "USD";
+	windows: {
+		show5h: boolean;
+		show7d: boolean;
+		showExtra: boolean;
+	};
+}
+
+export interface CopilotProviderSettings extends BaseProviderSettings {
+	showMultiplier: boolean;
+	showRequestsLeft: boolean;
+	quotaDisplay: "percentage" | "requests";
+	windows: {
+		showMonth: boolean;
+	};
+}
+
+export interface GeminiProviderSettings extends BaseProviderSettings {
+	windows: {
+		showPro: boolean;
+		showFlash: boolean;
+	};
+}
+
+export interface CodexProviderSettings extends BaseProviderSettings {
+	invertUsage: boolean;
+	windows: {
+		showPrimary: boolean;
+		showSecondary: boolean;
+	};
+}
+
+export interface KiroProviderSettings extends BaseProviderSettings {
+	windows: {
+		showCredits: boolean;
+	};
+}
+
+export interface ZaiProviderSettings extends BaseProviderSettings {
+	windows: {
+		showTokens: boolean;
+		showMonthly: boolean;
+	};
+}
+
+export interface ProviderSettingsMap {
+	anthropic: AnthropicProviderSettings;
+	copilot: CopilotProviderSettings;
+	gemini: GeminiProviderSettings;
+	codex: CodexProviderSettings;
+	kiro: KiroProviderSettings;
+	zai: ZaiProviderSettings;
+}
+
+export interface BehaviorSettings {
+	refreshInterval: number;
+	refreshOnTurnStart: boolean;
+	refreshOnToolResult: boolean;
+	autoDetectProvider: boolean;
+}
+
+export interface CoreSettings {
+	providers: ProviderSettingsMap;
+	behavior: BehaviorSettings;
+	providerOrder: ProviderName[];
+	defaultProvider: ProviderName | null;
+}
+
 export type SubCoreState = {
 	provider?: ProviderName;
 	usage?: UsageSnapshot;

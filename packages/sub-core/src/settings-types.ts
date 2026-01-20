@@ -1,198 +1,41 @@
 /**
- * Settings types and defaults for sub-bar
+ * Settings types and defaults for sub-core
  */
 
-import type { ProviderName } from "./types.js";
-import { PROVIDERS } from "./providers/metadata.js";
+import type {
+	ProviderName,
+	ProviderSettingsMap,
+	BehaviorSettings,
+	CoreSettings,
+	BaseProviderSettings,
+	AnthropicProviderSettings,
+	CopilotProviderSettings,
+	GeminiProviderSettings,
+	CodexProviderSettings,
+	KiroProviderSettings,
+	ZaiProviderSettings,
+} from "pi-sub-shared";
+import { PROVIDERS } from "pi-sub-shared";
 
-/**
- * Bar display style
- */
-export type BarStyle = "bar" | "percentage" | "both";
-
-/**
- * Color scheme for usage bars
- */
-export type ColorScheme = "traffic-light" | "gradient" | "monochrome";
-
-/**
- * Progress bar character style
- */
-export type BarCharacter = "light" | "heavy" | "double" | "block";
-
-/**
- * Divider character style
- */
-export type DividerCharacter = "blank" | "|" | "•" | "●" | "○" | "◇";
-
-/**
- * Widget line wrapping mode
- */
-export type WidgetWrapping = "truncate" | "wrap";
-
-/**
- * Base provider settings (shared by all providers)
- */
-export interface BaseProviderSettings {
-	/** Whether this provider is enabled */
-	enabled: boolean;
-	/** Custom display name (optional) */
-	displayName?: string;
-	/** Show status indicator from status page */
-	showStatus: boolean;
-}
-
-/**
- * Anthropic-specific provider settings
- */
-export interface AnthropicProviderSettings extends BaseProviderSettings {
-	/** Show extra usage info */
-	showExtraUsage: boolean;
-	/** Currency for extra usage display */
-	extraUsageCurrency: "EUR" | "USD";
-	/** Visible windows */
-	windows: {
-		show5h: boolean;
-		show7d: boolean;
-		showExtra: boolean;
-	};
-}
-
-/**
- * Copilot-specific provider settings
- */
-export interface CopilotProviderSettings extends BaseProviderSettings {
-	/** Show model multiplier info */
-	showMultiplier: boolean;
-	/** Show requests remaining calculation */
-	showRequestsLeft: boolean;
-	/** Show quota as percentage or requests */
-	quotaDisplay: "percentage" | "requests";
-	/** Visible windows */
-	windows: {
-		showMonth: boolean;
-	};
-}
-
-/**
- * Gemini-specific provider settings
- */
-export interface GeminiProviderSettings extends BaseProviderSettings {
-	/** Visible windows */
-	windows: {
-		showPro: boolean;
-		showFlash: boolean;
-	};
-}
-
-/**
- * Codex-specific provider settings
- */
-export interface CodexProviderSettings extends BaseProviderSettings {
-	/** Invert remaining/used percentage (Codex usage page style) */
-	invertUsage: boolean;
-	/** Visible windows */
-	windows: {
-		showPrimary: boolean;
-		showSecondary: boolean;
-	};
-}
-
-/**
- * Kiro-specific provider settings
- */
-export interface KiroProviderSettings extends BaseProviderSettings {
-	/** Visible windows */
-	windows: {
-		showCredits: boolean;
-	};
-}
-
-/**
- * z.ai-specific provider settings
- */
-export interface ZaiProviderSettings extends BaseProviderSettings {
-	/** Visible windows */
-	windows: {
-		showTokens: boolean;
-		showMonthly: boolean;
-	};
-}
-
-/**
- * Provider settings map with specific types for providers that have extra settings
- */
-export interface ProviderSettingsMap {
-	anthropic: AnthropicProviderSettings;
-	copilot: CopilotProviderSettings;
-	gemini: GeminiProviderSettings;
-	codex: CodexProviderSettings;
-	kiro: KiroProviderSettings;
-	zai: ZaiProviderSettings;
-}
-
-/**
- * Display settings
- */
-export interface DisplaySettings {
-	/** Bar display style */
-	barStyle: BarStyle;
-	/** Width of the progress bar in characters */
-	barWidth: number;
-	/** Progress bar character */
-	barCharacter: BarCharacter;
-	/** Color scheme for bars */
-	colorScheme: ColorScheme;
-	/** Reset time display position */
-	resetTimePosition: "off" | "front" | "back" | "integrated";
-	/** Show provider display name */
-	showProviderName: boolean;
-	/** Show usage labels (used/rem.) */
-	showUsageLabels: boolean;
-	/** Divider character */
-	dividerCharacter: DividerCharacter;
-	/** Blanks before and after divider (0 or 1) */
-	dividerBlanks: 0 | 1;
-	/** Widget line wrapping */
-	widgetWrapping: WidgetWrapping;
-	/** Error threshold (percentage remaining below this = red) */
-	errorThreshold: number;
-	/** Warning threshold (percentage remaining below this = yellow) */
-	warningThreshold: number;
-	/** Success threshold (percentage remaining above this = green, gradient only) */
-	successThreshold: number;
-}
-
-/**
- * Behavior settings
- */
-export interface BehaviorSettings {
-	/** Auto-refresh interval in seconds (0 = disabled) */
-	refreshInterval: number;
-	/** Refresh on turn start */
-	refreshOnTurnStart: boolean;
-	/** Refresh on tool result */
-	refreshOnToolResult: boolean;
-	/** Auto-detect provider from model */
-	autoDetectProvider: boolean;
-}
+export type {
+	BaseProviderSettings,
+	AnthropicProviderSettings,
+	CopilotProviderSettings,
+	GeminiProviderSettings,
+	CodexProviderSettings,
+	KiroProviderSettings,
+	ZaiProviderSettings,
+	ProviderSettingsMap,
+	BehaviorSettings,
+	CoreSettings,
+} from "pi-sub-shared";
 
 /**
  * All settings
  */
-export interface Settings {
+export interface Settings extends CoreSettings {
 	/** Version for migration */
 	version: number;
-	/** Provider-specific settings */
-	providers: ProviderSettingsMap;
-	/** Display settings */
-	display: DisplaySettings;
-	/** Behavior settings */
-	behavior: BehaviorSettings;
-	/** Provider order for cycling */
-	providerOrder: ProviderName[];
-	/** Default/pinned provider (null = auto-detect) */
-	defaultProvider: ProviderName | null;
 }
 
 /**
@@ -261,21 +104,6 @@ export function getDefaultSettings(): Settings {
 				},
 			},
 		},
-		display: {
-			barStyle: "both",
-			barWidth: 6,
-			barCharacter: "double",
-			colorScheme: "traffic-light",
-			resetTimePosition: "front",
-			showProviderName: true,
-			showUsageLabels: true,
-			dividerCharacter: "•",
-			dividerBlanks: 1,
-			errorThreshold: 25,
-			warningThreshold: 50,
-			widgetWrapping: "truncate",
-			successThreshold: 75,
-		},
 		behavior: {
 			refreshInterval: 60,
 			refreshOnTurnStart: true,
@@ -291,10 +119,10 @@ export function getDefaultSettings(): Settings {
  * Deep merge two objects
  */
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
-	const result = { ...target };
+	const result = { ...target } as T;
 	for (const key of Object.keys(source) as (keyof T)[]) {
 		const sourceValue = source[key];
-		const targetValue = target[key];
+		const targetValue = result[key];
 		if (
 			sourceValue !== undefined &&
 			typeof sourceValue === "object" &&
@@ -304,7 +132,7 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 			targetValue !== null &&
 			!Array.isArray(targetValue)
 		) {
-			result[key] = deepMerge(targetValue, sourceValue as Partial<typeof targetValue>);
+			result[key] = deepMerge(targetValue as object, sourceValue as object) as T[keyof T];
 		} else if (sourceValue !== undefined) {
 			result[key] = sourceValue as T[keyof T];
 		}
@@ -315,7 +143,12 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 /**
  * Migrate settings from older versions
  */
-export function migrateSettings(loaded: Partial<Settings> & { copilot?: { showMultiplier?: boolean; showRequestsLeft?: boolean }; anthropic?: { showExtraUsage?: boolean; extraUsageCurrency?: "EUR" | "USD" } }): Settings {
+export function migrateSettings(
+	loaded: Partial<Settings> & {
+		copilot?: { showMultiplier?: boolean; showRequestsLeft?: boolean };
+		anthropic?: { showExtraUsage?: boolean; extraUsageCurrency?: "EUR" | "USD" };
+	}
+): Settings {
 	const defaults = getDefaultSettings();
 
 	// If no version, it's either new or very old
@@ -331,7 +164,7 @@ export function migrateSettings(loaded: Partial<Settings> & { copilot?: { showMu
 				loaded.providers = {} as ProviderSettingsMap;
 			}
 			if (!loaded.providers.copilot) {
-				loaded.providers.copilot = { ...defaults.providers.copilot };
+				loaded.providers.copilot = { ...defaults.providers.copilot } as CopilotProviderSettings;
 			}
 			if (loaded.copilot.showMultiplier !== undefined) {
 				loaded.providers.copilot.showMultiplier = loaded.copilot.showMultiplier;
@@ -346,7 +179,7 @@ export function migrateSettings(loaded: Partial<Settings> & { copilot?: { showMu
 				loaded.providers = {} as ProviderSettingsMap;
 			}
 			if (!loaded.providers.anthropic) {
-				loaded.providers.anthropic = { ...defaults.providers.anthropic };
+				loaded.providers.anthropic = { ...defaults.providers.anthropic } as AnthropicProviderSettings;
 			}
 			if (loaded.anthropic.showExtraUsage !== undefined) {
 				loaded.providers.anthropic.showExtraUsage = loaded.anthropic.showExtraUsage;
@@ -359,39 +192,5 @@ export function migrateSettings(loaded: Partial<Settings> & { copilot?: { showMu
 		loaded.version = 2;
 	}
 
-	// Migrate old barCharacter values (hyphen/equals/double-line -> light/heavy/double)
-	if (loaded.display?.barCharacter) {
-		const oldToNew: Record<string, BarCharacter> = {
-			"hyphen": "light",
-			"equals": "heavy",
-			"double-line": "double",
-			"block": "block",
-		};
-		const oldValue = loaded.display.barCharacter as string;
-		if (oldValue in oldToNew) {
-			loaded.display.barCharacter = oldToNew[oldValue];
-		}
-	}
-
-	// Migrate showResetTime to resetTimePosition
-	if (loaded.display) {
-		const legacyDisplay = loaded.display as {
-			showResetTime?: boolean;
-			leadingDivider?: boolean;
-			trailingDivider?: boolean;
-		};
-		if (legacyDisplay.showResetTime !== undefined) {
-			loaded.display.resetTimePosition = legacyDisplay.showResetTime ? "front" : "off";
-			delete legacyDisplay.showResetTime;
-		}
-		if (legacyDisplay.leadingDivider !== undefined) {
-			delete legacyDisplay.leadingDivider;
-		}
-		if (legacyDisplay.trailingDivider !== undefined) {
-			delete legacyDisplay.trailingDivider;
-		}
-	}
-
-	// Version-specific migrations would go here for future versions
 	return deepMerge(defaults, loaded as Partial<Settings>);
 }

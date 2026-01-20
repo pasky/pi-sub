@@ -2,8 +2,8 @@
  * Settings types and defaults for sub-bar
  */
 
-import type { ProviderName } from "./types.js";
-import { PROVIDERS } from "./providers/metadata.js";
+import type { ProviderName, ProviderSettingsMap, BehaviorSettings, CoreSettings } from "pi-sub-shared";
+import { PROVIDERS } from "pi-sub-shared";
 
 /**
  * Bar display style
@@ -71,105 +71,20 @@ export type BarWidth = 1 | 4 | 6 | 8 | 10 | 12 | "fill";
 export type DividerBlanks = 0 | 1 | 2 | 3 | "fill";
 
 /**
- * Base provider settings (shared by all providers)
+ * Shared provider + behavior settings
  */
-export interface BaseProviderSettings {
-	/** Whether this provider is enabled */
-	enabled: boolean;
-	/** Custom display name (optional) */
-	displayName?: string;
-	/** Show status indicator from status page */
-	showStatus: boolean;
-}
-
-/**
- * Anthropic-specific provider settings
- */
-export interface AnthropicProviderSettings extends BaseProviderSettings {
-	/** Show extra usage info */
-	showExtraUsage: boolean;
-	/** Currency for extra usage display */
-	extraUsageCurrency: "EUR" | "USD";
-	/** Visible windows */
-	windows: {
-		show5h: boolean;
-		show7d: boolean;
-		showExtra: boolean;
-	};
-}
-
-/**
- * Copilot-specific provider settings
- */
-export interface CopilotProviderSettings extends BaseProviderSettings {
-	/** Show model multiplier info */
-	showMultiplier: boolean;
-	/** Show requests remaining calculation */
-	showRequestsLeft: boolean;
-	/** Show quota as percentage or requests */
-	quotaDisplay: "percentage" | "requests";
-	/** Visible windows */
-	windows: {
-		showMonth: boolean;
-	};
-}
-
-/**
- * Gemini-specific provider settings
- */
-export interface GeminiProviderSettings extends BaseProviderSettings {
-	/** Visible windows */
-	windows: {
-		showPro: boolean;
-		showFlash: boolean;
-	};
-}
-
-/**
- * Codex-specific provider settings
- */
-export interface CodexProviderSettings extends BaseProviderSettings {
-	/** Invert remaining/used percentage (Codex usage page style) */
-	invertUsage: boolean;
-	/** Visible windows */
-	windows: {
-		showPrimary: boolean;
-		showSecondary: boolean;
-	};
-}
-
-/**
- * Kiro-specific provider settings
- */
-export interface KiroProviderSettings extends BaseProviderSettings {
-	/** Visible windows */
-	windows: {
-		showCredits: boolean;
-	};
-}
-
-/**
- * z.ai-specific provider settings
- */
-export interface ZaiProviderSettings extends BaseProviderSettings {
-	/** Visible windows */
-	windows: {
-		showTokens: boolean;
-		showMonthly: boolean;
-	};
-}
-
-/**
- * Provider settings map with specific types for providers that have extra settings
- */
-export interface ProviderSettingsMap {
-	anthropic: AnthropicProviderSettings;
-	copilot: CopilotProviderSettings;
-	gemini: GeminiProviderSettings;
-	codex: CodexProviderSettings;
-	kiro: KiroProviderSettings;
-	zai: ZaiProviderSettings;
-}
+export type {
+	BaseProviderSettings,
+	AnthropicProviderSettings,
+	CopilotProviderSettings,
+	GeminiProviderSettings,
+	CodexProviderSettings,
+	KiroProviderSettings,
+	ZaiProviderSettings,
+	ProviderSettingsMap,
+	BehaviorSettings,
+	CoreSettings,
+} from "pi-sub-shared";
 
 /**
  * Display settings
@@ -228,35 +143,13 @@ export interface DisplaySettings {
 }
 
 /**
- * Behavior settings
- */
-export interface BehaviorSettings {
-	/** Auto-refresh interval in seconds (0 = disabled) */
-	refreshInterval: number;
-	/** Refresh on turn start */
-	refreshOnTurnStart: boolean;
-	/** Refresh on tool result */
-	refreshOnToolResult: boolean;
-	/** Auto-detect provider from model */
-	autoDetectProvider: boolean;
-}
-
-/**
  * All settings
  */
-export interface Settings {
+export interface Settings extends CoreSettings {
 	/** Version for migration */
 	version: number;
-	/** Provider-specific settings */
-	providers: ProviderSettingsMap;
 	/** Display settings */
 	display: DisplaySettings;
-	/** Behavior settings */
-	behavior: BehaviorSettings;
-	/** Provider order for cycling */
-	providerOrder: ProviderName[];
-	/** Default/pinned provider (null = auto-detect) */
-	defaultProvider: ProviderName | null;
 }
 
 /**
