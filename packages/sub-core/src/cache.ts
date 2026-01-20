@@ -139,6 +139,7 @@ export function watchCacheUpdates(options?: CacheWatchOptions): () => void {
 
 	const emitFromCache = () => {
 		try {
+			if (fs.existsSync(LOCK_PATH)) return;
 			const stat = fs.statSync(CACHE_PATH, { throwIfNoEntry: false });
 			if (!stat || !stat.mtimeMs) return;
 			if (stat.mtimeMs === lastMtimeMs) return;

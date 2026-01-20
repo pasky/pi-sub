@@ -81,6 +81,16 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 	};
 
 	let lastAllSnapshot = "";
+	let lastCurrentSnapshot = "";
+
+	const emitCurrentUpdate = (provider?: ProviderName, usage?: UsageSnapshot): void => {
+		lastState = { provider, usage };
+		const payload = JSON.stringify(lastState);
+		if (payload === lastCurrentSnapshot) return;
+		lastCurrentSnapshot = payload;
+		pi.events.emit("sub-core:update-current", { state: lastState });
+	};
+
 	const unsubscribeCacheSnapshot = onCacheSnapshot((cache: Cache) => {
 		const ttlMs = settings.behavior.refreshInterval * 1000;
 		const now = Date.now();
@@ -105,21 +115,13 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		if (!controllerState.currentProvider || provider !== controllerState.currentProvider) return;
 		const usage = entry?.usage ? { ...entry.usage, status: entry.status } : undefined;
 		controllerState.cachedUsage = usage;
-		lastState = {
-			provider: controllerState.currentProvider,
-			usage,
-		};
-		pi.events.emit("sub-core:update-current", { state: lastState });
+		emitCurrentUpdate(controllerState.currentProvider, usage);
 	});
 
 	const stopCacheWatch = watchCacheUpdates();
 
 	function emitUpdate(update: UsageUpdate): void {
-		lastState = {
-			provider: update.provider,
-			usage: update.usage,
-		};
-		pi.events.emit("sub-core:update-current", { state: lastState });
+		emitCurrentUpdate(update.provider, update.usage);
 	}
 
 	async function refresh(ctx: ExtensionContext, options?: { force?: boolean }) {
