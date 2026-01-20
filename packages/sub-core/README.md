@@ -13,11 +13,11 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 `sub-core` registers tools to expose usage snapshots to Pi:
 
 - `sub_get_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
-- `sub_get_all_usage` – refreshes and returns all enabled provider entries.
+- `sub_get_all_usage` – refreshes and returns all enabled provider entries (auto-enabled providers require credentials).
 
 ## Settings
 
-Use `sub-core:settings` to configure shared provider + behavior settings.
+Use `sub-core:settings` to configure shared provider + behavior settings. Provider enablement supports `auto` (default), `on`, and `off` — `auto` enables a provider only when credentials are detected.
 
 ## Installation
 

@@ -10,6 +10,7 @@ import { isExpectedMissingData } from "../errors.js";
 import { fetchUsageForProvider } from "./fetch.js";
 import type { Dependencies } from "../types.js";
 import { getCachedData } from "../cache.js";
+import { hasProviderCredentials } from "../providers/registry.js";
 
 export interface UsageControllerState {
 	currentProvider?: ProviderName;
@@ -26,8 +27,15 @@ export interface UsageUpdate {
 export type UsageUpdateHandler = (update: UsageUpdate) => void;
 
 export function createUsageController(deps: Dependencies) {
+	function isProviderAvailable(settings: Settings, provider: ProviderName): boolean {
+		const setting = settings.providers[provider];
+		if (setting.enabled === "off" || setting.enabled === false) return false;
+		if (setting.enabled === "on" || setting.enabled === true) return true;
+		return hasProviderCredentials(provider, deps);
+	}
+
 	function getEnabledProviders(settings: Settings): ProviderName[] {
-		return settings.providerOrder.filter((p) => settings.providers[p].enabled);
+		return settings.providerOrder.filter((p) => isProviderAvailable(settings, p));
 	}
 
 	function resolveProvider(
@@ -35,15 +43,15 @@ export function createUsageController(deps: Dependencies) {
 		settings: Settings,
 		state: UsageControllerState
 	): ProviderName | undefined {
-		if (state.pinnedProvider && settings.providers[state.pinnedProvider].enabled) {
+		if (state.pinnedProvider && isProviderAvailable(settings, state.pinnedProvider)) {
 			return state.pinnedProvider;
 		}
-		if (settings.defaultProvider && settings.providers[settings.defaultProvider].enabled) {
+		if (settings.defaultProvider && isProviderAvailable(settings, settings.defaultProvider)) {
 			return settings.defaultProvider;
 		}
 		if (settings.behavior.autoDetectProvider) {
 			const detected = detectProviderFromModel(ctx.model);
-			if (detected && settings.providers[detected].enabled) {
+			if (detected && isProviderAvailable(settings, detected)) {
 				return detected;
 			}
 		}

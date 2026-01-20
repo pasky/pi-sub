@@ -12,6 +12,10 @@ export class KiroProvider extends BaseProvider {
 	readonly name = "kiro" as const;
 	readonly displayName = "Kiro Plan";
 
+	hasCredentials(deps: Dependencies): boolean {
+		return Boolean(whichSync("kiro-cli", deps));
+	}
+
 	async fetchUsage(deps: Dependencies): Promise<UsageSnapshot> {
 		const kiroBinary = whichSync("kiro-cli", deps);
 		if (!kiroBinary) {

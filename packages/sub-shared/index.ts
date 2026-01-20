@@ -54,8 +54,10 @@ export interface ProviderUsageEntry {
 	usage?: UsageSnapshot;
 }
 
+export type ProviderEnabledSetting = "auto" | "on" | "off" | boolean;
+
 export interface CoreProviderSettings {
-	enabled: boolean;
+	enabled: ProviderEnabledSetting;
 	displayName?: string;
 	fetchStatus: boolean;
 }
@@ -74,6 +76,33 @@ export interface BehaviorSettings {
 	refreshOnTurnStart: boolean;
 	refreshOnToolResult: boolean;
 	autoDetectProvider: boolean;
+}
+
+export const DEFAULT_BEHAVIOR_SETTINGS: BehaviorSettings = {
+	refreshInterval: 60,
+	refreshOnTurnStart: true,
+	refreshOnToolResult: true,
+	autoDetectProvider: true,
+};
+
+export function getDefaultCoreProviderSettings(): CoreProviderSettingsMap {
+	const defaults = {} as CoreProviderSettingsMap;
+	for (const provider of PROVIDERS) {
+		defaults[provider] = {
+			enabled: "auto" as ProviderEnabledSetting,
+			fetchStatus: Boolean(PROVIDER_METADATA[provider]?.status),
+		};
+	}
+	return defaults;
+}
+
+export function getDefaultCoreSettings(): CoreSettings {
+	return {
+		providers: getDefaultCoreProviderSettings(),
+		behavior: { ...DEFAULT_BEHAVIOR_SETTINGS },
+		providerOrder: [...PROVIDERS],
+		defaultProvider: null,
+	};
 }
 
 export interface CoreSettings {

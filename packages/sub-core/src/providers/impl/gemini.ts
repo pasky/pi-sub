@@ -42,6 +42,10 @@ export class GeminiProvider extends BaseProvider {
 	readonly name = "gemini" as const;
 	readonly displayName = "Gemini Plan";
 
+	hasCredentials(deps: Dependencies): boolean {
+		return Boolean(loadGeminiToken(deps));
+	}
+
 	async fetchUsage(deps: Dependencies): Promise<UsageSnapshot> {
 		const token = loadGeminiToken(deps);
 		if (!token) {

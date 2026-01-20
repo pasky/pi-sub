@@ -8,7 +8,7 @@ import type { ProviderName } from "../types.js";
 import { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 
 export function buildMainMenuItems(settings: Settings): SelectItem[] {
-	const enabledCount = Object.values(settings.providers).filter((p) => p.enabled).length;
+	const enabledCount = Object.values(settings.providers).filter((p) => p.enabled !== "off" && p.enabled !== false).length;
 	const totalCount = Object.keys(settings.providers).length;
 
 	return [
@@ -43,18 +43,21 @@ export function buildMainMenuItems(settings: Settings): SelectItem[] {
 export function buildProviderListItems(settings: Settings): SelectItem[] {
 	return PROVIDERS.map((provider) => {
 		const ps = settings.providers[provider];
-		const status = ps.enabled ? "enabled" : "disabled";
+		const enabledValue = ps.enabled === "auto" ? "auto" : ps.enabled === true || ps.enabled === "on" ? "on" : "off";
 		const statusIcon = ps.fetchStatus ? ", status fetch on" : "";
 		return {
 			value: `provider-${provider}`,
 			label: PROVIDER_DISPLAY_NAMES[provider],
-			description: `${status}${statusIcon}`,
+			description: `enabled ${enabledValue}${statusIcon}`,
 		};
 	});
 }
 
 export function buildProviderOrderItems(settings: Settings): SelectItem[] {
-	const activeProviders = settings.providerOrder.filter((provider) => settings.providers[provider].enabled);
+	const activeProviders = settings.providerOrder.filter((provider) => {
+		const enabled = settings.providers[provider].enabled;
+		return enabled !== "off" && enabled !== false;
+	});
 	return activeProviders.map((provider, index) => ({
 		value: provider,
 		label: `${index + 1}. ${PROVIDER_DISPLAY_NAMES[provider]}`,
@@ -71,7 +74,8 @@ export function buildDefaultProviderItems(settings: Settings): SelectItem[] {
 	];
 
 	for (const provider of settings.providerOrder) {
-		if (settings.providers[provider].enabled) {
+		const enabled = settings.providers[provider].enabled;
+		if (enabled !== "off" && enabled !== false) {
 			items.push({
 				value: provider,
 				label:

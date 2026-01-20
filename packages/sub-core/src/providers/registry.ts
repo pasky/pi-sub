@@ -9,7 +9,7 @@ export { CodexProvider } from "./impl/codex.js";
 export { KiroProvider } from "./impl/kiro.js";
 export { ZaiProvider } from "./impl/zai.js";
 
-import type { ProviderName } from "../types.js";
+import type { Dependencies, ProviderName } from "../types.js";
 import type { UsageProvider } from "../provider.js";
 import { PROVIDERS } from "./metadata.js";
 import { AnthropicProvider } from "./impl/anthropic.js";
@@ -40,4 +40,12 @@ export function createProvider(name: ProviderName): UsageProvider {
  */
 export function getAllProviders(): UsageProvider[] {
 	return PROVIDERS.map((name) => PROVIDER_FACTORIES[name]());
+}
+
+export function hasProviderCredentials(name: ProviderName, deps: Dependencies): boolean {
+	const provider = createProvider(name);
+	if (provider.hasCredentials) {
+		return provider.hasCredentials(deps);
+	}
+	return true;
 }

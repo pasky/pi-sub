@@ -36,6 +36,10 @@ export class ZaiProvider extends BaseProvider {
 	readonly name = "zai" as const;
 	readonly displayName = "z.ai Plan";
 
+	hasCredentials(deps: Dependencies): boolean {
+		return Boolean(loadZaiApiKey(deps));
+	}
+
 	async fetchUsage(deps: Dependencies): Promise<UsageSnapshot> {
 		const apiKey = loadZaiApiKey(deps);
 		if (!apiKey) {

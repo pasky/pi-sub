@@ -8,7 +8,7 @@ import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-cod
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings } from "./src/settings-types.js";
-import type { CoreSettings } from "pi-sub-shared";
+import { getDefaultCoreSettings, type CoreSettings } from "pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
@@ -33,6 +33,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	let settings: Settings = loadSettings();
 	let currentUsage: UsageSnapshot | undefined;
 	let coreAvailable = false;
+	let coreSettings: CoreSettings = getDefaultCoreSettings();
 
 	function renderUsageWidget(ctx: ExtensionContext, usage: UsageSnapshot | undefined, message?: string): void {
 		if (!usage && !message) {
@@ -116,11 +117,12 @@ export default function createExtension(pi: ExtensionAPI) {
 		}
 	}
 
-	function applyCoreSettings(coreSettings?: CoreSettings): void {
-		if (!coreSettings) return;
-		settings.behavior = coreSettings.behavior ?? settings.behavior;
-		settings.providerOrder = coreSettings.providerOrder ?? settings.providerOrder;
-		settings.defaultProvider = coreSettings.defaultProvider ?? settings.defaultProvider;
+	function applyCoreSettings(next?: CoreSettings): void {
+		if (!next) return;
+		coreSettings = next;
+		settings.behavior = next.behavior ?? settings.behavior;
+		settings.providerOrder = next.providerOrder ?? settings.providerOrder;
+		settings.defaultProvider = next.defaultProvider ?? settings.defaultProvider;
 	}
 
 	function emitCoreAction(action: SubCoreAction): void {
@@ -179,11 +181,21 @@ export default function createExtension(pi: ExtensionAPI) {
 	pi.registerCommand("sub-bar:settings", {
 		description: "Open sub-bar settings",
 		handler: async (_args, ctx) => {
-			const newSettings = await showSettingsUI(ctx, async (updatedSettings) => {
-				settings = updatedSettings;
-				if (lastContext) {
-					renderUsageWidget(lastContext, currentUsage);
-				}
+			const newSettings = await showSettingsUI(ctx, {
+				coreSettings,
+				onSettingsChange: async (updatedSettings) => {
+					settings = updatedSettings;
+					if (lastContext) {
+						renderUsageWidget(lastContext, currentUsage);
+					}
+				},
+				onCoreSettingsChange: async (updatedCore) => {
+					coreSettings = updatedCore;
+					pi.events.emit("sub-core:settings:patch", { patch: { providers: updatedCore.providers } });
+					if (lastContext) {
+						renderUsageWidget(lastContext, currentUsage);
+					}
+				},
 			});
 			settings = newSettings;
 			if (lastContext) {

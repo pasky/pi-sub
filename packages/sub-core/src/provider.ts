@@ -20,6 +20,11 @@ export interface UsageProvider {
 	 * Fetch current status for this provider (optional)
 	 */
 	fetchStatus?(deps: Dependencies): Promise<ProviderStatus>;
+
+	/**
+	 * Check if credentials are available (optional)
+	 */
+	hasCredentials?(deps: Dependencies): boolean;
 }
 
 /**
@@ -30,6 +35,10 @@ export abstract class BaseProvider implements UsageProvider {
 	abstract readonly displayName: string;
 
 	abstract fetchUsage(deps: Dependencies): Promise<UsageSnapshot>;
+
+	hasCredentials(_deps: Dependencies): boolean {
+		return true;
+	}
 
 	/**
 	 * Create an empty snapshot with an error

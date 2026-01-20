@@ -2,14 +2,15 @@
  * Settings types and defaults for sub-core
  */
 
-import type { CoreSettings, CoreProviderSettingsMap, CoreProviderSettings, BehaviorSettings, ProviderName } from "pi-sub-shared";
-import { PROVIDERS } from "pi-sub-shared";
+import type { CoreSettings, CoreProviderSettingsMap, CoreProviderSettings, BehaviorSettings, ProviderName, ProviderEnabledSetting } from "pi-sub-shared";
+import { PROVIDERS, getDefaultCoreSettings } from "pi-sub-shared";
 
 export type {
 	CoreProviderSettings,
 	CoreProviderSettingsMap,
 	BehaviorSettings,
 	CoreSettings,
+	ProviderEnabledSetting,
 } from "pi-sub-shared";
 
 /**
@@ -29,42 +30,13 @@ export const SETTINGS_VERSION = 2;
  * Default settings
  */
 export function getDefaultSettings(): Settings {
+	const coreDefaults = getDefaultCoreSettings();
 	return {
 		version: SETTINGS_VERSION,
-		providers: {
-			anthropic: {
-				enabled: true,
-				fetchStatus: true,
-			},
-			copilot: {
-				enabled: true,
-				fetchStatus: true,
-			},
-			gemini: {
-				enabled: true,
-				fetchStatus: true,
-			},
-			codex: {
-				enabled: true,
-				fetchStatus: true,
-			},
-			kiro: {
-				enabled: true,
-				fetchStatus: false,
-			},
-			zai: {
-				enabled: true,
-				fetchStatus: false,
-			},
-		},
-		behavior: {
-			refreshInterval: 60,
-			refreshOnTurnStart: true,
-			refreshOnToolResult: true,
-			autoDetectProvider: true,
-		},
-		providerOrder: [...PROVIDERS],
-		defaultProvider: null,
+		providers: coreDefaults.providers,
+		behavior: coreDefaults.behavior,
+		providerOrder: coreDefaults.providerOrder,
+		defaultProvider: coreDefaults.defaultProvider,
 	};
 }
 

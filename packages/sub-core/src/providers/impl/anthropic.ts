@@ -48,6 +48,10 @@ export class AnthropicProvider extends BaseProvider {
 	readonly name = "anthropic" as const;
 	readonly displayName = "Claude Plan";
 
+	hasCredentials(deps: Dependencies): boolean {
+		return Boolean(loadClaudeToken(deps));
+	}
+
 	async fetchUsage(deps: Dependencies): Promise<UsageSnapshot> {
 		const token = loadClaudeToken(deps);
 		if (!token) {

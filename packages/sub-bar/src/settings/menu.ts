@@ -3,6 +3,7 @@
  */
 
 import type { SelectItem } from "@mariozechner/pi-tui";
+import type { CoreProviderSettingsMap } from "pi-sub-shared";
 import type { Settings } from "../settings-types.js";
 import type { ProviderName } from "../types.js";
 import { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
@@ -19,17 +20,30 @@ export function buildMainMenuItems(settings: Settings): SelectItem[] {
 			label: "Display Settings",
 			description: `${settings.display.barStyle} style, divider: ${settings.display.dividerCharacter}`,
 		},
+		{
+			value: "open-core-settings",
+			label: "Change additional settings in sub-core",
+			description: "open sub-core settings",
+		},
 	];
 }
 
-export function buildProviderListItems(settings: Settings): SelectItem[] {
+export function buildProviderListItems(settings: Settings, coreProviders?: CoreProviderSettingsMap): SelectItem[] {
 	const items = PROVIDERS.map((provider) => {
 		const ps = settings.providers[provider];
+		const core = coreProviders?.[provider];
+		const enabledValue = core
+			? core.enabled === "auto"
+				? "auto"
+				: core.enabled === true || core.enabled === "on"
+					? "on"
+					: "off"
+			: "auto";
 		const status = ps.showStatus ? "status on" : "status off";
 		return {
 			value: `provider-${provider}`,
 			label: PROVIDER_DISPLAY_NAMES[provider],
-			description: status,
+			description: `enabled ${enabledValue}, ${status}`,
 		};
 	});
 

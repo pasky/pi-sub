@@ -94,19 +94,19 @@ The extension loads automatically. Use:
 
 `sub-bar` is a display client. It listens for `sub-core:update-current`/`sub-core:ready` events and renders the widget. On startup it requests the current state via `sub-core:request`.
 
-`sub-bar` manages display settings and UI-only provider options (window visibility, labels, status indicator). Provider enablement, ordering, and refresh behavior are configured in `sub-core:settings`, and sub-core broadcasts updates that sub-bar consumes. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
+`sub-bar` manages display settings and UI-only provider options (window visibility, labels, status indicator). Provider enablement lives in sub-core, but the sub-bar settings UI can toggle Enabled (auto/on/off) and forwards changes to `sub-core:settings:patch`. Ordering and refresh behavior are configured in `sub-core:settings`, and sub-core broadcasts updates that sub-bar consumes. The cycle command forwards to `sub-core:action` so core updates provider selection and then broadcasts the new state.
 
 ## Settings
 
-Display and provider UI settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Core settings are managed by sub-core.
+Display and provider UI settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Core settings are managed by sub-core, and the sub-bar settings menu includes a shortcut that points you to `sub-core:settings` for additional options.
 
 ### Provider UI Settings
 
-Use `sub-bar:settings` → Provider Settings to control status indicators and per-provider window visibility.
+Use `sub-bar:settings` → Provider Settings to control enabled state (auto/on/off), status indicators, and per-provider window visibility.
 
 ### Core Settings
 
-Use `sub-core:settings` to configure provider enablement, fetch status, refresh behavior, provider order, and pinned provider.
+Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch status, refresh behavior, provider order, and pinned provider.
 
 ### Display Settings
 

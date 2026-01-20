@@ -56,6 +56,10 @@ export class CodexProvider extends BaseProvider {
 	readonly name = "codex" as const;
 	readonly displayName = "Codex Plan";
 
+	hasCredentials(deps: Dependencies): boolean {
+		return Boolean(loadCodexCredentials(deps).accessToken);
+	}
+
 	async fetchUsage(deps: Dependencies): Promise<UsageSnapshot> {
 		const { accessToken, accountId } = loadCodexCredentials(deps);
 		if (!accessToken) {

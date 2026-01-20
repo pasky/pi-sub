@@ -7,12 +7,13 @@ import type { ProviderName } from "../types.js";
 import type { Settings, CoreProviderSettings } from "../settings-types.js";
 
 function buildBaseProviderItems(ps: CoreProviderSettings): SettingItem[] {
+	const enabledValue = ps.enabled === "auto" ? "auto" : ps.enabled === true || ps.enabled === "on" ? "on" : "off";
 	return [
 		{
 			id: "enabled",
 			label: "Enabled",
-			currentValue: ps.enabled ? "on" : "off",
-			values: ["on", "off"],
+			currentValue: enabledValue,
+			values: ["auto", "on", "off"],
 		},
 		{
 			id: "fetchStatus",
@@ -23,10 +24,15 @@ function buildBaseProviderItems(ps: CoreProviderSettings): SettingItem[] {
 	];
 }
 
+function resolveEnabledValue(value: string): CoreProviderSettings["enabled"] {
+	if (value === "auto") return "auto";
+	return value === "on";
+}
+
 function applyBaseProviderSetting(ps: CoreProviderSettings, id: string, value: string): boolean {
 	switch (id) {
 		case "enabled":
-			ps.enabled = value === "on";
+			ps.enabled = resolveEnabledValue(value);
 			return true;
 		case "fetchStatus":
 			ps.fetchStatus = value === "on";

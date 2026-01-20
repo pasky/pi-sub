@@ -7,6 +7,7 @@ import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-age
 import { Container, SelectList, type SettingItem, SettingsList, Spacer, Text } from "@mariozechner/pi-tui";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
+import { getDefaultCoreSettings, type CoreSettings } from "pi-sub-shared";
 import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
@@ -68,9 +69,16 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
  */
 export async function showSettingsUI(
 	ctx: ExtensionContext,
-	onSettingsChange?: (settings: Settings) => void | Promise<void>
+	options?: {
+		coreSettings?: CoreSettings;
+		onSettingsChange?: (settings: Settings) => void | Promise<void>;
+		onCoreSettingsChange?: (settings: CoreSettings) => void | Promise<void>;
+	}
 ): Promise<Settings> {
+	const onSettingsChange = options?.onSettingsChange;
+	const onCoreSettingsChange = options?.onCoreSettingsChange;
 	let settings = getSettings();
+	let coreSettings = options?.coreSettings ?? getDefaultCoreSettings();
 	let currentCategory: SettingsCategory = "main";
 
 	return new Promise((resolve) => {
@@ -113,14 +121,10 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					selectList.onSelect = (item) => {
-						if (item.value === "reset-display") {
-							const defaults = getDefaultSettings();
-							settings.display = { ...defaults.display };
+						if (item.value === "open-core-settings") {
+							ctx.ui.notify("Run sub-core:settings to edit core settings", "info");
 							saveSettings(settings);
-							if (onSettingsChange) void onSettingsChange(settings);
-							ctx.ui.notify("Display settings reset to defaults", "info");
-							rebuild();
-							tui.requestRender();
+							done(settings);
 							return;
 						}
 						currentCategory = item.value as SettingsCategory;
@@ -134,7 +138,7 @@ export async function showSettingsUI(
 					activeList = selectList;
 					container.addChild(selectList);
 				} else if (currentCategory === "providers") {
-					const items = buildProviderListItems(settings);
+					const items = buildProviderListItems(settings, coreSettings.providers);
 					const selectList = new SelectList(items, Math.min(items.length, 10), {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
 						selectedText: (t: string) => theme.fg("accent", t),
@@ -166,7 +170,24 @@ export async function showSettingsUI(
 					container.addChild(selectList);
 				} else if (providerCategory) {
 					const items = buildProviderSettingsItems(settings, providerCategory);
+					const coreProvider = coreSettings.providers[providerCategory];
+					const enabledValue = coreProvider.enabled === "auto"
+						? "auto"
+						: coreProvider.enabled === true || coreProvider.enabled === "on"
+							? "on"
+							: "off";
+					items.unshift({
+						id: "enabled",
+						label: "Enabled",
+						currentValue: enabledValue,
+						values: ["auto", "on", "off"],
+					});
 					const handleChange = (id: string, value: string) => {
+						if (id === "enabled") {
+							coreProvider.enabled = value === "auto" ? "auto" : value === "on";
+							if (onCoreSettingsChange) void onCoreSettingsChange(coreSettings);
+							return;
+						}
 						settings = applyProviderSettingsChange(settings, providerCategory, id, value);
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
@@ -204,6 +225,16 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					selectList.onSelect = (item) => {
+						if (item.value === "reset-display") {
+							const defaults = getDefaultSettings();
+							settings.display = { ...defaults.display };
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+							ctx.ui.notify("Display settings reset to defaults", "info");
+							rebuild();
+							tui.requestRender();
+							return;
+						}
 						currentCategory = item.value as SettingsCategory;
 						rebuild();
 						tui.requestRender();

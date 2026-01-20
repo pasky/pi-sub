@@ -95,6 +95,10 @@ export class CopilotProvider extends BaseProvider {
 	readonly name = "copilot" as const;
 	readonly displayName = "Copilot Plan";
 
+	hasCredentials(deps: Dependencies): boolean {
+		return Boolean(loadCopilotToken(deps));
+	}
+
 	async fetchUsage(deps: Dependencies): Promise<UsageSnapshot> {
 		const token = loadCopilotToken(deps);
 		if (!token) {

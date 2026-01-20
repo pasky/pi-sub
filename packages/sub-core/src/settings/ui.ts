@@ -155,7 +155,10 @@ export async function showSettingsUI(
 							return;
 						}
 
-						const activeProviders = settings.providerOrder.filter((provider) => settings.providers[provider].enabled);
+						const activeProviders = settings.providerOrder.filter((provider) => {
+							const enabled = settings.providers[provider].enabled;
+							return enabled !== "off" && enabled !== false;
+						});
 						const oldIndex = providerOrderSelectedIndex;
 						if (newIndex === oldIndex) return;
 						if (oldIndex < 0 || oldIndex >= activeProviders.length) return;
@@ -167,7 +170,8 @@ export async function showSettingsUI(
 
 						let activeIndex = 0;
 						settings.providerOrder = settings.providerOrder.map((existing) => {
-							if (!settings.providers[existing].enabled) return existing;
+							const enabled = settings.providers[existing].enabled;
+							if (enabled === "off" || enabled === false) return existing;
 							const next = updatedActive[activeIndex];
 							activeIndex += 1;
 							return next;

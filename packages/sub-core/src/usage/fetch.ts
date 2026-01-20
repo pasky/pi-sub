@@ -8,6 +8,7 @@ import type { ProviderUsageEntry } from "./types.js";
 import { createProvider } from "../providers/registry.js";
 import { fetchWithCache, getCachedData } from "../cache.js";
 import { fetchProviderStatusWithFallback, providerHasStatus } from "../providers/status.js";
+import { hasProviderCredentials } from "../providers/registry.js";
 import { isExpectedMissingData } from "../errors.js";
 
 export function getCacheTtlMs(settings: Settings): number {
@@ -20,7 +21,11 @@ export async function fetchUsageForProvider(
 	provider: ProviderName,
 	options?: { force?: boolean }
 ): Promise<{ usage?: UsageSnapshot; status?: ProviderStatus }> {
-	if (!settings.providers[provider].enabled) {
+	const enabledSetting = settings.providers[provider].enabled;
+	if (enabledSetting === "off" || enabledSetting === false) {
+		return {};
+	}
+	if (enabledSetting === "auto" && !hasProviderCredentials(provider, deps)) {
 		return {};
 	}
 
