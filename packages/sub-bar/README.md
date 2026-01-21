@@ -100,6 +100,8 @@ The extension loads automatically. Use:
 
 Display and provider UI settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Core settings are managed by sub-core, and the sub-bar settings menu includes a shortcut that points you to `sub-core:settings` for additional options.
 
+**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
+
 ### Provider UI Settings
 
 Use `sub-bar:settings` → Provider Settings to control enabled state (auto/on/off), status indicators, and per-provider window visibility. Anthropic extra usage amounts use the currency from sub-core overage configuration (if present).
@@ -123,7 +125,7 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
 | Reset Timer Format | relative, datetime | relative | Show relative countdown or reset datetime |
 | Status Mode | icon, color, icon+color | icon | Show status as icons, color tint, or both |
-| Status Icon Pack | minimal, emoji, shapes | emoji | Icon set for status indicators |
+| Status Icon Pack | minimal, emoji | emoji | Icon set for status indicators |
 | Show Status Text | on/off | off | Show textual status description |
 | Dismiss Operational Status | on/off | on | Hide status when there are no incidents |
 | Show Provider Name | on/off | on | Show provider label in status |

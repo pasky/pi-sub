@@ -19,6 +19,8 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 
 Use `sub-core:settings` to configure shared provider + behavior settings. Provider enablement supports `auto` (default), `on`, and `off` — `auto` enables a provider only when credentials are detected.
 
+**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
+
 ### Anthropic overage currency (optional)
 
 To include the org currency symbol in Anthropic “Extra” usage lines, sub-core can query the Claude web endpoint once on startup. Provide the org ID + cookie (or sessionKey) via `~/.pi/agent/auth.json` or environment variables.
