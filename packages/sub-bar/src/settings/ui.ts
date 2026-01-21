@@ -18,10 +18,10 @@ import {
 	buildMainMenuItems,
 	buildProviderListItems,
 	buildDisplayMenuItems,
-	buildDisplayPresetItems,
 	getProviderFromCategory,
 	type TooltipSelectItem,
 } from "./menu.js";
+import { buildDisplayPresetItems, buildPresetActionItems, resolveDisplayPresetTarget } from "./presets.js";
 
 /**
  * Settings category
@@ -41,37 +41,6 @@ type SettingsCategory =
 	| "display-divider"
 	| "display-presets"
 	| "display-presets-action";
-
-function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Settings["display"] {
-	return {
-		...defaultDisplay,
-		alignment: "left",
-		widgetWrapping: "truncate",
-		resetTimePosition: "off",
-		resetTimeFormat: "relative",
-		showUsageLabels: false,
-		paddingX: 0,
-		widgetPlacement: "belowEditor",
-		barStyle: "bar",
-		barType: "horizontal-bar",
-		barWidth: 4,
-		brailleFillEmpty: false,
-		showProviderName: false,
-		providerLabel: "none",
-		providerLabelColon: false,
-		providerLabelBold: false,
-		baseTextColor: "dim",
-		boldWindowTitle: false,
-		dividerCharacter: "none",
-		dividerColor: "borderMuted",
-		dividerBlanks: 0,
-		showProviderDivider: false,
-		dividerFooterJoin: false,
-		showTopDivider: false,
-		showBottomDivider: false,
-	};
-}
-
 
 /**
  * Show the settings UI
@@ -286,52 +255,7 @@ export async function showSettingsUI(
 					}
 					const defaults = getDefaultSettings();
 					const fallbackUser = settings.displayUserPreset ?? displayPreviewBackup;
-					const resolvePreset = (value: string) => {
-						if (value === "user") {
-							return { name: "Your setting", display: fallbackUser ?? settings.display, deletable: false };
-						}
-						if (value === "default") {
-							return { name: "Default", display: { ...defaults.display }, deletable: false };
-						}
-						if (value === "minimal") {
-							return { name: "Minimal", display: buildMinimalDisplaySettings(defaults.display), deletable: false };
-						}
-						if (value.startsWith("preset:")) {
-							const id = value.replace("preset:", "");
-							const preset = settings.displayPresets.find((entry) => entry.id === id);
-							if (!preset) return null;
-							return { id: preset.id, name: preset.name, display: preset.display, deletable: true };
-						}
-						return null;
-					};
-
-					const presetItems: TooltipSelectItem[] = [];
-					presetItems.push({
-						value: "user",
-						label: "Your setting",
-						description: "restore your last settings",
-						tooltip: "Restore your previous display settings.",
-					});
-					presetItems.push({
-						value: "default",
-						label: "Default",
-						description: "restore default settings",
-						tooltip: "Reset display settings to defaults.",
-					});
-					presetItems.push({
-						value: "minimal",
-						label: "Minimal",
-						description: "compact display",
-						tooltip: "Apply a compact display preset.",
-					});
-					for (const preset of settings.displayPresets) {
-						presetItems.push({
-							value: `preset:${preset.id}`,
-							label: preset.name,
-							description: "imported preset",
-							tooltip: `Manage ${preset.name}.`,
-						});
-					}
+					const presetItems = buildDisplayPresetItems(settings);
 
 					const selectList = new SelectList(presetItems, Math.min(presetItems.length, 10), {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
@@ -341,7 +265,9 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					selectList.onSelectionChange = (item) => {
-						const target = item ? resolvePreset(item.value) : null;
+						const target = item
+							? resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser)
+							: null;
 						if (!target) return;
 						settings.display = { ...target.display };
 						if (onSettingsChange) void onSettingsChange(settings);
@@ -350,7 +276,7 @@ export async function showSettingsUI(
 					attachTooltip(presetItems, selectList);
 
 					selectList.onSelect = (item) => {
-						const target = resolvePreset(item.value);
+						const target = resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser);
 						if (!target) return;
 						presetActionTarget = target;
 						currentCategory = "display-presets-action";
@@ -378,22 +304,7 @@ export async function showSettingsUI(
 						return;
 					}
 
-					const items: TooltipSelectItem[] = [
-						{
-							value: "load",
-							label: `Load ${target.name}`,
-							description: "apply this preset",
-							tooltip: "Apply the selected preset.",
-						},
-					];
-					if (target.deletable) {
-						items.push({
-							value: "delete",
-							label: `Delete ${target.name}`,
-							description: "remove saved preset",
-							tooltip: "Remove this preset from saved presets.",
-						});
-					}
+					const items = buildPresetActionItems(target);
 
 					const selectList = new SelectList(items, items.length, {
 						selectedPrefix: (t: string) => theme.fg("accent", t),

@@ -111,23 +111,6 @@ export function buildDisplayMenuItems(): TooltipSelectItem[] {
 	];
 }
 
-export function buildDisplayPresetItems(): TooltipSelectItem[] {
-	return [
-		{
-			value: "default",
-			label: "Default",
-			description: "restore default display settings",
-			tooltip: "Reset display settings to defaults.",
-		},
-		{
-			value: "minimal",
-			label: "Minimal",
-			description: "compact display",
-			tooltip: "Apply a compact display preset.",
-		},
-	];
-}
-
 export function buildProviderSettingsItems(settings: Settings): TooltipSelectItem[] {
 	return buildProviderListItems(settings);
 }
