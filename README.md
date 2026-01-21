@@ -159,6 +159,27 @@ cd packages/sub-bar
 npm run test
 ```
 
+## Release process (manual)
+
+We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in lockstep. Releases are manual and run via the GitHub Actions workflow `Release (manual)` on `main`.
+
+### Steps
+
+1. Create a changeset locally:
+   ```bash
+   npm run changeset
+   ```
+2. Commit the generated `.changeset/*.md` file(s) and push to `main`.
+3. Run the **Release (manual)** workflow. It will open a version bump PR (with changelogs).
+4. Merge the version PR.
+5. Run the **Release (manual)** workflow again to publish to npm and create GitHub Releases.
+
+> The workflow runs tests first but will continue with release even if tests fail, so check the test job results before publishing.
+
+### Required secrets
+
+- `NPM_TOKEN`: npm publish token with access to `pi-sub-core`, `pi-sub-bar`, `pi-sub-shared`.
+
 ## Publishing (planned)
 
 - NPM package names: `pi-sub-core`, `pi-sub-bar`, `pi-sub-shared`.

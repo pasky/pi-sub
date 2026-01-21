@@ -19,7 +19,7 @@
     "typescript": "^5.8.0"
   },
   "dependencies": {
-    "pi-sub-shared": "file:../sub-shared"
+    "pi-sub-shared": "^0.1.0"
   },
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*"
