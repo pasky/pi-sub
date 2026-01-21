@@ -95,6 +95,14 @@ Sub-core stores a shared cache and lock file:
 
 You need to update both **sub-core** (fetch layer) and **sub-bar** (display layer).
 
+## Feature placement (core vs UI)
+
+- **sub-core**: fetching, caching, provider detection/selection, status polling, tools/events, and shared settings.
+- **sub-bar**: formatting, widget layout, UI-only toggles, and display-specific behavior.
+- **sub-shared**: shared types/constants for anything referenced by both layers.
+
+See the root README “Developer guide” for the decision checklist and examples.
+
 ### sub-core (fetch + status)
 1. Add provider name to `src/types.ts` (`PROVIDERS`, `ProviderName`).
 2. Implement fetcher in `src/providers/impl/<provider>.ts`.

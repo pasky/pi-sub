@@ -173,6 +173,14 @@ sub-bar/
 
 Update both sub-core (fetch) and sub-bar (display). See `sub-core/README.md` for the full checklist.
 
+## Feature placement (UI vs core)
+
+- **sub-bar** owns presentation (formatting, layout, status indicators, UI settings).
+- **sub-core** owns data fetching, caching, provider selection, and shared settings/events.
+- Add shared types to **sub-shared** when both layers reference them.
+
+See the root README “Developer guide” for the full decision checklist and examples.
+
 ## Development
 
 ```bash

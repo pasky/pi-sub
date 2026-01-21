@@ -104,6 +104,39 @@ You must update **both** sub-core (fetch layer) and sub-bar (display/UI).
 4. Add extras (if needed) in `packages/sub-bar/src/providers/extras.ts`.
 5. Add settings UI + defaults in `packages/sub-bar/src/providers/settings.ts` and `packages/sub-bar/src/settings-types.ts`.
 
+## Developer guide (common workflows)
+
+### Add a new provider (core + UI)
+
+- **sub-core** owns fetching, caching, status lookup, provider detection, and emits update events.
+- **sub-bar** owns display rules, formatting, per-provider UI settings, and visibility of windows/extras.
+- If you add new shared types or provider metadata used by multiple packages, update **sub-shared** and re-export.
+
+### Add a new feature: core vs sub-*
+
+Use this rule of thumb when deciding where a feature lives:
+
+**Put it in sub-core when:**
+- It affects **data fetching**, provider detection/selection, or status polling.
+- It changes **event contracts** (`sub-core:*` events) or tools (`sub_get_usage`, `sub_get_all_usage`).
+- It introduces **shared settings** that should affect all clients.
+- It requires cache/lock behavior or cross-window coordination.
+
+**Put it in sub-* when:**
+- It is **presentation-only** (formatting, layout, colors, widget behavior).
+- It is **UI-only settings** (visibility toggles, label text, window ordering in display).
+- It targets a single client (e.g. sub-bar specific display change).
+
+**If both layers need it:**
+- Add data and settings in sub-core (and `sub-shared` types), then consume in sub-bar.
+- Update docs and tests for the shared contract.
+
+### Example decisions
+
+- **New API field or rate window data** → sub-core (fetch + cache), then surface in sub-bar.
+- **New bar style or status icon pack** → sub-bar only.
+- **New provider enablement behavior** → sub-core (and sub-bar UI can forward settings).
+
 ## Development
 
 ```bash
