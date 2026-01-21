@@ -50,8 +50,8 @@ export default function createExtension(pi: ExtensionAPI) {
 					const safeWidth = Math.max(1, width);
 					const paddingX = settings.display.paddingX ?? 0;
 					const contentWidth = Math.max(1, safeWidth - paddingX * 2);
-					const showTopDivider = settings.display.showTopDivider ?? true;
-					const showBottomDivider = settings.display.showBottomDivider ?? false;
+					const showTopDivider = settings.display.showTopDivider ?? false;
+					const showBottomDivider = settings.display.showBottomDivider ?? true;
 					const dividerLine = theme.fg("borderMuted", "─".repeat(safeWidth));
 					const alignment = settings.display.alignment ?? "left";
 					const hasFill = settings.display.barWidth === "fill" || settings.display.dividerBlanks === "fill";
@@ -98,7 +98,7 @@ export default function createExtension(pi: ExtensionAPI) {
 				},
 				invalidate() {},
 			}),
-			{ placement: settings.display.widgetPlacement ?? "aboveEditor" },
+			{ placement: settings.display.widgetPlacement ?? "belowEditor" },
 		);
 		
 	}

@@ -132,11 +132,9 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 | Base Color | dim, muted, text | dim | Base color for widget labels/dividers |
 | Show Usage Labels | on/off | on | Show "used/rem." labels |
 | Padding X | 0, 1, 2, 3, 4 | 0 | Left/right padding inside widget |
-| Widget Placement | aboveEditor, belowEditor | aboveEditor | Place widget above or below editor |
 | Divider Character | none, blank, \|, •, ●, ○, ◇ | • | Character between usage entries |
 | Divider Blanks | 0, 1, 2, 3, fill | 1 | Padding around divider |
-| Show Top Divider | on/off | on | Show horizontal divider line above bar |
-| Show Bottom Divider | on/off | off | Show horizontal divider line below bar |
+| Show Bottom Divider | on/off | on | Show horizontal divider line below bar |
 | Widget Wrapping | truncate, wrap | truncate | Wrap usage line to multiple lines or truncate |
 | Error Threshold (%) | 10-40 | 25 | Percentage remaining below which shows red |
 | Warning Threshold (%) | 30-70 | 50 | Percentage remaining below which shows yellow |

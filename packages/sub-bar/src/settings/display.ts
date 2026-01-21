@@ -49,13 +49,6 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			values: ["0", "1", "2", "3", "4"],
 			description: "Add left/right padding inside the widget.",
 		},
-		{
-			id: "widgetPlacement",
-			label: "Widget Placement",
-			currentValue: settings.display.widgetPlacement ?? "aboveEditor",
-			values: ["aboveEditor", "belowEditor"] as WidgetPlacement[],
-			description: "Place the widget above or below the editor.",
-		},
 	];
 }
 
@@ -268,13 +261,6 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			currentValue: String(settings.display.dividerBlanks),
 			values: ["0", "1", "2", "3", "fill"],
 			description: "Padding around the divider character.",
-		},
-		{
-			id: "showTopDivider",
-			label: "Show Top Divider",
-			currentValue: settings.display.showTopDivider ? "on" : "off",
-			values: ["on", "off"],
-			description: "Show a divider line above the widget.",
 		},
 		{
 			id: "showBottomDivider",

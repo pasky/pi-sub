@@ -38,7 +38,7 @@ export type WidgetWrapping = "truncate" | "wrap";
 /**
  * Widget placement
  */
-export type WidgetPlacement = "aboveEditor" | "belowEditor";
+export type WidgetPlacement = "belowEditor";
 
 /**
  * Alignment for the widget
@@ -300,10 +300,10 @@ export function getDefaultSettings(): Settings {
 			showUsageLabels: true,
 			dividerCharacter: "•",
 			dividerBlanks: 1,
-			showTopDivider: true,
-			showBottomDivider: false,
+			showTopDivider: false,
+			showBottomDivider: true,
 			paddingX: 0,
-			widgetPlacement: "aboveEditor",
+			widgetPlacement: "belowEditor",
 			errorThreshold: 25,
 			warningThreshold: 50,
 			widgetWrapping: "truncate",

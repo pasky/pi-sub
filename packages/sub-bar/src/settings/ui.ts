@@ -50,7 +50,7 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
 		resetTimeFormat: "relative",
 		showUsageLabels: false,
 		paddingX: 0,
-		widgetPlacement: "aboveEditor",
+		widgetPlacement: "belowEditor",
 		barStyle: "bar",
 		barType: "horizontal-bar",
 		barWidth: 4,
