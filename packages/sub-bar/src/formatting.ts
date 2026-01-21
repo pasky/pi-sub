@@ -111,7 +111,7 @@ function getBarTypeLevels(barType: BarType): string[] | null {
 		case "vertical":
 			return ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
 		case "braille":
-			return ["⡀", "⣀", "⣄", "⣆", "⣇", "⣧", "⣷", "⣿"];
+			return ["⡀", "⡄", "⣄", "⣆", "⣇", "⣧", "⣷", "⣿"];
 		case "shade":
 			return ["░", "▒", "▓", "█"];
 		default:
