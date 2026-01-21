@@ -161,6 +161,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const showStatusText = settings?.display.statusText ?? false;
 	const providerLabelSetting = settings?.display.providerLabel ?? "none";
 	const showColon = settings?.display.providerLabelColon ?? true;
+	const boldProviderLabel = settings?.display.providerLabelBold ?? false;
 	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 
 	const statusActive = Boolean(status && (!statusDismissOk || status.indicator !== "none"));
@@ -189,9 +190,15 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const statusColor = showColor && status ? getStatusColor(status.indicator, settings?.display.colorScheme ?? "base-warning-error") : "base";
 	const labelColor = showColor ? resolveStatusTintColor(statusColor, baseTextColor) : baseTextColor;
 
-	const parts = [icon, statusText, providerLabelWithColon].filter(Boolean);
+	const parts: string[] = [];
+	if (icon) parts.push(theme.fg(labelColor, icon));
+	if (statusText) parts.push(theme.fg(labelColor, statusText));
+	if (providerLabelWithColon) {
+		const colored = theme.fg(labelColor, providerLabelWithColon);
+		parts.push(boldProviderLabel ? theme.bold(colored) : colored);
+	}
 	if (parts.length === 0) return "";
-	return parts.map((part) => theme.fg(labelColor, part)).join(" ");
+	return parts.join(" ");
 }
 
 /**
@@ -253,6 +260,7 @@ export function formatUsageWindowParts(
 	const resetTimePosition = settings?.display.resetTimePosition ?? "front";
 	const resetTimeFormat = settings?.display.resetTimeFormat ?? "relative";
 	const showUsageLabels = settings?.display.showUsageLabels ?? true;
+	const boldWindowTitle = settings?.display.boldWindowTitle ?? false;
 	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 	const errorThreshold = settings?.display.errorThreshold ?? 25;
 	const warningThreshold = settings?.display.warningThreshold ?? 50;
@@ -338,18 +346,20 @@ export function formatUsageWindowParts(
 			: window.resetDescription;
 	const leftSuffix = resetText && resetTimeFormat === "relative" && showUsageLabels ? " left" : "";
 
-	let labelValue = window.label;
+	const coloredTitle = theme.fg(textColor, window.label);
+	const titlePart = boldWindowTitle ? theme.bold(coloredTitle) : coloredTitle;
+
+	let labelPart = titlePart;
 	if (resetText) {
 		if (resetTimePosition === "front") {
-			labelValue = `${window.label} (${resetText}${leftSuffix})`;
+			labelPart = `${titlePart} ${theme.fg(textColor, `(${resetText}${leftSuffix})`)}`;
 		} else if (resetTimePosition === "integrated") {
-			labelValue = `${resetText}/${window.label}`;
+			labelPart = `${theme.fg(textColor, `${resetText}/`)}${titlePart}`;
+		} else if (resetTimePosition === "back") {
+			labelPart = titlePart;
 		}
 	}
 
-	const labelPart = resetTimePosition === "back"
-		? theme.fg(textColor, window.label)
-		: theme.fg(textColor, labelValue);
 	const resetPart =
 		resetTimePosition === "back" && resetText
 			? theme.fg(textColor, `(${resetText}${leftSuffix})`)

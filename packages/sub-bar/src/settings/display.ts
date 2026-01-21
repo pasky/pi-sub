@@ -44,6 +44,13 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			description: "Show “used/rem.” labels after percentages.",
 		},
 		{
+			id: "boldWindowTitle",
+			label: "Bold Title",
+			currentValue: settings.display.boldWindowTitle ? "on" : "off",
+			values: ["on", "off"],
+			description: "Bold window titles like 5h, Week, etc.",
+		},
+		{
 			id: "paddingX",
 			label: "Padding X",
 			currentValue: String(settings.display.paddingX ?? 0),
@@ -184,6 +191,13 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 			currentValue: settings.display.providerLabelColon ? "on" : "off",
 			values: ["on", "off"],
 			description: "Show a colon after the provider label.",
+		},
+		{
+			id: "providerLabelBold",
+			label: "Show in Bold",
+			currentValue: settings.display.providerLabelBold ? "on" : "off",
+			values: ["on", "off"],
+			description: "Bold the provider name and colon.",
 		},
 	];
 }
@@ -358,11 +372,17 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "providerLabelColon":
 			settings.display.providerLabelColon = value === "on";
 			break;
+		case "providerLabelBold":
+			settings.display.providerLabelBold = value === "on";
+			break;
 		case "baseTextColor":
 			settings.display.baseTextColor = normalizeBaseTextColor(value);
 			break;
 		case "showUsageLabels":
 			settings.display.showUsageLabels = value === "on";
+			break;
+		case "boldWindowTitle":
+			settings.display.boldWindowTitle = value === "on";
 			break;
 		case "widgetPlacement":
 			settings.display.widgetPlacement = value as WidgetPlacement;

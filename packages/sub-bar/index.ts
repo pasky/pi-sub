@@ -14,6 +14,7 @@ import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
 import { getFallbackCoreSettings } from "./src/core-settings.js";
+import { buildDisplayShareString, decodeDisplayShareString } from "./src/share.js";
 
 type SubCoreRequest = {
 	type?: "current";
@@ -273,11 +274,77 @@ export default function createExtension(pi: ExtensionAPI) {
 						renderUsageWidget(lastContext, currentUsage);
 					}
 				},
+				onDisplayPresetApplied: (name) => {
+					pi.sendMessage({
+						customType: "sub-bar",
+						content: `sub-bar Display setting ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Load Settings`,
+						display: true,
+					});
+				},
 			});
 			settings = newSettings;
 			if (lastContext) {
 				renderUsageWidget(lastContext, currentUsage);
 			}
+		},
+	});
+
+	pi.registerCommand("sub-bar:share", {
+		description: "Share sub-bar display settings",
+		handler: async (args, ctx) => {
+			const name = args.trim();
+			if (!name) {
+				ctx.ui.notify("Usage: /sub-bar:share <name>", "warning");
+				return;
+			}
+			const shareString = buildDisplayShareString(name, settings.display);
+			pi.sendMessage({
+				customType: "sub-bar",
+				content: `\n${shareString}\n`,
+				display: true,
+			});
+			ctx.ui.notify("Display share string posted to chat", "info");
+		},
+	});
+
+	pi.registerCommand("sub-bar:load", {
+		description: "Load sub-bar display settings",
+		handler: async (args, ctx) => {
+			const input = args.trim();
+			if (!input) {
+				ctx.ui.notify("Usage: /sub-bar:load <name:hash>", "warning");
+				return;
+			}
+			const decoded = decodeDisplayShareString(input);
+			if (!decoded) {
+				ctx.ui.notify("Invalid display settings string", "error");
+				return;
+			}
+			settings.displayUserPreset = { ...settings.display };
+			settings.display = { ...decoded.display };
+
+			const presetId = decoded.name.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, 24) || "preset";
+			const existing = settings.displayPresets.find((preset) => preset.id === presetId);
+			if (existing) {
+				existing.name = decoded.name;
+				existing.display = decoded.display;
+			} else {
+				settings.displayPresets.push({ id: presetId, name: decoded.name, display: decoded.display });
+			}
+
+			saveSettings(settings);
+			if (lastContext) {
+				renderUsageWidget(lastContext, currentUsage);
+			}
+			const message = decoded.isNewerVersion
+				? `Loaded ${decoded.name} (newer version, some fields may be ignored)`
+				: `Loaded ${decoded.name}`;
+			ctx.ui.notify(message, decoded.isNewerVersion ? "warning" : "info");
+			pi.sendMessage({
+				customType: "sub-bar",
+				content: `sub-bar Display setting ${decoded.name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Load Settings`,
+				display: true,
+			});
 		},
 	});
 

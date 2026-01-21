@@ -104,15 +104,9 @@ export function buildDisplayMenuItems(): TooltipSelectItem[] {
 		},
 		{
 			value: "display-presets",
-			label: "Load Presets",
-			description: "default or minimal",
-			tooltip: "Apply default or minimal display presets.",
-		},
-		{
-			value: "reset-display",
-			label: "Reset Display Defaults",
-			description: "restore display settings",
-			tooltip: "Restore all display settings to defaults.",
+			label: "Load Settings",
+			description: "default, minimal, saved",
+			tooltip: "Load saved display settings.",
 		},
 	];
 }

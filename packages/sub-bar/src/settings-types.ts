@@ -238,8 +238,12 @@ export interface DisplaySettings {
 	providerLabel: ProviderLabel;
 	/** Show colon after provider label */
 	providerLabelColon: boolean;
+	/** Bold provider name and colon */
+	providerLabelBold: boolean;
 	/** Base text color for widget labels */
 	baseTextColor: BaseTextColor;
+	/** Bold window titles (5h, Week, etc.) */
+	boldWindowTitle: boolean;
 	/** Show usage labels (used/rem.) */
 	showUsageLabels: boolean;
 	/** Divider character */
@@ -270,9 +274,16 @@ export interface DisplaySettings {
 	successThreshold: number;
 }
 
+
 /**
  * All settings
  */
+export interface DisplayPreset {
+	id: string;
+	name: string;
+	display: DisplaySettings;
+}
+
 export interface Settings extends Omit<CoreSettings, "providers"> {
 	/** Version for migration */
 	version: number;
@@ -280,6 +291,10 @@ export interface Settings extends Omit<CoreSettings, "providers"> {
 	providers: ProviderSettingsMap;
 	/** Display settings */
 	display: DisplaySettings;
+	/** Stored display presets */
+	displayPresets: DisplayPreset[];
+	/** Snapshot of the previous display settings */
+	displayUserPreset: DisplaySettings | null;
 }
 
 /**
@@ -358,7 +373,9 @@ export function getDefaultSettings(): Settings {
 			showProviderName: true,
 			providerLabel: "none",
 			providerLabelColon: true,
+			providerLabelBold: false,
 			baseTextColor: "dim",
+			boldWindowTitle: false,
 			showUsageLabels: true,
 			dividerCharacter: "•",
 			dividerColor: "borderMuted",
@@ -374,6 +391,9 @@ export function getDefaultSettings(): Settings {
 			widgetWrapping: "truncate",
 			successThreshold: 75,
 		},
+
+		displayPresets: [],
+		displayUserPreset: null,
 
 		behavior: {
 			refreshInterval: 60,

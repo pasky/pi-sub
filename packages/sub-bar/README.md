@@ -81,6 +81,8 @@ Until then, manual paths/symlinks work as documented above.
 The extension loads automatically. Use:
 
 - `sub-bar:settings` - Open display + provider UI settings
+- `sub-bar:share <name>` - Print a shareable display settings string
+- `sub-bar:load <name:hash>` - Load display settings from a share string
 - `sub-core:settings` - Configure provider enablement/order + behavior settings
 - `Ctrl+Alt+P` - Cycle through available providers
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
@@ -112,6 +114,8 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 
 ### Display Settings
 
+Use `/sub-bar:share <name>` share a display config and `/sub-bar:load <name:hash>` to load it.
+
 | Setting | Options | Default | Description |
 |---------|---------|---------|-------------|
 | Alignment | left, center, right, split | left | Alignment for the widget (split fills the gap after the provider name) |
@@ -131,8 +135,10 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 | Show Provider Name | on/off | on | Show provider label in status |
 | Provider Label | none, plan, subscription, sub | none | Suffix after provider name (replaces existing Plan/Subscription suffix if present) |
 | Provider Label Colon | on/off | on | Show colon after provider label |
+| Show in Bold | on/off | off | Bold the provider name and colon |
 | Base Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent | dim | Base color for widget labels/dividers |
 | Show Usage Labels | on/off | on | Show "used/rem." labels |
+| Bold Title | on/off | off | Bold window titles like 5h, Week |
 | Padding X | 0, 1, 2, 3, 4 | 0 | Left/right padding inside widget |
 | Divider Character | none, blank, \|, │, ┃, ┆, ┇, ║, •, ●, ○, ◇ | • | Character between usage entries |
 | Divider Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent | borderMuted | Color for divider glyphs and lines |

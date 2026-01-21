@@ -45,6 +45,8 @@ export function loadSettings(): Settings {
 					version: loaded.version,
 					display: loaded.display,
 					providers: loaded.providers,
+					displayPresets: loaded.displayPresets,
+					displayUserPreset: loaded.displayUserPreset,
 				} as Partial<Settings>);
 				return cachedSettings;
 			}
@@ -69,6 +71,8 @@ export function saveSettings(settings: Settings): boolean {
 			version: settings.version,
 			display: settings.display,
 			providers: settings.providers,
+			displayPresets: settings.displayPresets,
+			displayUserPreset: settings.displayUserPreset,
 		}, null, 2);
 		storage.writeFile(SETTINGS_PATH, content);
 		cachedSettings = settings;
@@ -85,7 +89,14 @@ export function saveSettings(settings: Settings): boolean {
 export function resetSettings(): Settings {
 	const defaults = getDefaultSettings();
 	const current = getSettings();
-	const next = { ...current, display: defaults.display, providers: defaults.providers, version: defaults.version };
+	const next = {
+		...current,
+		display: defaults.display,
+		providers: defaults.providers,
+		displayPresets: defaults.displayPresets,
+		displayUserPreset: defaults.displayUserPreset,
+		version: defaults.version,
+	};
 	saveSettings(next);
 	return next;
 }

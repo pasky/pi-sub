@@ -39,7 +39,8 @@ type SettingsCategory =
 	| "display-provider"
 	| "display-status"
 	| "display-divider"
-	| "display-presets";
+	| "display-presets"
+	| "display-presets-action";
 
 function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Settings["display"] {
 	return {
@@ -58,7 +59,9 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
 		showProviderName: false,
 		providerLabel: "none",
 		providerLabelColon: false,
+		providerLabelBold: false,
 		baseTextColor: "dim",
+		boldWindowTitle: false,
 		dividerCharacter: "none",
 		dividerColor: "borderMuted",
 		dividerBlanks: 0,
@@ -79,18 +82,22 @@ export async function showSettingsUI(
 		coreSettings?: CoreSettings;
 		onSettingsChange?: (settings: Settings) => void | Promise<void>;
 		onCoreSettingsChange?: (patch: Partial<CoreSettings>, next: CoreSettings) => void | Promise<void>;
+		onDisplayPresetApplied?: (name: string) => void | Promise<void>;
 	}
 ): Promise<Settings> {
 	const onSettingsChange = options?.onSettingsChange;
 	const onCoreSettingsChange = options?.onCoreSettingsChange;
 	let settings = getSettings();
 	let coreSettings = options?.coreSettings ?? getFallbackCoreSettings(settings);
+	const onDisplayPresetApplied = options?.onDisplayPresetApplied;
 	let currentCategory: SettingsCategory = "main";
 
 	return new Promise((resolve) => {
 		ctx.ui.custom<Settings>((tui, theme, _kb, done) => {
 			let container = new Container();
-			let activeList: SelectList | SettingsList | null = null;
+			let activeList: SelectList | SettingsList | { handleInput: (data: string) => void } | null = null;
+			let presetActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
+			let displayPreviewBackup: Settings["display"] | null = null;
 
 			function rebuild(): void {
 				container = new Container();
@@ -127,7 +134,8 @@ export async function showSettingsUI(
 					"display-provider": "Provider",
 					"display-status": "Status Indicator",
 					"display-divider": "Divider",
-					"display-presets": "Load Presets",
+					"display-presets": "Load Settings",
+					"display-presets-action": "Load Settings",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
 				const title = providerCategory
@@ -261,16 +269,6 @@ export async function showSettingsUI(
 					});
 					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
-						if (item.value === "reset-display") {
-							const defaults = getDefaultSettings();
-							settings.display = { ...defaults.display };
-							saveSettings(settings);
-							if (onSettingsChange) void onSettingsChange(settings);
-							ctx.ui.notify("Display settings reset to defaults", "info");
-							rebuild();
-							tui.requestRender();
-							return;
-						}
 						currentCategory = item.value as SettingsCategory;
 						rebuild();
 						tui.requestRender();
@@ -283,8 +281,121 @@ export async function showSettingsUI(
 					activeList = selectList;
 					container.addChild(selectList);
 				} else if (currentCategory === "display-presets") {
-					const items = buildDisplayPresetItems();
-					const selectList = new SelectList(items, Math.min(items.length, 6), {
+					if (!displayPreviewBackup) {
+						displayPreviewBackup = { ...settings.display };
+					}
+					const defaults = getDefaultSettings();
+					const fallbackUser = settings.displayUserPreset ?? displayPreviewBackup;
+					const resolvePreset = (value: string) => {
+						if (value === "user") {
+							return { name: "Your setting", display: fallbackUser ?? settings.display, deletable: false };
+						}
+						if (value === "default") {
+							return { name: "Default", display: { ...defaults.display }, deletable: false };
+						}
+						if (value === "minimal") {
+							return { name: "Minimal", display: buildMinimalDisplaySettings(defaults.display), deletable: false };
+						}
+						if (value.startsWith("preset:")) {
+							const id = value.replace("preset:", "");
+							const preset = settings.displayPresets.find((entry) => entry.id === id);
+							if (!preset) return null;
+							return { id: preset.id, name: preset.name, display: preset.display, deletable: true };
+						}
+						return null;
+					};
+
+					const presetItems: TooltipSelectItem[] = [];
+					presetItems.push({
+						value: "user",
+						label: "Your setting",
+						description: "restore your last settings",
+						tooltip: "Restore your previous display settings.",
+					});
+					presetItems.push({
+						value: "default",
+						label: "Default",
+						description: "restore default settings",
+						tooltip: "Reset display settings to defaults.",
+					});
+					presetItems.push({
+						value: "minimal",
+						label: "Minimal",
+						description: "compact display",
+						tooltip: "Apply a compact display preset.",
+					});
+					for (const preset of settings.displayPresets) {
+						presetItems.push({
+							value: `preset:${preset.id}`,
+							label: preset.name,
+							description: "imported preset",
+							tooltip: `Manage ${preset.name}.`,
+						});
+					}
+
+					const selectList = new SelectList(presetItems, Math.min(presetItems.length, 10), {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					selectList.onSelectionChange = (item) => {
+						const target = item ? resolvePreset(item.value) : null;
+						if (!target) return;
+						settings.display = { ...target.display };
+						if (onSettingsChange) void onSettingsChange(settings);
+						tui.requestRender();
+					};
+					attachTooltip(presetItems, selectList);
+
+					selectList.onSelect = (item) => {
+						const target = resolvePreset(item.value);
+						if (!target) return;
+						presetActionTarget = target;
+						currentCategory = "display-presets-action";
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						if (displayPreviewBackup) {
+							settings.display = { ...displayPreviewBackup };
+							if (onSettingsChange) void onSettingsChange(settings);
+						}
+						displayPreviewBackup = null;
+						currentCategory = "display";
+						rebuild();
+						tui.requestRender();
+					};
+					activeList = selectList;
+					container.addChild(selectList);
+				} else if (currentCategory === "display-presets-action") {
+					const target = presetActionTarget;
+					if (!target) {
+						currentCategory = "display-presets";
+						rebuild();
+						tui.requestRender();
+						return;
+					}
+
+					const items: TooltipSelectItem[] = [
+						{
+							value: "load",
+							label: `Load ${target.name}`,
+							description: "apply this preset",
+							tooltip: "Apply the selected preset.",
+						},
+					];
+					if (target.deletable) {
+						items.push({
+							value: "delete",
+							label: `Delete ${target.name}`,
+							description: "remove saved preset",
+							tooltip: "Remove this preset from saved presets.",
+						});
+					}
+
+					const selectList = new SelectList(items, items.length, {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
 						selectedText: (t: string) => theme.fg("accent", t),
 						description: (t: string) => theme.fg("muted", t),
@@ -292,23 +403,37 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					attachTooltip(items, selectList);
+
 					selectList.onSelect = (item) => {
-						const defaults = getDefaultSettings();
-						if (item.value === "default") {
-							settings.display = { ...defaults.display };
-							ctx.ui.notify("Display settings reset to defaults", "info");
-						} else if (item.value === "minimal") {
-							settings.display = buildMinimalDisplaySettings(defaults.display);
-							ctx.ui.notify("Display settings set to minimal", "info");
+						if (item.value === "load") {
+							const backup = displayPreviewBackup ?? settings.display;
+							settings.displayUserPreset = { ...backup };
+							settings.display = { ...target.display };
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+							if (onDisplayPresetApplied) void onDisplayPresetApplied(target.name);
+							displayPreviewBackup = null;
+							presetActionTarget = null;
+							currentCategory = "display";
+							rebuild();
+							tui.requestRender();
+							return;
 						}
-						saveSettings(settings);
-						if (onSettingsChange) void onSettingsChange(settings);
-						currentCategory = "display";
-						rebuild();
-						tui.requestRender();
+						if (item.value === "delete" && target.deletable && target.id) {
+							settings.displayPresets = settings.displayPresets.filter((entry) => entry.id !== target.id);
+							saveSettings(settings);
+							if (displayPreviewBackup) {
+								settings.display = { ...displayPreviewBackup };
+								if (onSettingsChange) void onSettingsChange(settings);
+							}
+							presetActionTarget = null;
+							currentCategory = "display-presets";
+							rebuild();
+							tui.requestRender();
+						}
 					};
 					selectList.onCancel = () => {
-						currentCategory = "display";
+						currentCategory = "display-presets";
 						rebuild();
 						tui.requestRender();
 					};
@@ -398,7 +523,8 @@ export async function showSettingsUI(
 						currentCategory === "main" ||
 						currentCategory === "providers" ||
 						currentCategory === "display" ||
-						currentCategory === "display-presets"
+						currentCategory === "display-presets" ||
+						currentCategory === "display-presets-action"
 					) {
 						helpText = "↑↓ navigate • Enter/Space select • Esc back";
 					} else {
