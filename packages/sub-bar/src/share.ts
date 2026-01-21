@@ -1,5 +1,5 @@
 /**
- * Display settings share helpers.
+ * Display theme share helpers.
  */
 
 import type { Settings } from "./settings-types.js";

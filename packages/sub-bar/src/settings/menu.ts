@@ -104,9 +104,9 @@ export function buildDisplayMenuItems(): TooltipSelectItem[] {
 		},
 		{
 			value: "display-presets",
-			label: "Load Settings",
-			description: "default, minimal, saved",
-			tooltip: "Load saved display settings.",
+			label: "Load Theme",
+			description: "default, minimal, saved themes",
+			tooltip: "Load saved display themes.",
 		},
 	];
 }

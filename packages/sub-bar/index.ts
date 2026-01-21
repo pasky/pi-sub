@@ -235,7 +235,7 @@ export default function createExtension(pi: ExtensionAPI) {
 				onDisplayPresetApplied: (name) => {
 					pi.sendMessage({
 						customType: "sub-bar",
-						content: `sub-bar Display setting ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Load Settings`,
+						content: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Load Theme`,
 						display: true,
 					});
 				},
@@ -248,7 +248,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("sub-bar:share", {
-		description: "Share sub-bar display settings",
+		description: "Share sub-bar display theme",
 		handler: async (args, ctx) => {
 			const name = args.trim();
 			if (!name) {
@@ -261,12 +261,12 @@ export default function createExtension(pi: ExtensionAPI) {
 				content: `\n${shareString}\n`,
 				display: true,
 			});
-			ctx.ui.notify("Display share string posted to chat", "info");
+			ctx.ui.notify("Theme share string posted to chat", "info");
 		},
 	});
 
 	pi.registerCommand("sub-bar:load", {
-		description: "Load sub-bar display settings",
+		description: "Load sub-bar display theme",
 		handler: async (args, ctx) => {
 			const input = args.trim();
 			if (!input) {
@@ -300,7 +300,7 @@ export default function createExtension(pi: ExtensionAPI) {
 			ctx.ui.notify(message, decoded.isNewerVersion ? "warning" : "info");
 			pi.sendMessage({
 				customType: "sub-bar",
-				content: `sub-bar Display setting ${decoded.name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Load Settings`,
+				content: `sub-bar Theme ${decoded.name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Load Theme`,
 				display: true,
 			});
 		},

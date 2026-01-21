@@ -103,8 +103,8 @@ export async function showSettingsUI(
 					"display-provider": "Provider",
 					"display-status": "Status Indicator",
 					"display-divider": "Divider",
-					"display-presets": "Load Settings",
-					"display-presets-action": "Load Settings",
+					"display-presets": "Load Theme",
+					"display-presets-action": "Load Theme",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
 				const title = providerCategory
