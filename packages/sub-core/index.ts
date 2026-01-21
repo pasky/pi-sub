@@ -125,7 +125,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		emitCurrentUpdate(update.provider, update.usage);
 	}
 
-	async function refresh(ctx: ExtensionContext, options?: { force?: boolean }) {
+	async function refresh(ctx: ExtensionContext, options?: { force?: boolean; allowStaleCache?: boolean }) {
 		lastContext = ctx;
 		await controller.refresh(ctx, settings, controllerState, emitUpdate, options);
 	}
@@ -285,8 +285,8 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		lastContext = ctx;
 		settings = loadSettings();
 		setupRefreshInterval();
-		await refreshAnthropicOverageCurrency();
-		await refresh(ctx);
+		void refreshAnthropicOverageCurrency();
+		void refresh(ctx, { force: true, allowStaleCache: true });
 		pi.events.emit("sub-core:ready", { state: lastState, settings });
 	});
 
@@ -324,7 +324,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		controllerState.currentProvider = undefined;
 		controllerState.pinnedProvider = undefined;
 		controllerState.cachedUsage = undefined;
-		await refresh(ctx, { force: true });
+		void refresh(ctx, { force: true, allowStaleCache: true });
 	});
 
 	pi.on("session_shutdown", async () => {

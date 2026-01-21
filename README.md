@@ -52,6 +52,16 @@ pi install npm:pi-sub-bar
 
 `sub-core` is the source of truth. It emits updates and accepts requests/actions over `pi.events`.
 
+## Rendering good practice (snappy UI)
+
+To keep UI clients responsive (like `sub-bar`), prefer this sequence when a model or session changes:
+
+1. **Render cached state immediately** (even if stale).
+2. **Fetch fresh usage in the background**.
+3. **Re-render when new data arrives**.
+
+Why: awaiting fetches inside `pi.on("session_start")` / `pi.on("model_select")` blocks other extension handlers, so UI renders can lag behind network calls. In sub-core we use a non-blocking refresh (`void refresh(...)`) and allow stale cache (`allowStaleCache: true`) so cached usage is emitted before the forced fetch finishes. UI clients should listen for `sub-core:update-current` and render whenever state changes.
+
 **Broadcasts**
 - `sub-core:ready` → `{ state, settings }` (first load)
 - `sub-core:update-current` → `{ state }` (cache hit or fresh fetch)

@@ -9,7 +9,7 @@ import { detectProviderFromModel } from "../providers/detection.js";
 import { isExpectedMissingData } from "../errors.js";
 import { fetchUsageForProvider } from "./fetch.js";
 import type { Dependencies } from "../types.js";
-import { getCachedData } from "../cache.js";
+import { getCachedData, readCache } from "../cache.js";
 import { hasProviderCredentials } from "../providers/registry.js";
 
 export interface UsageControllerState {
@@ -70,7 +70,7 @@ export function createUsageController(deps: Dependencies) {
 		settings: Settings,
 		state: UsageControllerState,
 		onUpdate: UsageUpdateHandler,
-		options?: { force?: boolean }
+		options?: { force?: boolean; allowStaleCache?: boolean }
 	): Promise<void> {
 		const provider = resolveProvider(ctx, settings, state);
 		if (!provider) {
@@ -87,7 +87,11 @@ export function createUsageController(deps: Dependencies) {
 			state.cachedUsage = undefined;
 		}
 
-		const cachedEntry = await getCachedData(provider, settings.behavior.refreshInterval * 1000);
+		let cachedEntry = await getCachedData(provider, settings.behavior.refreshInterval * 1000);
+		if (!cachedEntry && options?.allowStaleCache) {
+			const cache = readCache();
+			cachedEntry = cache[provider] ?? null;
+		}
 		if (cachedEntry?.usage) {
 			state.cachedUsage = { ...cachedEntry.usage, status: cachedEntry.status };
 		}
