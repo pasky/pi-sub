@@ -270,8 +270,9 @@ export function formatUsageWindowParts(
 	const displayPct = isCodex ? Math.max(0, Math.min(100, 100 - usedPct)) : usedPct;
 	const isRemaining = isCodex;
 
-	const filled = Math.round((displayPct / 100) * barWidth);
-	const empty = barWidth - filled;
+	const barPercent = Math.max(0, Math.min(100, displayPct));
+	const filled = Math.round((barPercent / 100) * barWidth);
+	const empty = Math.max(0, barWidth - filled);
 
 	const baseColor = getUsageColor(displayPct, isRemaining, colorScheme, errorThreshold, warningThreshold, successThreshold);
 	const barColor = (options?.useNormalColors && baseColor === "base") ? "text" : baseColor === "base" ? "muted" : baseColor;
@@ -291,7 +292,7 @@ export function formatUsageWindowParts(
 			barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], char.repeat(filled)) + theme.fg(emptyColor, char.repeat(empty));
 		} else {
 			const emptyChar = barType === "braille" && brailleFillEmpty && barWidth > 1 ? "⣿" : " ";
-			const { segments, minimal } = renderBarSegments(displayPct, barWidth, levels, {
+			const { segments, minimal } = renderBarSegments(barPercent, barWidth, levels, {
 				allowMinimum: true,
 				emptyChar,
 			});
