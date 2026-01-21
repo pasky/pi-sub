@@ -2,10 +2,11 @@
  * UI formatting utilities for the sub-bar extension
  */
 
-import type { Theme } from "@mariozechner/pi-coding-agent";
+import type { Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { visibleWidth } from "@mariozechner/pi-tui";
 import type { RateWindow, UsageSnapshot } from "./types.js";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, BarWidth, DividerBlanks, BaseTextColor } from "./settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, BarWidth, DividerBlanks } from "./settings-types.js";
+import { resolveBaseTextColor, resolveDividerColor } from "./settings-types.js";
 import { formatErrorForDisplay } from "./errors.js";
 import { getStatusIcon, getStatusLabel } from "./status.js";
 import { shouldShowWindow } from "./providers/windows.js";
@@ -89,7 +90,7 @@ function getStatusColor(
 	return "base";
 }
 
-function resolveStatusTintColor(color: "error" | "warning" | "success" | "base", baseTextColor: BaseTextColor): BaseTextColor | "error" | "warning" | "success" {
+function resolveStatusTintColor(color: "error" | "warning" | "success" | "base", baseTextColor: ThemeColor): ThemeColor {
 	return color === "base" ? baseTextColor : color;
 }
 
@@ -160,7 +161,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const showStatusText = settings?.display.statusText ?? false;
 	const providerLabelSetting = settings?.display.providerLabel ?? "none";
 	const showColon = settings?.display.providerLabelColon ?? true;
-	const baseTextColor = settings?.display.baseTextColor ?? "muted";
+	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 
 	const statusActive = Boolean(status && (!statusDismissOk || status.indicator !== "none"));
 	const showIcon = statusActive && (statusMode === "icon" || statusMode === "icon+color");
@@ -205,7 +206,7 @@ export function formatUsageWindow(
 	options?: { useNormalColors?: boolean; barWidthOverride?: number }
 ): string {
 	const parts = formatUsageWindowParts(theme, window, isCodex, settings, usage, options);
-	const baseTextColor = settings?.display.baseTextColor ?? "muted";
+	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 
 	// Special handling for Extra usage label
 	if (window.label.startsWith("Extra [")) {
@@ -252,7 +253,7 @@ export function formatUsageWindowParts(
 	const resetTimePosition = settings?.display.resetTimePosition ?? "front";
 	const resetTimeFormat = settings?.display.resetTimeFormat ?? "relative";
 	const showUsageLabels = settings?.display.showUsageLabels ?? true;
-	const baseTextColor = settings?.display.baseTextColor ?? "muted";
+	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 	const errorThreshold = settings?.display.errorThreshold ?? 25;
 	const warningThreshold = settings?.display.warningThreshold ?? 50;
 	const successThreshold = settings?.display.successThreshold ?? 75;
@@ -371,7 +372,7 @@ export function formatUsageStatus(
 	modelId?: string,
 	settings?: Settings
 ): string | undefined {
-	const baseTextColor = settings?.display.baseTextColor ?? "muted";
+	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 	const label = formatProviderLabel(theme, usage, settings);
 
 	// If no windows, just show the provider name with error
@@ -404,12 +405,18 @@ export function formatUsageStatus(
 
 	// Build divider from settings
 	const dividerChar = settings?.display.dividerCharacter ?? "•";
+	const dividerColor = resolveDividerColor(settings?.display.dividerColor);
 	const blanksSetting = settings?.display.dividerBlanks ?? 1;
+	const showProviderDivider = settings?.display.showProviderDivider ?? false;
 	const blanksPerSide = typeof blanksSetting === "number" ? blanksSetting : 1;
 	const spacing = " ".repeat(blanksPerSide);
 	const charToDisplay = dividerChar === "blank" ? " " : dividerChar === "none" ? "" : dividerChar;
-	const divider = charToDisplay ? spacing + theme.fg(baseTextColor, charToDisplay) + spacing : spacing + spacing;
-	const labelGap = label && parts.length > 0 ? " ".repeat(blanksPerSide) : "";
+	const divider = charToDisplay ? spacing + theme.fg(dividerColor, charToDisplay) + spacing : spacing + spacing;
+	const labelGap = label && parts.length > 0
+		? showProviderDivider && charToDisplay !== ""
+			? divider
+			: spacing
+		: "";
 
 	return label + labelGap + parts.join(divider);
 }
@@ -423,7 +430,7 @@ export function formatUsageStatusWithWidth(
 	options?: { labelGapFill?: boolean }
 ): string | undefined {
 	const labelGapFill = options?.labelGapFill ?? false;
-	const baseTextColor = settings?.display.baseTextColor ?? "muted";
+	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 	const label = formatProviderLabel(theme, usage, settings);
 
 	// If no windows, just show the provider name with error
@@ -439,6 +446,8 @@ export function formatUsageStatusWithWidth(
 	const hasBar = barStyle === "bar" || barStyle === "both";
 	const barWidthSetting = settings?.display.barWidth ?? 6;
 	const dividerBlanksSetting = settings?.display.dividerBlanks ?? 1;
+	const dividerColor = resolveDividerColor(settings?.display.dividerColor);
+	const showProviderDivider = settings?.display.showProviderDivider ?? false;
 	const containBar = settings?.display.containBar ?? false;
 
 	const barFill = barWidthSetting === "fill";
@@ -479,7 +488,12 @@ export function formatUsageStatusWithWidth(
 	const charToDisplay = dividerChar === "blank" ? " " : dividerChar === "none" ? "" : dividerChar;
 	const dividerBaseWidth = (charToDisplay ? 1 : 0) + baseDividerBlanks * 2;
 	const labelGapEnabled = label !== "" && partCount > 0;
-	const labelGapBaseWidth = labelGapEnabled ? baseDividerBlanks : 0;
+	const providerDividerActive = showProviderDivider && charToDisplay !== "";
+	const labelGapBaseWidth = labelGapEnabled
+		? providerDividerActive
+			? dividerBaseWidth
+			: baseDividerBlanks
+		: 0;
 
 	const labelWidth = visibleWidth(label);
 	const baseTotalWidth =
@@ -496,8 +510,9 @@ export function formatUsageStatusWithWidth(
 	}
 
 	const useBars = barFill && barEligibleCount > 0;
+	const labelGapUnits = labelGapEnabled ? (providerDividerActive ? 2 : 1) : 0;
 	const dividerSlots = dividerCount + (labelGapEnabled ? 1 : 0);
-	const dividerUnits = dividerCount * 2 + (labelGapEnabled ? 1 : 0);
+	const dividerUnits = dividerCount * 2 + labelGapUnits;
 	const useDividers = dividerFill && dividerUnits > 0;
 
 	let barExtraTotal = 0;
@@ -528,8 +543,17 @@ export function formatUsageStatusWithWidth(
 		const baseUnit = useDividers ? Math.floor(dividerExtraTotal / dividerUnits) : 0;
 		let remainderUnits = useDividers ? dividerExtraTotal % dividerUnits : 0;
 		if (labelGapEnabled) {
-			labelBlanks = baseDividerBlanks + baseUnit + (remainderUnits > 0 ? 1 : 0);
-			if (remainderUnits > 0) remainderUnits -= 1;
+			if (useDividers && providerDividerActive) {
+				let extraUnits = baseUnit * 2;
+				if (remainderUnits >= 2) {
+					extraUnits += 2;
+					remainderUnits -= 2;
+				}
+				labelBlanks = baseDividerBlanks + Math.floor(extraUnits / 2);
+			} else if (useDividers) {
+				labelBlanks = baseDividerBlanks + baseUnit + (remainderUnits > 0 ? 1 : 0);
+				if (remainderUnits > 0) remainderUnits -= 1;
+			}
 		}
 		for (let i = 0; i < dividerCount; i++) {
 			let extraUnits = baseUnit * 2;
@@ -559,22 +583,29 @@ export function formatUsageStatusWithWidth(
 			const blanks = dividerBlanks[i] ?? baseDividerBlanks;
 			const spacing = " ".repeat(Math.max(0, blanks));
 			rest += charToDisplay
-				? spacing + theme.fg(baseTextColor, charToDisplay) + spacing
+				? spacing + theme.fg(dividerColor, charToDisplay) + spacing
 				: spacing + spacing;
 		}
 	}
 
-	let labelGap = labelGapEnabled ? Math.max(0, labelBlanks) : 0;
+	let labelGapExtra = 0;
 	if (labelGapFill && labelGapEnabled) {
 		const restWidth = visibleWidth(rest);
-		const totalWidth = visibleWidth(label) + restWidth + labelGap;
-		const extraGap = Math.max(0, width - totalWidth);
-		labelGap += extraGap;
+		const labelGapWidth = providerDividerActive
+			? (Math.max(0, labelBlanks) * 2) + (charToDisplay ? 1 : 0)
+			: Math.max(0, labelBlanks);
+		const totalWidth = visibleWidth(label) + restWidth + labelGapWidth;
+		labelGapExtra = Math.max(0, width - totalWidth);
 	}
 
 	let output = label;
 	if (labelGapEnabled) {
-		output += " ".repeat(labelGap);
+		if (providerDividerActive) {
+			const spacing = " ".repeat(Math.max(0, labelBlanks));
+			output += spacing + theme.fg(dividerColor, charToDisplay) + spacing + " ".repeat(labelGapExtra);
+		} else {
+			output += " ".repeat(Math.max(0, labelBlanks + labelGapExtra));
+		}
 	}
 	output += rest;
 

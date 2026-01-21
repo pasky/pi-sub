@@ -60,7 +60,10 @@ function buildMinimalDisplaySettings(defaultDisplay: Settings["display"]): Setti
 		providerLabelColon: false,
 		baseTextColor: "dim",
 		dividerCharacter: "none",
+		dividerColor: "borderMuted",
 		dividerBlanks: 0,
+		showProviderDivider: false,
+		dividerFooterJoin: false,
 		showTopDivider: false,
 		showBottomDivider: false,
 	};

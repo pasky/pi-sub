@@ -3,7 +3,8 @@
  */
 
 import type { SettingItem } from "@mariozechner/pi-tui";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement, ResetTimeFormat, StatusIndicatorMode, StatusIconPack } from "../settings-types.js";
+import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement, ResetTimeFormat, StatusIndicatorMode, StatusIconPack, DividerColor } from "../settings-types.js";
+import { DIVIDER_COLOR_OPTIONS, normalizeDividerColor, normalizeBaseTextColor } from "../settings-types.js";
 
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
@@ -57,8 +58,8 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 		{
 			id: "baseTextColor",
 			label: "Base Color",
-			currentValue: settings.display.baseTextColor,
-			values: ["dim", "muted", "text"] as BaseTextColor[],
+			currentValue: normalizeBaseTextColor(settings.display.baseTextColor),
+			values: [...DIVIDER_COLOR_OPTIONS] as BaseTextColor[],
 			description: "Base color for neutral labels and dividers.",
 		},
 		{
@@ -252,8 +253,15 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			id: "dividerCharacter",
 			label: "Divider Character",
 			currentValue: settings.display.dividerCharacter,
-			values: ["none", "blank", "|", "•", "●", "○", "◇"] as DividerCharacter[],
+			values: ["none", "blank", "|", "│", "┃", "┆", "┇", "║", "•", "●", "○", "◇"] as DividerCharacter[],
 			description: "Choose the divider glyph between windows.",
+		},
+		{
+			id: "dividerColor",
+			label: "Divider Color",
+			currentValue: normalizeDividerColor(settings.display.dividerColor ?? "borderMuted"),
+			values: [...DIVIDER_COLOR_OPTIONS] as DividerColor[],
+			description: "Color used for divider glyphs and lines.",
 		},
 		{
 			id: "dividerBlanks",
@@ -263,11 +271,32 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			description: "Padding around the divider character.",
 		},
 		{
+			id: "showProviderDivider",
+			label: "Show Provider Divider",
+			currentValue: settings.display.showProviderDivider ? "on" : "off",
+			values: ["on", "off"],
+			description: "Show the divider after the provider label.",
+		},
+		{
+			id: "showTopDivider",
+			label: "Show Top Divider",
+			currentValue: settings.display.showTopDivider ? "on" : "off",
+			values: ["on", "off"],
+			description: "Show a divider line above the widget.",
+		},
+		{
 			id: "showBottomDivider",
 			label: "Show Bottom Divider",
 			currentValue: settings.display.showBottomDivider ? "on" : "off",
 			values: ["on", "off"],
 			description: "Show a divider line below the widget.",
+		},
+		{
+			id: "dividerFooterJoin",
+			label: "Connect Dividers",
+			currentValue: settings.display.dividerFooterJoin ? "on" : "off",
+			values: ["on", "off"],
+			description: "Draw reverse-T connectors for top/bottom dividers.",
 		},
 
 	];
@@ -330,7 +359,7 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.providerLabelColon = value === "on";
 			break;
 		case "baseTextColor":
-			settings.display.baseTextColor = value as BaseTextColor;
+			settings.display.baseTextColor = normalizeBaseTextColor(value);
 			break;
 		case "showUsageLabels":
 			settings.display.showUsageLabels = value === "on";
@@ -344,12 +373,21 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "dividerCharacter":
 			settings.display.dividerCharacter = value as DividerCharacter;
 			break;
+		case "dividerColor":
+			settings.display.dividerColor = normalizeDividerColor(value);
+			break;
 		case "dividerBlanks": {
 			settings.display.dividerBlanks = value === "fill"
 				? "fill" as DividerBlanks
 				: parseInt(value, 10) as DividerBlanks;
 			break;
 		}
+		case "showProviderDivider":
+			settings.display.showProviderDivider = value === "on";
+			break;
+		case "dividerFooterJoin":
+			settings.display.dividerFooterJoin = value === "on";
+			break;
 		case "showTopDivider":
 			settings.display.showTopDivider = value === "on";
 			break;

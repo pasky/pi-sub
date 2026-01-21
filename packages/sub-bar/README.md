@@ -131,12 +131,16 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 | Show Provider Name | on/off | on | Show provider label in status |
 | Provider Label | none, plan, subscription, sub | none | Suffix after provider name (replaces existing Plan/Subscription suffix if present) |
 | Provider Label Colon | on/off | on | Show colon after provider label |
-| Base Color | dim, muted, text | dim | Base color for widget labels/dividers |
+| Base Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent | dim | Base color for widget labels/dividers |
 | Show Usage Labels | on/off | on | Show "used/rem." labels |
 | Padding X | 0, 1, 2, 3, 4 | 0 | Left/right padding inside widget |
-| Divider Character | none, blank, \|, •, ●, ○, ◇ | • | Character between usage entries |
+| Divider Character | none, blank, \|, │, ┃, ┆, ┇, ║, •, ●, ○, ◇ | • | Character between usage entries |
+| Divider Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent | borderMuted | Color for divider glyphs and lines |
 | Divider Blanks | 0, 1, 2, 3, fill | 1 | Padding around divider |
+| Show Provider Divider | on/off | off | Show divider after provider label |
+| Show Top Divider | on/off | off | Show horizontal divider line above bar |
 | Show Bottom Divider | on/off | on | Show horizontal divider line below bar |
+| Connect Dividers | on/off | off | Draw reverse-T connectors for top/bottom dividers |
 | Widget Wrapping | truncate, wrap | truncate | Wrap usage line to multiple lines or truncate |
 | Error Threshold (%) | 10-40 | 25 | Percentage remaining below which shows red |
 | Warning Threshold (%) | 30-70 | 50 | Percentage remaining below which shows yellow |

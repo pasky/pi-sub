@@ -4,6 +4,7 @@
 
 import type { CoreSettings } from "pi-sub-shared";
 import { PROVIDERS } from "pi-sub-shared";
+import type { ThemeColor } from "@mariozechner/pi-coding-agent";
 
 /**
  * Bar display style
@@ -28,7 +29,7 @@ export type BarCharacter = "light" | "heavy" | "double" | "block";
 /**
  * Divider character style
  */
-export type DividerCharacter = "none" | "blank" | "|" | "•" | "●" | "○" | "◇";
+export type DividerCharacter = "none" | "blank" | "|" | "│" | "┃" | "┆" | "┇" | "║" | "•" | "●" | "○" | "◇";
 
 /**
  * Widget line wrapping mode
@@ -68,7 +69,62 @@ export type StatusIconPack = "minimal" | "emoji";
 /**
  * Base text color for widget labels
  */
-export type BaseTextColor = "dim" | "muted" | "text";
+export type BaseTextColor = DividerColor;
+
+/**
+ * Divider color options (subset of theme colors).
+ */
+export const DIVIDER_COLOR_OPTIONS = [
+	"primary",
+	"text",
+	"muted",
+	"dim",
+	"success",
+	"warning",
+	"error",
+	"border",
+	"borderMuted",
+	"borderAccent",
+] as const;
+
+export type DividerColor = (typeof DIVIDER_COLOR_OPTIONS)[number];
+
+export function normalizeDividerColor(value?: string): DividerColor {
+	if (!value) return "borderMuted";
+	if (value === "accent" || value === "primary") return "primary";
+	if ((DIVIDER_COLOR_OPTIONS as readonly string[]).includes(value)) {
+		return value as DividerColor;
+	}
+	return "borderMuted";
+}
+
+export function resolveDividerColor(value?: string): ThemeColor {
+	const normalized = normalizeDividerColor(value);
+	switch (normalized) {
+		case "primary":
+			return "accent";
+		case "border":
+		case "borderMuted":
+		case "borderAccent":
+		case "success":
+		case "warning":
+		case "error":
+		case "muted":
+		case "dim":
+		case "text":
+			return normalized as ThemeColor;
+		default:
+			return "borderMuted";
+	}
+}
+
+export function normalizeBaseTextColor(value?: string): BaseTextColor {
+	return normalizeDividerColor(value);
+}
+
+export function resolveBaseTextColor(value?: string): ThemeColor {
+	return resolveDividerColor(value);
+}
 
 /**
  * Bar width configuration
@@ -188,8 +244,14 @@ export interface DisplaySettings {
 	showUsageLabels: boolean;
 	/** Divider character */
 	dividerCharacter: DividerCharacter;
+	/** Divider color */
+	dividerColor: DividerColor;
 	/** Blanks before and after divider */
 	dividerBlanks: DividerBlanks;
+	/** Show divider between provider label and usage */
+	showProviderDivider: boolean;
+	/** Connect divider glyphs to the bottom divider line */
+	dividerFooterJoin: boolean;
 	/** Show divider line above the bar */
 	showTopDivider: boolean;
 	/** Show divider line below the bar */
@@ -299,7 +361,10 @@ export function getDefaultSettings(): Settings {
 			baseTextColor: "dim",
 			showUsageLabels: true,
 			dividerCharacter: "•",
+			dividerColor: "borderMuted",
 			dividerBlanks: 1,
+			showProviderDivider: false,
+			dividerFooterJoin: false,
 			showTopDivider: false,
 			showBottomDivider: true,
 			paddingX: 0,

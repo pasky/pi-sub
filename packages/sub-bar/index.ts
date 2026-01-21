@@ -4,10 +4,11 @@
  * Only shows stats for the currently selected provider.
  */
 
-import type { ExtensionAPI, ExtensionContext, Theme } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
-import type { Settings } from "./src/settings-types.js";
+import type { DividerCharacter, Settings } from "./src/settings-types.js";
+import { resolveBaseTextColor, resolveDividerColor } from "./src/settings-types.js";
 import type { CoreSettings } from "pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
@@ -25,6 +26,50 @@ type SubCoreAction = {
 	provider?: ProviderName;
 	force?: boolean;
 };
+
+const ANSI_REGEX = /\x1b\[[0-9;]*m/g;
+
+const DIVIDER_JOIN_MAP: Partial<Record<DividerCharacter, { top: string; bottom: string; line: string }>> = {
+	"|": { top: "┬", bottom: "┴", line: "─" },
+	"│": { top: "┬", bottom: "┴", line: "─" },
+	"┆": { top: "┬", bottom: "┴", line: "─" },
+	"┃": { top: "┳", bottom: "┻", line: "━" },
+	"┇": { top: "┳", bottom: "┻", line: "━" },
+	"║": { top: "╦", bottom: "╩", line: "═" },
+};
+
+function buildDividerLine(
+	width: number,
+	baseLine: string,
+	dividerChar: DividerCharacter,
+	joinEnabled: boolean,
+	position: "top" | "bottom",
+	dividerColor: ThemeColor,
+	theme: Theme
+): string {
+	let lineChar = "─";
+	let joinChar: string | undefined;
+	if (joinEnabled) {
+		const joinInfo = DIVIDER_JOIN_MAP[dividerChar];
+		if (joinInfo) {
+			lineChar = joinInfo.line;
+			joinChar = position === "top" ? joinInfo.top : joinInfo.bottom;
+		}
+	}
+	const lineChars = Array.from(lineChar.repeat(Math.max(1, width)));
+	if (joinChar) {
+		const stripped = baseLine.replace(ANSI_REGEX, "");
+		let pos = 0;
+		for (const ch of stripped) {
+			if (pos >= lineChars.length) break;
+			if (ch === dividerChar) {
+				lineChars[pos] = joinChar;
+			}
+			pos += 1;
+		}
+	}
+	return theme.fg(dividerColor, lineChars.join(""));
+}
 
 /**
  * Create the extension
@@ -52,12 +97,15 @@ export default function createExtension(pi: ExtensionAPI) {
 					const contentWidth = Math.max(1, safeWidth - paddingX * 2);
 					const showTopDivider = settings.display.showTopDivider ?? false;
 					const showBottomDivider = settings.display.showBottomDivider ?? true;
-					const dividerLine = theme.fg("borderMuted", "─".repeat(safeWidth));
+					const dividerChar = settings.display.dividerCharacter ?? "•";
+					const dividerColor: ThemeColor = resolveDividerColor(settings.display.dividerColor);
+					const dividerConnect = settings.display.dividerFooterJoin ?? false;
+					const dividerLine = theme.fg(dividerColor, "─".repeat(safeWidth));
 					const alignment = settings.display.alignment ?? "left";
 					const hasFill = settings.display.barWidth === "fill" || settings.display.dividerBlanks === "fill";
 					const wantsSplit = alignment === "split";
 					const shouldAlign = !hasFill && !wantsSplit && (alignment === "center" || alignment === "right");
-					const baseTextColor = settings.display.baseTextColor ?? "muted";
+					const baseTextColor = resolveBaseTextColor(settings.display.baseTextColor);
 					const formatted = message
 						? theme.fg(baseTextColor, message)
 						: (hasFill || wantsSplit)
@@ -89,10 +137,18 @@ export default function createExtension(pi: ExtensionAPI) {
 					}
 
 					if (showTopDivider) {
-						lines = [dividerLine, ...lines];
+						const baseLine = lines.length > 0 ? lines[0] : "";
+						const topLine = dividerConnect
+							? buildDividerLine(safeWidth, baseLine, dividerChar, dividerConnect, "top", dividerColor, theme)
+							: dividerLine;
+						lines = [topLine, ...lines];
 					}
 					if (showBottomDivider) {
-						lines = [...lines, dividerLine];
+						const baseLine = lines.length > 0 ? lines[lines.length - 1] : "";
+						const footerLine = dividerConnect
+							? buildDividerLine(safeWidth, baseLine, dividerChar, dividerConnect, "bottom", dividerColor, theme)
+							: dividerLine;
+						lines = [...lines, footerLine];
 					}
 					return lines;
 				},

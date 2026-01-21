@@ -1,5 +1,7 @@
 # pi-sub
 
+[![Release (manual)](https://github.com/marckrenn/pi-sub/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/marckrenn/pi-sub/actions/workflows/release.yml)
+
 Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), UI clients (like `sub-bar`), and headless consumers that subscribe to usage updates.
 
 ## Overview
@@ -161,7 +163,7 @@ npm run test
 
 ## Release process (manual)
 
-We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in lockstep. Releases are manual and run via the GitHub Actions workflow `Release (manual)` on `main`.
+We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in lockstep. Releases are manual and run via the GitHub Actions workflow `Release (manual)` on `main`. See [RELEASE.md](./RELEASE.md) for the detailed checklist.
 
 ### Steps
 
