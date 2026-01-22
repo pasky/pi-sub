@@ -1,7 +1,9 @@
 import type { Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
+import { visibleWidth } from "@mariozechner/pi-tui";
 import type { DividerCharacter } from "./settings-types.js";
 
 const ANSI_REGEX = /\x1b\[[0-9;]*m/g;
+const SEGMENTER = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 const DIVIDER_JOIN_MAP: Partial<Record<DividerCharacter, { top: string; bottom: string; line: string }>> = {
 	"|": { top: "┬", bottom: "┴", line: "─" },
@@ -34,12 +36,12 @@ export function buildDividerLine(
 	if (joinChar) {
 		const stripped = baseLine.replace(ANSI_REGEX, "");
 		let pos = 0;
-		for (const ch of stripped) {
+		for (const { segment } of SEGMENTER.segment(stripped)) {
 			if (pos >= lineChars.length) break;
-			if (ch === dividerChar) {
+			if (segment === dividerChar) {
 				lineChars[pos] = joinChar;
 			}
-			pos += 1;
+			pos += Math.max(1, visibleWidth(segment));
 		}
 	}
 	return theme.fg(dividerColor, lineChars.join(""));
