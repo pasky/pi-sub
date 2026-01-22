@@ -48,6 +48,18 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			description: "Wrap the usage line or truncate with ellipsis.",
 		},
 		{
+			id: "paddingX",
+			label: "Padding X",
+			currentValue: String(settings.display.paddingX ?? 0),
+			values: ["0", "1", "2", "3", "4", CUSTOM_OPTION],
+			description: "Add left/right padding inside the widget.",
+		},
+	];
+}
+
+export function buildDisplayResetItems(settings: Settings): SettingItem[] {
+	return [
+		{
 			id: "resetTimePosition",
 			label: "Reset Timer",
 			currentValue: settings.display.resetTimePosition,
@@ -67,27 +79,6 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			currentValue: settings.display.resetTimeContainment ?? "()",
 			values: ["none", "blank", "()", "[]", "<>"] as ResetTimerContainment[],
 			description: "Wrapping characters for the reset timer.",
-		},
-		{
-			id: "showUsageLabels",
-			label: "Show Usage Labels",
-			currentValue: settings.display.showUsageLabels ? "on" : "off",
-			values: ["on", "off"],
-			description: "Show “used/rem.” labels after percentages.",
-		},
-		{
-			id: "boldWindowTitle",
-			label: "Bold Title",
-			currentValue: settings.display.boldWindowTitle ? "on" : "off",
-			values: ["on", "off"],
-			description: "Bold window titles like 5h, Week, etc.",
-		},
-		{
-			id: "paddingX",
-			label: "Padding X",
-			currentValue: String(settings.display.paddingX ?? 0),
-			values: ["0", "1", "2", "3", "4", CUSTOM_OPTION],
-			description: "Add left/right padding inside the widget.",
 		},
 	];
 }
@@ -237,6 +228,20 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 			currentValue: settings.display.providerLabelBold ? "on" : "off",
 			values: ["on", "off"],
 			description: "Bold the provider name and colon.",
+		},
+		{
+			id: "showUsageLabels",
+			label: "Show Usage Labels",
+			currentValue: settings.display.showUsageLabels ? "on" : "off",
+			values: ["on", "off"],
+			description: "Show “used/rem.” labels after percentages.",
+		},
+		{
+			id: "boldWindowTitle",
+			label: "Bold Title",
+			currentValue: settings.display.boldWindowTitle ? "on" : "off",
+			values: ["on", "off"],
+			description: "Bold window titles like 5h, Week, etc.",
 		},
 	];
 }

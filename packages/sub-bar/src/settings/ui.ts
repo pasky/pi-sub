@@ -14,7 +14,16 @@ import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
-import { buildDisplayLayoutItems, buildDisplayColorItems, buildDisplayBarItems, buildDisplayProviderItems, buildDisplayStatusItems, buildDisplayDividerItems, applyDisplayChange } from "./display.js";
+import {
+	buildDisplayLayoutItems,
+	buildDisplayResetItems,
+	buildDisplayColorItems,
+	buildDisplayBarItems,
+	buildDisplayProviderItems,
+	buildDisplayStatusItems,
+	buildDisplayDividerItems,
+	applyDisplayChange,
+} from "./display.js";
 import {
 	buildMainMenuItems,
 	buildProviderListItems,
@@ -48,11 +57,12 @@ type SettingsCategory =
 	| "display-theme-action"
 	| "display-theme-import"
 	| "display-layout"
-	| "display-color"
 	| "display-bar"
 	| "display-provider"
+	| "display-reset"
 	| "display-status"
-	| "display-divider";
+	| "display-divider"
+	| "display-color";
 
 /**
  * Show the settings UI
@@ -239,12 +249,13 @@ export async function showSettingsUI(
 					"display-theme-manage": "Manage Themes",
 					"display-theme-action": "Manage Theme",
 					"display-theme-import": "Import Theme",
-					"display-layout": "Layout & Content",
-					"display-color": "Color Scheme",
-					"display-bar": "Bar",
-					"display-provider": "Provider",
-					"display-status": "Status Indicator",
-					"display-divider": "Divider",
+					"display-layout": "Layout & Structure",
+					"display-bar": "Bars",
+					"display-provider": "Labels & Text",
+					"display-reset": "Reset Timer",
+					"display-status": "Status",
+					"display-divider": "Dividers",
+					"display-color": "Colors",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
 				let title = providerCategory
@@ -619,20 +630,23 @@ export async function showSettingsUI(
 						case "display-layout":
 							items = buildDisplayLayoutItems(settings);
 							break;
-						case "display-color":
-							items = buildDisplayColorItems(settings);
-							break;
 						case "display-bar":
 							items = buildDisplayBarItems(settings);
 							break;
 						case "display-provider":
 							items = buildDisplayProviderItems(settings);
 							break;
+						case "display-reset":
+							items = buildDisplayResetItems(settings);
+							break;
 						case "display-status":
 							items = buildDisplayStatusItems(settings);
 							break;
 						case "display-divider":
 							items = buildDisplayDividerItems(settings);
+							break;
+						case "display-color":
+							items = buildDisplayColorItems(settings);
 							break;
 						default:
 							items = [];
@@ -704,11 +718,12 @@ export async function showSettingsUI(
 				const usesSettingsList =
 					Boolean(providerCategory) ||
 					currentCategory === "display-layout" ||
-					currentCategory === "display-color" ||
 					currentCategory === "display-bar" ||
 					currentCategory === "display-provider" ||
+					currentCategory === "display-reset" ||
 					currentCategory === "display-status" ||
-					currentCategory === "display-divider";
+					currentCategory === "display-divider" ||
+					currentCategory === "display-color";
 				if (!usesSettingsList) {
 					let helpText: string;
 					if (currentCategory === "display-theme-save") {
