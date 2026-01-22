@@ -4,7 +4,8 @@
 
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-agent";
-import { Container, Input, SelectList, type SettingItem, SettingsList, Spacer, Text } from "@mariozechner/pi-tui";
+import { Container, Input, SelectList, Spacer, Text } from "@mariozechner/pi-tui";
+import { SettingsList, type SettingItem } from "../ui/settings-list.js";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import type { CoreSettings } from "pi-sub-shared";
@@ -223,7 +224,7 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 					};
-					const settingsHintText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↑↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {
@@ -529,7 +530,7 @@ export async function showSettingsUI(
 						}
 					};
 
-					const settingsHintText = "↑↓ navigate • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↑↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {

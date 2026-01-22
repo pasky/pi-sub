@@ -3,7 +3,7 @@
   "display": {
     "alignment": "split",
     "barStyle": "both",
-    "barType": "braille",
+    "barType": "shade",
     "barWidth": "fill",
     "barCharacter": "heavy",
     "containBar": false,
