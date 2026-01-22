@@ -29,6 +29,7 @@ import {
 	normalizeBaseTextColor,
 	normalizeDividerColor,
 } from "../settings-types.js";
+import { CUSTOM_OPTION } from "../ui/settings-list.js";
 
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
@@ -85,7 +86,7 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			id: "paddingX",
 			label: "Padding X",
 			currentValue: String(settings.display.paddingX ?? 0),
-			values: ["0", "1", "2", "3", "4"],
+			values: ["0", "1", "2", "3", "4", CUSTOM_OPTION],
 			description: "Add left/right padding inside the widget.",
 		},
 	];
@@ -122,21 +123,21 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 			id: "errorThreshold",
 			label: "Error Threshold (%)",
 			currentValue: String(settings.display.errorThreshold),
-			values: ["10", "15", "20", "25", "30", "35", "40"],
+			values: ["10", "15", "20", "25", "30", "35", "40", CUSTOM_OPTION],
 			description: "Percent remaining below which usage is red.",
 		},
 		{
 			id: "warningThreshold",
 			label: "Warning Threshold (%)",
 			currentValue: String(settings.display.warningThreshold),
-			values: ["30", "40", "50", "60", "70"],
+			values: ["30", "40", "50", "60", "70", CUSTOM_OPTION],
 			description: "Percent remaining below which usage is yellow.",
 		},
 		{
 			id: "successThreshold",
 			label: "Success Threshold (%)",
 			currentValue: String(settings.display.successThreshold),
-			values: ["60", "70", "75", "80", "90"],
+			values: ["60", "70", "75", "80", "90", CUSTOM_OPTION],
 			description: "Percent remaining above which usage is green.",
 		},
 	];
@@ -164,7 +165,7 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 			id: "barCharacter",
 			label: "H. Bar Character",
 			currentValue: settings.display.barCharacter,
-			values: ["light", "heavy", "double", "block"],
+			values: ["light", "heavy", "double", "block", CUSTOM_OPTION],
 			description: "Select the horizontal bar line weight.",
 		});
 	}
@@ -174,7 +175,7 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 			id: "barWidth",
 			label: "Bar Width",
 			currentValue: String(settings.display.barWidth),
-			values: ["1", "4", "6", "8", "10", "12", "fill"],
+			values: ["1", "4", "6", "8", "10", "12", "fill", CUSTOM_OPTION],
 			description: "Set the bar width or fill available space.",
 		},
 		{
@@ -220,7 +221,7 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 			id: "providerLabel",
 			label: "Provider Label",
 			currentValue: settings.display.providerLabel,
-			values: ["none", "plan", "subscription", "sub"] as ProviderLabel[],
+			values: ["none", "plan", "subscription", "sub", CUSTOM_OPTION] as (ProviderLabel | typeof CUSTOM_OPTION)[],
 			description: "Suffix appended after the provider name.",
 		},
 		{
@@ -305,7 +306,7 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			id: "dividerCharacter",
 			label: "Divider Character",
 			currentValue: settings.display.dividerCharacter,
-			values: ["none", "blank", "|", "│", "┃", "┆", "┇", "║", "•", "●", "○", "◇"] as DividerCharacter[],
+			values: ["none", "blank", "|", "│", "┃", "┆", "┇", "║", "•", "●", "○", "◇", CUSTOM_OPTION] as DividerCharacter[],
 			description: "Choose the divider glyph between windows.",
 		},
 		{
@@ -319,7 +320,7 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			id: "dividerBlanks",
 			label: "Blanks Before/After Divider",
 			currentValue: String(settings.display.dividerBlanks),
-			values: ["0", "1", "2", "3", "fill"],
+			values: ["0", "1", "2", "3", "fill", CUSTOM_OPTION],
 			description: "Padding around the divider character.",
 		},
 		{
@@ -354,6 +355,10 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 	];
 }
 
+function clampNumber(value: number, min: number, max: number): number {
+	return Math.min(max, Math.max(min, value));
+}
+
 export function applyDisplayChange(settings: Settings, id: string, value: string): Settings {
 	switch (id) {
 		case "alignment":
@@ -368,7 +373,7 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "barWidth": {
 			settings.display.barWidth = value === "fill"
 				? "fill" as BarWidth
-				: parseInt(value, 10) as BarWidth;
+				: clampNumber(parseInt(value, 10), 0, 100);
 			break;
 		}
 		case "containBar":
@@ -432,7 +437,7 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.widgetPlacement = value as WidgetPlacement;
 			break;
 		case "paddingX":
-			settings.display.paddingX = parseInt(value, 10) as 0 | 1 | 2 | 3 | 4;
+			settings.display.paddingX = clampNumber(parseInt(value, 10), 0, 100);
 			break;
 		case "dividerCharacter":
 			settings.display.dividerCharacter = value as DividerCharacter;
@@ -443,7 +448,7 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "dividerBlanks": {
 			settings.display.dividerBlanks = value === "fill"
 				? "fill" as DividerBlanks
-				: parseInt(value, 10) as DividerBlanks;
+				: clampNumber(parseInt(value, 10), 0, 100);
 			break;
 		}
 		case "showProviderDivider":
@@ -462,13 +467,13 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.widgetWrapping = value as WidgetWrapping;
 			break;
 		case "errorThreshold":
-			settings.display.errorThreshold = parseInt(value, 10);
+			settings.display.errorThreshold = clampNumber(parseInt(value, 10), 0, 100);
 			break;
 		case "warningThreshold":
-			settings.display.warningThreshold = parseInt(value, 10);
+			settings.display.warningThreshold = clampNumber(parseInt(value, 10), 0, 100);
 			break;
 		case "successThreshold":
-			settings.display.successThreshold = parseInt(value, 10);
+			settings.display.successThreshold = clampNumber(parseInt(value, 10), 0, 100);
 			break;
 	}
 	return settings;

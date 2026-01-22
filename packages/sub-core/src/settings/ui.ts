@@ -4,8 +4,8 @@
 
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-agent";
-import { Container, type SelectItem, SelectList, Spacer, Text } from "@mariozechner/pi-tui";
-import { SettingsList, type SettingItem } from "../ui/settings-list.js";
+import { Container, Input, type SelectItem, SelectList, Spacer, Text } from "@mariozechner/pi-tui";
+import { SettingsList, type SettingItem, CUSTOM_OPTION } from "../ui/settings-list.js";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import { getDefaultSettings } from "../settings-types.js";
@@ -55,6 +55,55 @@ export async function showSettingsUI(
 		ctx.ui.custom<Settings>((tui, theme, _kb, done) => {
 			let container = new Container();
 			let activeList: SelectList | SettingsList | null = null;
+			const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+			const buildInputSubmenu = (
+				label: string,
+				parseValue: (value: string) => string | null,
+				formatInitial?: (value: string) => string,
+			) => {
+				return (currentValue: string, done: (selectedValue?: string) => void) => {
+					const input = new Input();
+					input.focused = true;
+					input.setValue(formatInitial ? formatInitial(currentValue) : currentValue);
+					input.onSubmit = (value) => {
+						const parsed = parseValue(value);
+						if (!parsed) return;
+						done(parsed);
+					};
+					input.onEscape = () => {
+						done();
+					};
+
+					const inputContainer = new Container();
+					inputContainer.addChild(new Text(theme.fg("muted", label), 1, 0));
+					inputContainer.addChild(new Spacer(1));
+					inputContainer.addChild(input);
+
+					return {
+						render: (width: number) => inputContainer.render(width),
+						invalidate: () => inputContainer.invalidate(),
+						handleInput: (data: string) => input.handleInput(data),
+					};
+				};
+			};
+
+			const parseRefreshInterval = (raw: string): string | null => {
+				const trimmed = raw.trim().toLowerCase();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a value", "warning");
+					return null;
+				}
+				if (trimmed === "off") return "off";
+				const cleaned = trimmed.replace(/s$/, "");
+				const parsed = Number.parseInt(cleaned, 10);
+				if (Number.isNaN(parsed)) {
+					ctx.ui.notify("Enter seconds", "warning");
+					return null;
+				}
+				const clamped = parsed <= 0 ? 0 : clamp(parsed, 5, 3600);
+				return clamped === 0 ? "off" : `${clamped}s`;
+			};
 
 			function rebuild(): void {
 				container = new Container();
@@ -244,6 +293,14 @@ export async function showSettingsUI(
 						backCategory = "providers";
 					} else {
 						items = buildBehaviorItems(settings);
+						const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {
+							refreshInterval: buildInputSubmenu("Auto-refresh Interval (seconds)", parseRefreshInterval),
+						};
+						for (const item of items) {
+							if (item.values?.includes(CUSTOM_OPTION) && customHandlers[item.id]) {
+								item.submenu = customHandlers[item.id];
+							}
+						}
 						handleChange = (id, value) => {
 							settings = applyBehaviorChange(settings, id, value);
 							saveSettings(settings);
@@ -252,7 +309,7 @@ export async function showSettingsUI(
 						backCategory = "main";
 					}
 
-					const settingsHintText = "↑↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {

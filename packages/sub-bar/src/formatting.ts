@@ -42,9 +42,13 @@ function getBarCharacter(barCharacter: BarCharacter): string {
 			return "═";
 		case "block":
 			return "█";
-		default:
-			// Fallback for unexpected values
-			return "═";
+		default: {
+			const trimmed = String(barCharacter).trim();
+			if (!trimmed) return "━";
+			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+			const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
+			return iterator.next().value?.segment ?? trimmed[0] ?? "━";
+		}
 	}
 }
 
@@ -216,7 +220,9 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 			? "Subscription"
 			: providerLabelSetting === "sub"
 				? "Sub."
-				: "";
+				: providerLabelSetting === "none"
+					? ""
+					: String(providerLabelSetting);
 
 	const rawName = usage.displayName?.trim() ?? "";
 	const baseName = rawName.replace(/\s+(plan|subscription|sub\.?)[\s]*$/i, "").trim();

@@ -11,7 +11,7 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "tsx test/formatting.test.ts"
+    "test": "tsx test/all.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

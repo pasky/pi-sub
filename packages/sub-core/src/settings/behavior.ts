@@ -4,6 +4,7 @@
 
 import type { SettingItem } from "@mariozechner/pi-tui";
 import type { Settings } from "../settings-types.js";
+import { CUSTOM_OPTION } from "../ui/settings-list.js";
 
 export function buildBehaviorItems(settings: Settings): SettingItem[] {
 	return [
@@ -11,7 +12,7 @@ export function buildBehaviorItems(settings: Settings): SettingItem[] {
 			id: "refreshInterval",
 			label: "Auto-refresh Interval",
 			currentValue: settings.behavior.refreshInterval === 0 ? "off" : `${settings.behavior.refreshInterval}s`,
-			values: ["off", "30s", "60s", "120s", "300s"],
+			values: ["off", "30s", "60s", "120s", "300s", CUSTOM_OPTION],
 			description: "How often to refresh usage data automatically.",
 		},
 		{

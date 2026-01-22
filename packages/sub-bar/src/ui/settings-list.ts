@@ -12,6 +12,9 @@ export interface SettingsListOptions {
 	enableSearch?: boolean;
 }
 
+export const CUSTOM_OPTION = "__custom__";
+export const CUSTOM_LABEL = "custom";
+
 export type { SettingItem, SettingsListTheme };
 
 export class SettingsList implements Component {
@@ -118,18 +121,21 @@ export class SettingsList implements Component {
 			// Calculate space for value
 			const separator = "  ";
 			const usedWidth = prefixWidth + maxLabelWidth + visibleWidth(separator);
-			const valueMaxWidth = Math.max(0, width - usedWidth - 2);
-			const valueText = isSelected && item.values && item.values.length > 0
-				? truncateToWidth(
-					item.values
-						.map((value) => this.theme.value(value, value === item.currentValue))
-						.join(this.theme.description(" • ")),
-					valueMaxWidth,
-					"",
-				)
+			const valueMaxWidth = Math.max(1, width - usedWidth - 2);
+			const optionLines = isSelected && item.values && item.values.length > 0
+				? wrapTextWithAnsi(this.formatOptionsInline(item, item.values), valueMaxWidth)
+				: null;
+			const valueText = optionLines
+				? optionLines[0] ?? ""
 				: this.theme.value(truncateToWidth(item.currentValue, valueMaxWidth, ""), isSelected);
 			const line = prefix + labelText + separator + valueText;
 			lines.push(truncateToWidth(line, width, ""));
+			if (optionLines && optionLines.length > 1) {
+				const indent = " ".repeat(prefixWidth + maxLabelWidth + visibleWidth(separator));
+				for (const continuation of optionLines.slice(1)) {
+					lines.push(truncateToWidth(indent + continuation, width, ""));
+				}
+			}
 		}
 
 		// Add scroll indicator if needed
@@ -202,6 +208,12 @@ export class SettingsList implements Component {
 		}
 		const nextIndex = (currentIndex + direction + values.length) % values.length;
 		const newValue = values[nextIndex];
+		if (newValue === CUSTOM_OPTION) {
+			if (item.submenu) {
+				this.openSubmenu(item);
+			}
+			return;
+		}
 		item.currentValue = newValue;
 		this.onChange(item.id, newValue);
 	}
@@ -210,23 +222,18 @@ export class SettingsList implements Component {
 		const item = this.searchEnabled ? this.filteredItems[this.selectedIndex] : this.items[this.selectedIndex];
 		if (!item) return;
 
+		const hasCustom = Boolean(item.values && item.values.includes(CUSTOM_OPTION));
+		const currentIsCustom = hasCustom && item.values && !item.values.includes(item.currentValue);
+
+		if (item.submenu && hasCustom) {
+			if (currentIsCustom || item.currentValue === CUSTOM_OPTION) {
+				this.openSubmenu(item);
+			}
+			return;
+		}
+
 		if (item.submenu) {
-			// Open submenu, passing current value so it can pre-select correctly
-			this.submenuItemIndex = this.selectedIndex;
-			this.submenuComponent = item.submenu(item.currentValue, (selectedValue) => {
-				if (selectedValue !== undefined) {
-					item.currentValue = selectedValue;
-					this.onChange(item.id, selectedValue);
-				}
-				this.closeSubmenu();
-			});
-		} else if (item.values && item.values.length > 0) {
-			// Cycle through values
-			const currentIndex = item.values.indexOf(item.currentValue);
-			const nextIndex = (currentIndex + 1) % item.values.length;
-			const newValue = item.values[nextIndex];
-			item.currentValue = newValue;
-			this.onChange(item.id, newValue);
+			this.openSubmenu(item);
 		}
 	}
 
@@ -242,6 +249,33 @@ export class SettingsList implements Component {
 	private applyFilter(query: string): void {
 		this.filteredItems = fuzzyFilter(this.items, query, (item) => item.label);
 		this.selectedIndex = 0;
+	}
+
+	private formatOptionsInline(item: SettingItem, values: string[]): string {
+		const separator = this.theme.description(" • ");
+		const hasCustom = values.includes(CUSTOM_OPTION);
+		const currentIsCustom = hasCustom && !values.includes(item.currentValue);
+		return values
+			.map((value) => {
+				const label = value === CUSTOM_OPTION
+					? (currentIsCustom ? `${CUSTOM_LABEL} (${item.currentValue})` : CUSTOM_LABEL)
+					: value;
+				const selected = value === item.currentValue || (currentIsCustom && value === CUSTOM_OPTION);
+				return this.theme.value(label, selected);
+			})
+			.join(separator);
+	}
+
+	private openSubmenu(item: SettingItem): void {
+		if (!item.submenu) return;
+		this.submenuItemIndex = this.selectedIndex;
+		this.submenuComponent = item.submenu(item.currentValue, (selectedValue) => {
+			if (selectedValue !== undefined) {
+				item.currentValue = selectedValue;
+				this.onChange(item.id, selectedValue);
+			}
+			this.closeSubmenu();
+		});
 	}
 
 	private addHintLine(lines: string[]): void {

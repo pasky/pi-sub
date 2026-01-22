@@ -5,7 +5,7 @@
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-agent";
 import { Container, Input, SelectList, Spacer, Text } from "@mariozechner/pi-tui";
-import { SettingsList, type SettingItem } from "../ui/settings-list.js";
+import { SettingsList, type SettingItem, CUSTOM_OPTION } from "../ui/settings-list.js";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import type { CoreSettings } from "pi-sub-shared";
@@ -63,7 +63,7 @@ export async function showSettingsUI(
 		coreSettings?: CoreSettings;
 		onSettingsChange?: (settings: Settings) => void | Promise<void>;
 		onCoreSettingsChange?: (patch: Partial<CoreSettings>, next: CoreSettings) => void | Promise<void>;
-		onDisplayPresetApplied?: (name: string) => void | Promise<void>;
+		onDisplayPresetApplied?: (name: string, options?: { source?: "manual" }) => void | Promise<void>;
 		onDisplayThemeShared?: (name: string, shareString: string) => void | Promise<void>;
 	}
 ): Promise<Settings> {
@@ -81,6 +81,129 @@ export async function showSettingsUI(
 			let activeList: SelectList | SettingsList | { handleInput: (data: string) => void } | null = null;
 			let presetActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
 			let displayPreviewBackup: Settings["display"] | null = null;
+			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+			const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+			const buildInputSubmenu = (
+				label: string,
+				parseValue: (value: string) => string | null,
+				formatInitial?: (value: string) => string,
+			) => {
+				return (currentValue: string, done: (selectedValue?: string) => void) => {
+					const input = new Input();
+					input.focused = true;
+					input.setValue(formatInitial ? formatInitial(currentValue) : currentValue);
+					input.onSubmit = (value) => {
+						const parsed = parseValue(value);
+						if (!parsed) return;
+						done(parsed);
+					};
+					input.onEscape = () => {
+						done();
+					};
+
+					const container = new Container();
+					container.addChild(new Text(theme.fg("muted", label), 1, 0));
+					container.addChild(new Spacer(1));
+					container.addChild(input);
+
+					return {
+						render: (width: number) => container.render(width),
+						invalidate: () => container.invalidate(),
+						handleInput: (data: string) => input.handleInput(data),
+					};
+				};
+			};
+
+			const parseInteger = (raw: string, min: number, max: number): string | null => {
+				const trimmed = raw.trim().replace(/%$/, "");
+				if (!trimmed) {
+					ctx.ui.notify("Enter a value", "warning");
+					return null;
+				}
+				const parsed = Number.parseInt(trimmed, 10);
+				if (Number.isNaN(parsed)) {
+					ctx.ui.notify("Enter a number", "warning");
+					return null;
+				}
+				return String(clamp(parsed, min, max));
+			};
+
+			const parseBarWidth = (raw: string): string | null => {
+				const trimmed = raw.trim().toLowerCase();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a value", "warning");
+					return null;
+				}
+				if (trimmed === "fill") return "fill";
+				return parseInteger(trimmed, 0, 100);
+			};
+
+			const parseDividerBlanks = (raw: string): string | null => {
+				const trimmed = raw.trim().toLowerCase();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a value", "warning");
+					return null;
+				}
+				if (trimmed === "fill") return "fill";
+				return parseInteger(trimmed, 0, 100);
+			};
+
+			const parseDividerCharacter = (raw: string): string | null => {
+				const trimmed = raw.trim();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a character", "warning");
+					return null;
+				}
+				const normalized = trimmed.toLowerCase();
+				if (normalized === "none" || normalized === "blank") {
+					return normalized;
+				}
+				const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
+				const first = iterator.next().value?.segment ?? trimmed[0];
+				return first;
+			};
+
+			const parseBarCharacter = (raw: string): string | null => {
+				const trimmed = raw.trim();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a character", "warning");
+					return null;
+				}
+				const normalized = trimmed.toLowerCase();
+				if (["light", "heavy", "double", "block"].includes(normalized)) {
+					return normalized;
+				}
+				const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
+				const first = iterator.next().value?.segment ?? trimmed[0];
+				return first;
+			};
+
+			const parseProviderLabel = (raw: string): string | null => {
+				const trimmed = raw.trim();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a label", "warning");
+					return null;
+				}
+				const normalized = trimmed.toLowerCase();
+				if (["none", "plan", "subscription", "sub"].includes(normalized)) {
+					return normalized;
+				}
+				return trimmed;
+			};
+
+			const attachCustomInputs = (
+				items: SettingItem[],
+				handlers: Record<string, ReturnType<typeof buildInputSubmenu>>,
+			) => {
+				for (const item of items) {
+					if (!item.values || !item.values.includes(CUSTOM_OPTION)) continue;
+					const handler = handlers[item.id];
+					if (!handler) continue;
+					item.submenu = handler;
+				}
+			};
 
 			function rebuild(): void {
 				container = new Container();
@@ -224,7 +347,7 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 					};
-					const settingsHintText = "↑↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {
@@ -444,7 +567,7 @@ export async function showSettingsUI(
 							settings.display = { ...target.display };
 							saveSettings(settings);
 							if (onSettingsChange) void onSettingsChange(settings);
-							if (onDisplayPresetApplied) void onDisplayPresetApplied(target.name);
+							if (onDisplayPresetApplied) void onDisplayPresetApplied(target.name, { source: "manual" });
 							displayPreviewBackup = null;
 							presetActionTarget = null;
 							currentCategory = "display-theme";
@@ -515,6 +638,28 @@ export async function showSettingsUI(
 							items = [];
 					}
 
+					const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {};
+					if (currentCategory === "display-layout") {
+						customHandlers.paddingX = buildInputSubmenu("Padding X", (value) => parseInteger(value, 0, 100));
+					}
+					if (currentCategory === "display-color") {
+						customHandlers.errorThreshold = buildInputSubmenu("Error Threshold (%)", (value) => parseInteger(value, 0, 100));
+						customHandlers.warningThreshold = buildInputSubmenu("Warning Threshold (%)", (value) => parseInteger(value, 0, 100));
+						customHandlers.successThreshold = buildInputSubmenu("Success Threshold (%)", (value) => parseInteger(value, 0, 100));
+					}
+					if (currentCategory === "display-bar") {
+						customHandlers.barWidth = buildInputSubmenu("Bar Width", parseBarWidth);
+						customHandlers.barCharacter = buildInputSubmenu("Bar Character", parseBarCharacter);
+					}
+					if (currentCategory === "display-provider") {
+						customHandlers.providerLabel = buildInputSubmenu("Provider Label", parseProviderLabel);
+					}
+					if (currentCategory === "display-divider") {
+						customHandlers.dividerCharacter = buildInputSubmenu("Divider Character", parseDividerCharacter);
+						customHandlers.dividerBlanks = buildInputSubmenu("Divider Blanks", parseDividerBlanks);
+					}
+					attachCustomInputs(items, customHandlers);
+
 					handleChange = (id, value) => {
 						settings = applyDisplayChange(settings, id, value);
 						saveSettings(settings);
@@ -530,7 +675,7 @@ export async function showSettingsUI(
 						}
 					};
 
-					const settingsHintText = "↑↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {

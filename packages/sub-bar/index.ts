@@ -250,10 +250,13 @@ export default function createExtension(pi: ExtensionAPI) {
 						renderUsageWidget(lastContext, currentUsage);
 					}
 				},
-				onDisplayPresetApplied: (name) => {
+				onDisplayPresetApplied: (name, options) => {
+					const content = options?.source === "manual"
+						? `sub-bar Theme ${name} loaded`
+						: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Theme -> Manage themes`;
 					pi.sendMessage({
 						customType: "sub-bar",
-						content: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Theme -> Manage themes`,
+						content,
 						display: true,
 					});
 				},

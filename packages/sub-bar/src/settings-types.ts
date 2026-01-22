@@ -24,12 +24,25 @@ export type ColorScheme = "monochrome" | "base-warning-error" | "success-base-wa
 /**
  * Progress bar character style
  */
-export type BarCharacter = "light" | "heavy" | "double" | "block";
+export type BarCharacter = "light" | "heavy" | "double" | "block" | (string & {});
 
 /**
  * Divider character style
  */
-export type DividerCharacter = "none" | "blank" | "|" | "│" | "┃" | "┆" | "┇" | "║" | "•" | "●" | "○" | "◇";
+export type DividerCharacter =
+	| "none"
+	| "blank"
+	| "|"
+	| "│"
+	| "┃"
+	| "┆"
+	| "┇"
+	| "║"
+	| "•"
+	| "●"
+	| "○"
+	| "◇"
+	| (string & {});
 
 /**
  * Widget line wrapping mode
@@ -49,7 +62,7 @@ export type DisplayAlignment = "left" | "center" | "right" | "split";
 /**
  * Provider label prefix
  */
-export type ProviderLabel = "plan" | "subscription" | "sub" | "none";
+export type ProviderLabel = "plan" | "subscription" | "sub" | "none" | (string & {});
 
 /**
  * Reset timer format
@@ -162,12 +175,12 @@ export function resolveBaseTextColor(value?: string): BaseTextColor {
 /**
  * Bar width configuration
  */
-export type BarWidth = 1 | 4 | 6 | 8 | 10 | 12 | "fill";
+export type BarWidth = number | "fill";
 
 /**
  * Divider blank spacing configuration
  */
-export type DividerBlanks = 0 | 1 | 2 | 3 | "fill";
+export type DividerBlanks = number | "fill";
 
 /**
  * Provider settings (UI-only)
@@ -300,7 +313,7 @@ export interface DisplaySettings {
 	/** Widget line wrapping */
 	widgetWrapping: WidgetWrapping;
 	/** Left/right padding inside widget */
-	paddingX: 0 | 1 | 2 | 3 | 4;
+	paddingX: number;
 	/** Widget placement */
 	widgetPlacement: WidgetPlacement;
 	/** Error threshold (percentage remaining below this = red) */
