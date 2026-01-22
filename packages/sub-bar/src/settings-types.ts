@@ -312,6 +312,7 @@ export interface DisplayPreset {
 	id: string;
 	name: string;
 	display: DisplaySettings;
+	source?: "saved" | "imported";
 }
 
 export interface Settings extends Omit<CoreSettings, "providers"> {

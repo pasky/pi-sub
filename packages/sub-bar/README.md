@@ -81,8 +81,6 @@ Until then, manual paths/symlinks work as documented above.
 The extension loads automatically. Use:
 
 - `sub-bar:settings` - Open display + provider UI settings
-- `sub-bar:share <name>` - Print a shareable display theme string
-- `sub-bar:load <name:hash>` - Load a display theme from a share string
 - `sub-core:settings` - Configure provider enablement/order + behavior settings
 - `Ctrl+Alt+P` - Cycle through available providers
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
@@ -114,7 +112,7 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 
 ### Display Settings
 
-Use `/sub-bar:share <name>` to share a display theme and `/sub-bar:load <name:hash>` to load it. Use Display Settings → Save Theme to store the current theme.
+Use Display Settings → Theme to save, share, import, and manage display themes.
 
 | Setting | Options | Default | Description |
 |---------|---------|---------|-------------|

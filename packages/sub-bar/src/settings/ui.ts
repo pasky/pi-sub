@@ -18,10 +18,18 @@ import {
 	buildMainMenuItems,
 	buildProviderListItems,
 	buildDisplayMenuItems,
+	buildDisplayThemeMenuItems,
 	getProviderFromCategory,
 	type TooltipSelectItem,
 } from "./menu.js";
-import { buildDisplayPresetItems, buildPresetActionItems, resolveDisplayPresetTarget, saveDisplayPreset } from "./presets.js";
+import {
+	buildDisplayPresetItems,
+	buildPresetActionItems,
+	resolveDisplayPresetTarget,
+	saveDisplayPreset,
+	upsertDisplayPreset,
+} from "./presets.js";
+import { buildDisplayShareString, decodeDisplayShareString } from "../share.js";
 
 /**
  * Settings category
@@ -33,15 +41,17 @@ type SettingsCategory =
 	| "providers"
 	| ProviderCategory
 	| "display"
+	| "display-theme"
+	| "display-theme-save"
+	| "display-theme-manage"
+	| "display-theme-action"
+	| "display-theme-import"
 	| "display-layout"
 	| "display-color"
 	| "display-bar"
 	| "display-provider"
 	| "display-status"
-	| "display-divider"
-	| "display-save-theme"
-	| "display-presets"
-	| "display-presets-action";
+	| "display-divider";
 
 /**
  * Show the settings UI
@@ -53,6 +63,7 @@ export async function showSettingsUI(
 		onSettingsChange?: (settings: Settings) => void | Promise<void>;
 		onCoreSettingsChange?: (patch: Partial<CoreSettings>, next: CoreSettings) => void | Promise<void>;
 		onDisplayPresetApplied?: (name: string) => void | Promise<void>;
+		onDisplayThemeShared?: (name: string, shareString: string) => void | Promise<void>;
 	}
 ): Promise<Settings> {
 	const onSettingsChange = options?.onSettingsChange;
@@ -60,6 +71,7 @@ export async function showSettingsUI(
 	let settings = getSettings();
 	let coreSettings = options?.coreSettings ?? getFallbackCoreSettings(settings);
 	const onDisplayPresetApplied = options?.onDisplayPresetApplied;
+	const onDisplayThemeShared = options?.onDisplayThemeShared;
 	let currentCategory: SettingsCategory = "main";
 
 	return new Promise((resolve) => {
@@ -98,20 +110,25 @@ export async function showSettingsUI(
 					main: "sub-bar Settings",
 					providers: "Provider Settings",
 					display: "Display Settings",
+					"display-theme": "Theme",
+					"display-theme-save": "Save Theme",
+					"display-theme-manage": "Manage Themes",
+					"display-theme-action": "Manage Theme",
+					"display-theme-import": "Import Theme",
 					"display-layout": "Layout & Content",
 					"display-color": "Color Scheme",
 					"display-bar": "Bar",
 					"display-provider": "Provider",
 					"display-status": "Status Indicator",
 					"display-divider": "Divider",
-					"display-save-theme": "Save Theme",
-					"display-presets": "Load Theme",
-					"display-presets-action": "Load Theme",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
-				const title = providerCategory
+				let title = providerCategory
 					? `${PROVIDER_DISPLAY_NAMES[providerCategory]} Settings`
 					: (titles[currentCategory] ?? "sub-bar Settings");
+				if (currentCategory === "display-theme-action" && presetActionTarget) {
+					title = `Manage ${presetActionTarget.name}`;
+				}
 				container.addChild(new Text(theme.fg("accent", theme.bold(title)), 1, 0));
 				container.addChild(new Spacer(1));
 
@@ -251,7 +268,29 @@ export async function showSettingsUI(
 					};
 					activeList = selectList;
 					container.addChild(selectList);
-				} else if (currentCategory === "display-save-theme") {
+				} else if (currentCategory === "display-theme") {
+					const items = buildDisplayThemeMenuItems();
+					const selectList = new SelectList(items, Math.min(items.length, 10), {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					attachTooltip(items, selectList);
+					selectList.onSelect = (item) => {
+						currentCategory = item.value as SettingsCategory;
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						currentCategory = "display";
+						rebuild();
+						tui.requestRender();
+					};
+					activeList = selectList;
+					container.addChild(selectList);
+				} else if (currentCategory === "display-theme-save") {
 					const input = new Input();
 					input.focused = true;
 					const titleText = new Text(theme.fg("muted", "Theme name"), 1, 0);
@@ -265,12 +304,12 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 						ctx.ui.notify(`Theme ${trimmed} saved`, "info");
-						currentCategory = "display";
+						currentCategory = "display-theme";
 						rebuild();
 						tui.requestRender();
 					};
 					input.onEscape = () => {
-						currentCategory = "display";
+						currentCategory = "display-theme";
 						rebuild();
 						tui.requestRender();
 					};
@@ -278,15 +317,24 @@ export async function showSettingsUI(
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 					activeList = input;
-				} else if (currentCategory === "display-presets") {
+				} else if (currentCategory === "display-theme-manage") {
 					if (!displayPreviewBackup) {
 						displayPreviewBackup = { ...settings.display };
 					}
 					const defaults = getDefaultSettings();
 					const fallbackUser = settings.displayUserPreset ?? displayPreviewBackup;
 					const presetItems = buildDisplayPresetItems(settings);
+					const manageItems: TooltipSelectItem[] = [
+						{
+							value: "import",
+							label: "Import theme",
+							description: "from share string",
+							tooltip: "Import a shared theme string.",
+						},
+						...presetItems,
+					];
 
-					const selectList = new SelectList(presetItems, Math.min(presetItems.length, 10), {
+					const selectList = new SelectList(manageItems, Math.min(manageItems.length, 10), {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
 						selectedText: (t: string) => theme.fg("accent", t),
 						description: (t: string) => theme.fg("muted", t),
@@ -294,21 +342,30 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					selectList.onSelectionChange = (item) => {
-						const target = item
-							? resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser)
-							: null;
+						if (!item || item.value === "import") return;
+						const target = resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser);
 						if (!target) return;
 						settings.display = { ...target.display };
 						if (onSettingsChange) void onSettingsChange(settings);
 						tui.requestRender();
 					};
-					attachTooltip(presetItems, selectList);
+					attachTooltip(manageItems, selectList);
 
 					selectList.onSelect = (item) => {
+						if (item.value === "import") {
+							if (displayPreviewBackup) {
+								settings.display = { ...displayPreviewBackup };
+								if (onSettingsChange) void onSettingsChange(settings);
+							}
+							currentCategory = "display-theme-import";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
 						const target = resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser);
 						if (!target) return;
 						presetActionTarget = target;
-						currentCategory = "display-presets-action";
+						currentCategory = "display-theme-action";
 						rebuild();
 						tui.requestRender();
 					};
@@ -318,16 +375,51 @@ export async function showSettingsUI(
 							if (onSettingsChange) void onSettingsChange(settings);
 						}
 						displayPreviewBackup = null;
-						currentCategory = "display";
+						currentCategory = "display-theme";
 						rebuild();
 						tui.requestRender();
 					};
 					activeList = selectList;
 					container.addChild(selectList);
-				} else if (currentCategory === "display-presets-action") {
+				} else if (currentCategory === "display-theme-import") {
+					const input = new Input();
+					input.focused = true;
+					const titleText = new Text(theme.fg("muted", "Share string"), 1, 0);
+					input.onSubmit = (value) => {
+						const trimmed = value.trim();
+						if (!trimmed) {
+							ctx.ui.notify("Enter a share string", "warning");
+							return;
+						}
+						const decoded = decodeDisplayShareString(trimmed);
+						if (!decoded) {
+							ctx.ui.notify("Invalid theme share string", "error");
+							return;
+						}
+						settings = upsertDisplayPreset(settings, decoded.name, decoded.display, "imported");
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						const message = decoded.isNewerVersion
+							? `Imported ${decoded.name} (newer version, some fields may be ignored)`
+							: `Imported ${decoded.name}`;
+						ctx.ui.notify(message, decoded.isNewerVersion ? "warning" : "info");
+						currentCategory = "display-theme-manage";
+						rebuild();
+						tui.requestRender();
+					};
+					input.onEscape = () => {
+						currentCategory = "display-theme-manage";
+						rebuild();
+						tui.requestRender();
+					};
+					container.addChild(titleText);
+					container.addChild(new Spacer(1));
+					container.addChild(input);
+					activeList = input;
+				} else if (currentCategory === "display-theme-action") {
 					const target = presetActionTarget;
 					if (!target) {
-						currentCategory = "display-presets";
+						currentCategory = "display-theme-manage";
 						rebuild();
 						tui.requestRender();
 						return;
@@ -354,7 +446,21 @@ export async function showSettingsUI(
 							if (onDisplayPresetApplied) void onDisplayPresetApplied(target.name);
 							displayPreviewBackup = null;
 							presetActionTarget = null;
-							currentCategory = "display";
+							currentCategory = "display-theme";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						if (item.value === "share") {
+							const shareString = buildDisplayShareString(target.name, target.display);
+							if (onDisplayThemeShared) {
+								void onDisplayThemeShared(target.name, shareString);
+								ctx.ui.notify("Theme share string posted to chat", "info");
+							} else {
+								ctx.ui.notify(shareString, "info");
+							}
+							presetActionTarget = null;
+							currentCategory = "display-theme-manage";
 							rebuild();
 							tui.requestRender();
 							return;
@@ -367,13 +473,13 @@ export async function showSettingsUI(
 								if (onSettingsChange) void onSettingsChange(settings);
 							}
 							presetActionTarget = null;
-							currentCategory = "display-presets";
+							currentCategory = "display-theme-manage";
 							rebuild();
 							tui.requestRender();
 						}
 					};
 					selectList.onCancel = () => {
-						currentCategory = "display-presets";
+						currentCategory = "display-theme-manage";
 						rebuild();
 						tui.requestRender();
 					};
@@ -459,14 +565,17 @@ export async function showSettingsUI(
 					currentCategory === "display-divider";
 				if (!usesSettingsList) {
 					let helpText: string;
-					if (currentCategory === "display-save-theme") {
+					if (currentCategory === "display-theme-save") {
 						helpText = "Type name • Enter to save • Esc back";
+					} else if (currentCategory === "display-theme-import") {
+						helpText = "Paste share string • Enter to import • Esc back";
 					} else if (
 						currentCategory === "main" ||
 						currentCategory === "providers" ||
 						currentCategory === "display" ||
-						currentCategory === "display-presets" ||
-						currentCategory === "display-presets-action"
+						currentCategory === "display-theme" ||
+						currentCategory === "display-theme-manage" ||
+						currentCategory === "display-theme-action"
 					) {
 						helpText = "↑↓ navigate • Enter/Space select • Esc back";
 					} else {

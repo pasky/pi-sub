@@ -38,10 +38,11 @@ export function buildDisplayPresetItems(
 		tooltip: "Apply a compact display preset.",
 	});
 	for (const preset of settings.displayPresets) {
+		const description = preset.source === "imported" ? "manually imported theme" : "manually saved theme";
 		items.push({
 			value: `preset:${preset.id}`,
 			label: preset.name,
-			description: "manually saved theme",
+			description,
 			tooltip: `Manage ${preset.name}.`,
 		});
 	}
@@ -108,32 +109,49 @@ export function buildPresetActionItems(target: DisplayPresetTarget): TooltipSele
 	const items: TooltipSelectItem[] = [
 		{
 			value: "load",
-			label: `Load ${target.name}`,
-			description: "apply this preset",
-			tooltip: "Apply the selected preset.",
+			label: "Load",
+			description: "apply this theme",
+			tooltip: "Apply the selected theme.",
+		},
+		{
+			value: "share",
+			label: "Share",
+			description: "post share string",
+			tooltip: "Post a shareable theme string to chat.",
 		},
 	];
 	if (target.deletable) {
 		items.push({
 			value: "delete",
-			label: `Delete ${target.name}`,
-			description: "remove saved preset",
-			tooltip: "Remove this preset from saved presets.",
+			label: "Delete",
+			description: "remove saved theme",
+			tooltip: "Remove this theme from saved themes.",
 		});
 	}
 	return items;
 }
 
-export function saveDisplayPreset(settings: Settings, name: string): Settings {
-	const trimmed = name.trim();
+export function upsertDisplayPreset(
+	settings: Settings,
+	name: string,
+	display: Settings["display"],
+	source?: "saved" | "imported",
+): Settings {
+	const trimmed = name.trim() || "Theme";
 	const id = buildPresetId(trimmed);
-	const snapshot = { ...settings.display };
+	const snapshot = { ...display };
 	const existing = settings.displayPresets.find((preset) => preset.id === id);
+	const resolvedSource = source ?? existing?.source ?? "saved";
 	if (existing) {
 		existing.name = trimmed;
 		existing.display = snapshot;
+		existing.source = resolvedSource;
 	} else {
-		settings.displayPresets.push({ id, name: trimmed, display: snapshot });
+		settings.displayPresets.push({ id, name: trimmed, display: snapshot, source: resolvedSource });
 	}
 	return settings;
+}
+
+export function saveDisplayPreset(settings: Settings, name: string): Settings {
+	return upsertDisplayPreset(settings, name, settings.display, "saved");
 }

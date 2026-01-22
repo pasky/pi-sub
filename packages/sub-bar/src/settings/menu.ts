@@ -67,6 +67,12 @@ export function buildProviderListItems(settings: Settings, coreProviders?: CoreP
 export function buildDisplayMenuItems(): TooltipSelectItem[] {
 	return [
 		{
+			value: "display-theme",
+			label: "Theme",
+			description: "save, manage, share",
+			tooltip: "Save or manage display themes.",
+		},
+		{
 			value: "display-layout",
 			label: "Layout & Content",
 			description: "alignment, wrapping, reset, usage labels",
@@ -102,17 +108,22 @@ export function buildDisplayMenuItems(): TooltipSelectItem[] {
 			description: "character, blanks, top divider",
 			tooltip: "Change divider character, spacing, and divider lines.",
 		},
+	];
+}
+
+export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
+	return [
 		{
-			value: "display-save-theme",
-			label: "Save Theme",
+			value: "display-theme-save",
+			label: "Save current theme",
 			description: "store current theme",
 			tooltip: "Save the current display theme with a custom name.",
 		},
 		{
-			value: "display-presets",
-			label: "Load Theme",
-			description: "default, minimal, saved themes",
-			tooltip: "Load saved display themes.",
+			value: "display-theme-manage",
+			label: "Manage themes",
+			description: "load, share, import, delete",
+			tooltip: "Load, share, import, or delete saved themes.",
 		},
 	];
 }
