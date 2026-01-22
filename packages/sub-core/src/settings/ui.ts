@@ -309,7 +309,7 @@ export async function showSettingsUI(
 						backCategory = "main";
 					}
 
-					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space edit custom • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {

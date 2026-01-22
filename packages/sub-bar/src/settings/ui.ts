@@ -358,7 +358,7 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 					};
-					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space edit custom • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {
@@ -689,7 +689,7 @@ export async function showSettingsUI(
 						}
 					};
 
-					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space to change • Esc to cancel";
+					const settingsHintText = "↓ navigate • ←/→ change • Enter/Space edit custom • Esc to cancel";
 					const customTheme = {
 						...getSettingsListTheme(),
 						hint: (text: string) => {

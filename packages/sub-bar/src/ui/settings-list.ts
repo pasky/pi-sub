@@ -283,8 +283,8 @@ export class SettingsList implements Component {
 		lines.push(
 			this.theme.hint(
 				this.searchEnabled
-					? "  Type to search · Enter/Space or ←/→ to change · Esc to cancel"
-					: "  Enter/Space or ←/→ to change · Esc to cancel",
+					? "  Type to search · ←/→ change · Enter/Space edit custom · Esc to cancel"
+					: "  ←/→ change · Enter/Space edit custom · Esc to cancel",
 			),
 		);
 	}
