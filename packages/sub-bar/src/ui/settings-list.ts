@@ -119,7 +119,15 @@ export class SettingsList implements Component {
 			const separator = "  ";
 			const usedWidth = prefixWidth + maxLabelWidth + visibleWidth(separator);
 			const valueMaxWidth = Math.max(0, width - usedWidth - 2);
-			const valueText = this.theme.value(truncateToWidth(item.currentValue, valueMaxWidth, ""), isSelected);
+			const valueText = isSelected && item.values && item.values.length > 0
+				? truncateToWidth(
+					item.values
+						.map((value) => this.theme.value(value, value === item.currentValue))
+						.join(this.theme.description(" • ")),
+					valueMaxWidth,
+					"",
+				)
+				: this.theme.value(truncateToWidth(item.currentValue, valueMaxWidth, ""), isSelected);
 			const line = prefix + labelText + separator + valueText;
 			lines.push(truncateToWidth(line, width, ""));
 		}
@@ -142,23 +150,6 @@ export class SettingsList implements Component {
 			}
 		}
 
-		// Add options for selected item
-		if (selectedItem?.values && selectedItem.values.length > 0) {
-			if (!selectedItem.description) {
-				lines.push("");
-			}
-			const separator = this.theme.description(" • ");
-			const options = selectedItem.values
-				.map((value) => this.theme.value(value, value === selectedItem.currentValue))
-				.join(separator);
-			const optionsLine = `${this.theme.description("Options: ")}${options}`;
-			const wrapWidth = Math.max(1, width - 4);
-			const wrappedOptions = wrapTextWithAnsi(optionsLine, wrapWidth);
-			for (const line of wrappedOptions) {
-				const prefixed = `  ${line}`;
-				lines.push(truncateToWidth(prefixed, width, ""));
-			}
-		}
 
 		// Add hint
 		this.addHintLine(lines);
