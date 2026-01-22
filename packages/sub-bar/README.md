@@ -191,6 +191,11 @@ Update both sub-core (fetch) and sub-bar (display). See `sub-core/README.md` for
 
 See the root README “Developer guide” for the full decision checklist and examples.
 
+## Credits
+
+- Hannes Januschka ([barts](https://github.com/hjanuschka/shitty-extensions?tab=readme-ov-file#usage-barts), [@hjanuschka](https://x.com/hjanuschka))
+- Peter Steinberger ([CodexBar](https://github.com/steipete/CodexBar), [@steipete](https://x.com/steipete))
+
 ## Development
 
 ```bash

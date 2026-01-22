@@ -142,6 +142,10 @@ The `reply` callback receives `{ state }` or `{ entries }` immediately if availa
 
 After an action, sub-core emits `sub-core:update-current` with the new state.
 
+## Credits
+
+- Peter Steinberger ([CodexBar](https://github.com/steipete/CodexBar), [@steipete](https://x.com/steipete))
+
 ## Status
 
 Active. Used by `sub-bar` for display.
