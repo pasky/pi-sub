@@ -71,6 +71,7 @@ export function resolveDisplayPresetTarget(
 				widgetWrapping: "truncate",
 				resetTimePosition: "off",
 				resetTimeFormat: "relative",
+				resetTimeContainment: "()",
 				showUsageLabels: false,
 				paddingX: 0,
 				widgetPlacement: "belowEditor",

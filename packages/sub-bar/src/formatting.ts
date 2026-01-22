@@ -13,6 +13,7 @@ import type {
 	BarWidth,
 	ColorScheme,
 	DividerBlanks,
+	ResetTimerContainment,
 	Settings,
 } from "./settings-types.js";
 import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./settings-types.js";
@@ -116,6 +117,22 @@ function applyBaseTextColor(theme: Theme, color: BaseTextColor, text: string): s
 		return `${fgAnsi}${text}\x1b[39m`;
 	}
 	return theme.fg(resolveDividerColor(color), text);
+}
+
+function wrapResetContainment(text: string, containment: ResetTimerContainment): { wrapped: string; attachWithSpace: boolean } {
+	switch (containment) {
+		case "none":
+			return { wrapped: text, attachWithSpace: true };
+		case "blank":
+			return { wrapped: ` ${text} `, attachWithSpace: false };
+		case "[]":
+			return { wrapped: `[${text}]`, attachWithSpace: true };
+		case "<>":
+			return { wrapped: `<${text}>`, attachWithSpace: true };
+		case "()":
+		default:
+			return { wrapped: `(${text})`, attachWithSpace: true };
+	}
 }
 
 function formatResetDateTime(resetAt: string): string {
@@ -371,6 +388,7 @@ export function formatUsageWindowParts(
 		: resetTimeFormat === "datetime"
 			? (window.resetAt ? formatResetDateTime(window.resetAt) : window.resetDescription)
 			: window.resetDescription;
+	const resetContainment = settings?.display.resetTimeContainment ?? "()";
 	const leftSuffix = resetText && resetTimeFormat === "relative" && showUsageLabels ? " left" : "";
 
 	const coloredTitle = applyBaseTextColor(theme, textColor, window.label);
@@ -378,10 +396,13 @@ export function formatUsageWindowParts(
 
 	let labelPart = titlePart;
 	if (resetText) {
+		const resetBody = `${resetText}${leftSuffix}`;
+		const { wrapped, attachWithSpace } = wrapResetContainment(resetBody, resetContainment);
+		const coloredReset = applyBaseTextColor(theme, textColor, wrapped);
 		if (resetTimePosition === "front") {
-			labelPart = `${titlePart} ${applyBaseTextColor(theme, textColor, `(${resetText}${leftSuffix})`)}`;
+			labelPart = attachWithSpace ? `${titlePart} ${coloredReset}` : `${titlePart}${coloredReset}`;
 		} else if (resetTimePosition === "integrated") {
-			labelPart = `${applyBaseTextColor(theme, textColor, `${resetText}/`)}${titlePart}`;
+			labelPart = `${applyBaseTextColor(theme, textColor, `${wrapped}/`)}${titlePart}`;
 		} else if (resetTimePosition === "back") {
 			labelPart = titlePart;
 		}
@@ -389,7 +410,7 @@ export function formatUsageWindowParts(
 
 	const resetPart =
 		resetTimePosition === "back" && resetText
-			? applyBaseTextColor(theme, textColor, `(${resetText}${leftSuffix})`)
+			? applyBaseTextColor(theme, textColor, wrapResetContainment(`${resetText}${leftSuffix}`, resetContainment).wrapped)
 			: "";
 
 	return {

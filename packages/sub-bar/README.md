@@ -126,6 +126,7 @@ Use Display Settings → Theme to save, share, import, and manage display themes
 | Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
 | Reset Timer Format | relative, datetime | relative | Show relative countdown or reset datetime |
+| Reset Timer Containment | none, blank, (), [], <> | () | Wrap reset timer text |
 | Status Mode | icon, color, icon+color | icon | Show status as icons, color tint, or both |
 | Status Icon Pack | minimal, emoji | emoji | Icon set for status indicators |
 | Show Status Text | on/off | off | Show textual status description |

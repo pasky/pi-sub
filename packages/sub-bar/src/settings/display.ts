@@ -3,7 +3,26 @@
  */
 
 import type { SettingItem } from "@mariozechner/pi-tui";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement, ResetTimeFormat, StatusIndicatorMode, StatusIconPack, DividerColor } from "../settings-types.js";
+import type {
+	Settings,
+	BarStyle,
+	BarType,
+	ColorScheme,
+	BarCharacter,
+	DividerCharacter,
+	WidgetWrapping,
+	DisplayAlignment,
+	BarWidth,
+	DividerBlanks,
+	ProviderLabel,
+	BaseTextColor,
+	WidgetPlacement,
+	ResetTimeFormat,
+	ResetTimerContainment,
+	StatusIndicatorMode,
+	StatusIconPack,
+	DividerColor,
+} from "../settings-types.js";
 import {
 	BASE_COLOR_OPTIONS,
 	DIVIDER_COLOR_OPTIONS,
@@ -40,6 +59,13 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			currentValue: settings.display.resetTimeFormat ?? "relative",
 			values: ["relative", "datetime"] as ResetTimeFormat[],
 			description: "Show relative countdown or reset datetime.",
+		},
+		{
+			id: "resetTimeContainment",
+			label: "Reset Timer Containment",
+			currentValue: settings.display.resetTimeContainment ?? "()",
+			values: ["none", "blank", "()", "[]", "<>"] as ResetTimerContainment[],
+			description: "Wrapping characters for the reset timer.",
 		},
 		{
 			id: "showUsageLabels",
@@ -362,6 +388,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "resetTimeFormat":
 			settings.display.resetTimeFormat = value as ResetTimeFormat;
+			break;
+		case "resetTimeContainment":
+			settings.display.resetTimeContainment = value as ResetTimerContainment;
 			break;
 		case "statusIndicatorMode":
 			settings.display.statusIndicatorMode = value as StatusIndicatorMode;

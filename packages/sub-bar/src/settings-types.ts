@@ -57,6 +57,11 @@ export type ProviderLabel = "plan" | "subscription" | "sub" | "none";
 export type ResetTimeFormat = "relative" | "datetime";
 
 /**
+ * Reset timer containment style
+ */
+export type ResetTimerContainment = "none" | "blank" | "()" | "[]" | "<>";
+
+/**
  * Status indicator display mode
  */
 export type StatusIndicatorMode = "icon" | "color" | "icon+color";
@@ -252,6 +257,8 @@ export interface DisplaySettings {
 	resetTimePosition: "off" | "front" | "back" | "integrated";
 	/** Reset time format */
 	resetTimeFormat: ResetTimeFormat;
+	/** Reset timer containment */
+	resetTimeContainment: ResetTimerContainment;
 	/** Status indicator mode */
 	statusIndicatorMode: StatusIndicatorMode;
 	/** Status icon pack */
@@ -397,6 +404,7 @@ export function getDefaultSettings(): Settings {
 			colorScheme: "base-warning-error",
 			resetTimePosition: "front",
 			resetTimeFormat: "relative",
+			resetTimeContainment: "()",
 			statusIndicatorMode: "icon",
 			statusIconPack: "emoji",
 			statusText: false,

@@ -40,12 +40,14 @@ export function loadSettings(): Settings {
 		if (storage.exists(SETTINGS_PATH)) {
 			const content = storage.readFile(SETTINGS_PATH);
 			if (content) {
-				const loaded = JSON.parse(content) as Partial<Settings>;
+				const loaded = JSON.parse(content) as Partial<Settings> & {
+					displayThemes?: Settings["displayPresets"];
+				};
 				cachedSettings = mergeSettings({
 					version: loaded.version,
 					display: loaded.display,
 					providers: loaded.providers,
-					displayPresets: loaded.displayPresets,
+					displayPresets: loaded.displayThemes ?? loaded.displayPresets,
 					displayUserPreset: loaded.displayUserPreset,
 				} as Partial<Settings>);
 				return cachedSettings;
@@ -71,7 +73,7 @@ export function saveSettings(settings: Settings): boolean {
 			version: settings.version,
 			display: settings.display,
 			providers: settings.providers,
-			displayPresets: settings.displayPresets,
+			displayThemes: settings.displayPresets,
 			displayUserPreset: settings.displayUserPreset,
 		}, null, 2);
 		storage.writeFile(SETTINGS_PATH, content);
