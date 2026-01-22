@@ -103,6 +103,12 @@ export function buildDisplayMenuItems(): TooltipSelectItem[] {
 			tooltip: "Change divider character, spacing, and divider lines.",
 		},
 		{
+			value: "display-save-theme",
+			label: "Save Theme",
+			description: "store current theme",
+			tooltip: "Save the current display theme with a custom name.",
+		},
+		{
 			value: "display-presets",
 			label: "Load Theme",
 			description: "default, minimal, saved themes",

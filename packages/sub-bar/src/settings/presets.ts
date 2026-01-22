@@ -1,6 +1,13 @@
 import type { Settings } from "../settings-types.js";
 import type { TooltipSelectItem } from "./menu.js";
 
+const PRESET_ID_LENGTH = 24;
+const PRESET_ID_FALLBACK = "theme";
+
+function buildPresetId(name: string): string {
+	return name.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, PRESET_ID_LENGTH) || PRESET_ID_FALLBACK;
+}
+
 export interface DisplayPresetTarget {
 	id?: string;
 	name: string;
@@ -14,9 +21,9 @@ export function buildDisplayPresetItems(
 	const items: TooltipSelectItem[] = [];
 	items.push({
 		value: "user",
-		label: "Your setting",
-		description: "restore your last settings",
-		tooltip: "Restore your previous display settings.",
+		label: "Restore backup",
+		description: "restore your last theme",
+		tooltip: "Restore your previous display theme.",
 	});
 	items.push({
 		value: "default",
@@ -34,7 +41,7 @@ export function buildDisplayPresetItems(
 		items.push({
 			value: `preset:${preset.id}`,
 			label: preset.name,
-			description: "imported preset",
+			description: "manually saved theme",
 			tooltip: `Manage ${preset.name}.`,
 		});
 	}
@@ -49,7 +56,7 @@ export function resolveDisplayPresetTarget(
 ): DisplayPresetTarget | null {
 	if (value === "user") {
 		const display = settings.displayUserPreset ?? fallbackUser ?? settings.display;
-		return { name: "Your setting", display, deletable: false };
+		return { name: "Restore backup", display, deletable: false };
 	}
 	if (value === "default") {
 		return { name: "Default", display: { ...defaults.display }, deletable: false };
@@ -115,4 +122,18 @@ export function buildPresetActionItems(target: DisplayPresetTarget): TooltipSele
 		});
 	}
 	return items;
+}
+
+export function saveDisplayPreset(settings: Settings, name: string): Settings {
+	const trimmed = name.trim();
+	const id = buildPresetId(trimmed);
+	const snapshot = { ...settings.display };
+	const existing = settings.displayPresets.find((preset) => preset.id === id);
+	if (existing) {
+		existing.name = trimmed;
+		existing.display = snapshot;
+	} else {
+		settings.displayPresets.push({ id, name: trimmed, display: snapshot });
+	}
+	return settings;
 }

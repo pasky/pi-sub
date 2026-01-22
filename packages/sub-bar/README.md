@@ -114,7 +114,7 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 
 ### Display Settings
 
-Use `/sub-bar:share <name>` to share a display theme and `/sub-bar:load <name:hash>` to load it.
+Use `/sub-bar:share <name>` to share a display theme and `/sub-bar:load <name:hash>` to load it. Use Display Settings → Save Theme to store the current theme.
 
 | Setting | Options | Default | Description |
 |---------|---------|---------|-------------|

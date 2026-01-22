@@ -4,7 +4,7 @@
 
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-agent";
-import { Container, SelectList, type SettingItem, SettingsList, Spacer, Text } from "@mariozechner/pi-tui";
+import { Container, Input, SelectList, type SettingItem, SettingsList, Spacer, Text } from "@mariozechner/pi-tui";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import type { CoreSettings } from "pi-sub-shared";
@@ -21,7 +21,7 @@ import {
 	getProviderFromCategory,
 	type TooltipSelectItem,
 } from "./menu.js";
-import { buildDisplayPresetItems, buildPresetActionItems, resolveDisplayPresetTarget } from "./presets.js";
+import { buildDisplayPresetItems, buildPresetActionItems, resolveDisplayPresetTarget, saveDisplayPreset } from "./presets.js";
 
 /**
  * Settings category
@@ -39,6 +39,7 @@ type SettingsCategory =
 	| "display-provider"
 	| "display-status"
 	| "display-divider"
+	| "display-save-theme"
 	| "display-presets"
 	| "display-presets-action";
 
@@ -103,6 +104,7 @@ export async function showSettingsUI(
 					"display-provider": "Provider",
 					"display-status": "Status Indicator",
 					"display-divider": "Divider",
+					"display-save-theme": "Save Theme",
 					"display-presets": "Load Theme",
 					"display-presets-action": "Load Theme",
 				};
@@ -249,6 +251,33 @@ export async function showSettingsUI(
 					};
 					activeList = selectList;
 					container.addChild(selectList);
+				} else if (currentCategory === "display-save-theme") {
+					const input = new Input();
+					input.focused = true;
+					const titleText = new Text(theme.fg("muted", "Theme name"), 1, 0);
+					input.onSubmit = (value) => {
+						const trimmed = value.trim();
+						if (!trimmed) {
+							ctx.ui.notify("Enter a theme name", "warning");
+							return;
+						}
+						settings = saveDisplayPreset(settings, trimmed);
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						ctx.ui.notify(`Theme ${trimmed} saved`, "info");
+						currentCategory = "display";
+						rebuild();
+						tui.requestRender();
+					};
+					input.onEscape = () => {
+						currentCategory = "display";
+						rebuild();
+						tui.requestRender();
+					};
+					container.addChild(titleText);
+					container.addChild(new Spacer(1));
+					container.addChild(input);
+					activeList = input;
 				} else if (currentCategory === "display-presets") {
 					if (!displayPreviewBackup) {
 						displayPreviewBackup = { ...settings.display };
@@ -430,7 +459,9 @@ export async function showSettingsUI(
 					currentCategory === "display-divider";
 				if (!usesSettingsList) {
 					let helpText: string;
-					if (
+					if (currentCategory === "display-save-theme") {
+						helpText = "Type name • Enter to save • Esc back";
+					} else if (
 						currentCategory === "main" ||
 						currentCategory === "providers" ||
 						currentCategory === "display" ||
