@@ -75,6 +75,7 @@ export function resolveDisplayPresetTarget(
 				providerLabelColon: false,
 				providerLabelBold: false,
 				baseTextColor: "dim",
+				backgroundColor: "text",
 				boldWindowTitle: false,
 				dividerCharacter: "none",
 				dividerColor: "borderMuted",

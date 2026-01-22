@@ -136,7 +136,8 @@ Use `/sub-bar:share <name>` to share a display theme and `/sub-bar:load <name:ha
 | Provider Label | none, plan, subscription, sub | none | Suffix after provider name (replaces existing Plan/Subscription suffix if present) |
 | Provider Label Colon | on/off | on | Show colon after provider label |
 | Show in Bold | on/off | off | Bold the provider name and colon |
-| Base Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent | dim | Base color for widget labels/dividers |
+| Base Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent, selectedBg, userMessageBg, customMessageBg, toolPendingBg, toolSuccessBg, toolErrorBg | dim | Base color for widget labels/dividers |
+| Background Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent, selectedBg, userMessageBg, customMessageBg, toolPendingBg, toolSuccessBg, toolErrorBg | text | Background color for widget line |
 | Show Usage Labels | on/off | on | Show "used/rem." labels |
 | Bold Title | on/off | off | Bold window titles like 5h, Week |
 | Padding X | 0, 1, 2, 3, 4 | 0 | Left/right padding inside widget |

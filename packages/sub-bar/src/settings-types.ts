@@ -67,11 +67,6 @@ export type StatusIndicatorMode = "icon" | "color" | "icon+color";
 export type StatusIconPack = "minimal" | "emoji";
 
 /**
- * Base text color for widget labels
- */
-export type BaseTextColor = DividerColor;
-
-/**
  * Divider color options (subset of theme colors).
  */
 export const DIVIDER_COLOR_OPTIONS = [
@@ -88,6 +83,30 @@ export const DIVIDER_COLOR_OPTIONS = [
 ] as const;
 
 export type DividerColor = (typeof DIVIDER_COLOR_OPTIONS)[number];
+
+/**
+ * Background color options (theme background colors).
+ */
+export const BACKGROUND_COLOR_OPTIONS = [
+	"selectedBg",
+	"userMessageBg",
+	"customMessageBg",
+	"toolPendingBg",
+	"toolSuccessBg",
+	"toolErrorBg",
+] as const;
+
+export type BackgroundColor = (typeof BACKGROUND_COLOR_OPTIONS)[number];
+
+/**
+ * Base text/background color options.
+ */
+export const BASE_COLOR_OPTIONS = [...DIVIDER_COLOR_OPTIONS, ...BACKGROUND_COLOR_OPTIONS] as const;
+
+/**
+ * Base text color for widget labels
+ */
+export type BaseTextColor = (typeof BASE_COLOR_OPTIONS)[number];
 
 export function normalizeDividerColor(value?: string): DividerColor {
 	if (!value) return "borderMuted";
@@ -118,12 +137,21 @@ export function resolveDividerColor(value?: string): ThemeColor {
 	}
 }
 
-export function normalizeBaseTextColor(value?: string): BaseTextColor {
-	return normalizeDividerColor(value);
+export function isBackgroundColor(value?: BaseTextColor): value is BackgroundColor {
+	return !!value && (BACKGROUND_COLOR_OPTIONS as readonly string[]).includes(value);
 }
 
-export function resolveBaseTextColor(value?: string): ThemeColor {
-	return resolveDividerColor(value);
+export function normalizeBaseTextColor(value?: string): BaseTextColor {
+	if (!value) return "dim";
+	if (value === "accent" || value === "primary") return "primary";
+	if ((BASE_COLOR_OPTIONS as readonly string[]).includes(value)) {
+		return value as BaseTextColor;
+	}
+	return "dim";
+}
+
+export function resolveBaseTextColor(value?: string): BaseTextColor {
+	return normalizeBaseTextColor(value);
 }
 
 /**
@@ -242,6 +270,8 @@ export interface DisplaySettings {
 	providerLabelBold: boolean;
 	/** Base text color for widget labels */
 	baseTextColor: BaseTextColor;
+	/** Background color for the widget line */
+	backgroundColor: BaseTextColor;
 	/** Bold window titles (5h, Week, etc.) */
 	boldWindowTitle: boolean;
 	/** Show usage labels (used/rem.) */
@@ -375,6 +405,7 @@ export function getDefaultSettings(): Settings {
 			providerLabelColon: true,
 			providerLabelBold: false,
 			baseTextColor: "dim",
+			backgroundColor: "text",
 			boldWindowTitle: false,
 			showUsageLabels: true,
 			dividerCharacter: "•",

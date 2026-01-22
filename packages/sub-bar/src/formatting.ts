@@ -2,11 +2,20 @@
  * UI formatting utilities for the sub-bar extension
  */
 
-import type { Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
+import type { Theme } from "@mariozechner/pi-coding-agent";
 import { visibleWidth } from "@mariozechner/pi-tui";
 import type { RateWindow, UsageSnapshot } from "./types.js";
-import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, BarWidth, DividerBlanks } from "./settings-types.js";
-import { resolveBaseTextColor, resolveDividerColor } from "./settings-types.js";
+import type {
+	BaseTextColor,
+	BarStyle,
+	BarType,
+	BarCharacter,
+	BarWidth,
+	ColorScheme,
+	DividerBlanks,
+	Settings,
+} from "./settings-types.js";
+import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./settings-types.js";
 import { formatErrorForDisplay } from "./errors.js";
 import { getStatusIcon, getStatusLabel } from "./status.js";
 import { shouldShowWindow } from "./providers/windows.js";
@@ -48,7 +57,7 @@ function getUsageColor(
 	errorThreshold: number = 25,
 	warningThreshold: number = 50,
 	successThreshold: number = 75
-): "error" | "warning" | "base" | "success" | "accent" | "text" {
+): "error" | "warning" | "base" | "success" {
 	if (colorScheme === "monochrome") {
 		return "base";
 	}
@@ -90,8 +99,23 @@ function getStatusColor(
 	return "base";
 }
 
-function resolveStatusTintColor(color: "error" | "warning" | "success" | "base", baseTextColor: ThemeColor): ThemeColor {
+function resolveStatusTintColor(
+	color: "error" | "warning" | "success" | "base",
+	baseTextColor: BaseTextColor
+): BaseTextColor {
 	return color === "base" ? baseTextColor : color;
+}
+
+function fgFromBgAnsi(ansi: string): string {
+	return ansi.replace(/\x1b\[48;/g, "\x1b[38;").replace(/\x1b\[49m/g, "\x1b[39m");
+}
+
+function applyBaseTextColor(theme: Theme, color: BaseTextColor, text: string): string {
+	if (isBackgroundColor(color)) {
+		const fgAnsi = fgFromBgAnsi(theme.getBgAnsi(color as Parameters<Theme["getBgAnsi"]>[0]));
+		return `${fgAnsi}${text}\x1b[39m`;
+	}
+	return theme.fg(resolveDividerColor(color), text);
 }
 
 function formatResetDateTime(resetAt: string): string {
@@ -191,10 +215,10 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const labelColor = showColor ? resolveStatusTintColor(statusColor, baseTextColor) : baseTextColor;
 
 	const parts: string[] = [];
-	if (icon) parts.push(theme.fg(labelColor, icon));
-	if (statusText) parts.push(theme.fg(labelColor, statusText));
+	if (icon) parts.push(applyBaseTextColor(theme, labelColor, icon));
+	if (statusText) parts.push(applyBaseTextColor(theme, labelColor, statusText));
 	if (providerLabelWithColon) {
-		const colored = theme.fg(labelColor, providerLabelWithColon);
+		const colored = applyBaseTextColor(theme, labelColor, providerLabelWithColon);
 		parts.push(boldProviderLabel ? theme.bold(colored) : colored);
 	}
 	if (parts.length === 0) return "";
@@ -222,8 +246,10 @@ export function formatUsageWindow(
 			const [, prefix, status, suffix] = match;
 			const styledLabel =
 				status === "active"
-					? theme.fg(baseTextColor, prefix) + theme.fg("text", status) + theme.fg(baseTextColor, suffix)
-					: theme.fg(baseTextColor, window.label);
+					? applyBaseTextColor(theme, baseTextColor, prefix)
+						+ theme.fg("text", status)
+						+ applyBaseTextColor(theme, baseTextColor, suffix)
+					: applyBaseTextColor(theme, baseTextColor, window.label);
 			const extraParts = [styledLabel, parts.bar, parts.pct].filter(Boolean);
 			return extraParts.join(" ");
 		}
@@ -233,7 +259,7 @@ export function formatUsageWindow(
 			: extraColor === "base"
 				? baseTextColor
 				: extraColor;
-		const extraParts = [theme.fg(extraTextColor, window.label), parts.bar, parts.pct].filter(Boolean);
+		const extraParts = [applyBaseTextColor(theme, extraTextColor, window.label), parts.bar, parts.pct].filter(Boolean);
 		return extraParts.join(" ");
 	}
 
@@ -311,8 +337,8 @@ export function formatUsageWindowParts(
 		}
 
 		if (settings?.display.containBar && barStr) {
-			const leftCap = theme.fg(baseTextColor, "▕");
-			const rightCap = theme.fg(baseTextColor, "▏");
+			const leftCap = applyBaseTextColor(theme, baseTextColor, "▕");
+			const rightCap = applyBaseTextColor(theme, baseTextColor, "▏");
 			barStr = leftCap + barStr + rightCap;
 		}
 	}
@@ -325,17 +351,17 @@ export function formatUsageWindowParts(
 			if (quotaDisplay === "requests" && usage.requestsRemaining !== undefined && usage.requestsEntitlement !== undefined) {
 				const used = usage.requestsEntitlement - usage.requestsRemaining;
 				const suffix = showUsageLabels ? " used" : "";
-				pctStr = theme.fg(textColor, `${used}/${usage.requestsEntitlement}${suffix}`);
+				pctStr = applyBaseTextColor(theme, textColor, `${used}/${usage.requestsEntitlement}${suffix}`);
 			} else {
 				const suffix = showUsageLabels ? " used" : "";
-				pctStr = theme.fg(textColor, `${usedPct}%${suffix}`);
+				pctStr = applyBaseTextColor(theme, textColor, `${usedPct}%${suffix}`);
 			}
 		} else if (isCodex) {
 			const suffix = showUsageLabels ? " rem." : "";
-			pctStr = theme.fg(textColor, `${displayPct}%${suffix}`);
+			pctStr = applyBaseTextColor(theme, textColor, `${displayPct}%${suffix}`);
 		} else {
 			const suffix = showUsageLabels ? " used" : "";
-			pctStr = theme.fg(textColor, `${usedPct}%${suffix}`);
+			pctStr = applyBaseTextColor(theme, textColor, `${usedPct}%${suffix}`);
 		}
 	}
 
@@ -347,15 +373,15 @@ export function formatUsageWindowParts(
 			: window.resetDescription;
 	const leftSuffix = resetText && resetTimeFormat === "relative" && showUsageLabels ? " left" : "";
 
-	const coloredTitle = theme.fg(textColor, window.label);
+	const coloredTitle = applyBaseTextColor(theme, textColor, window.label);
 	const titlePart = boldWindowTitle ? theme.bold(coloredTitle) : coloredTitle;
 
 	let labelPart = titlePart;
 	if (resetText) {
 		if (resetTimePosition === "front") {
-			labelPart = `${titlePart} ${theme.fg(textColor, `(${resetText}${leftSuffix})`)}`;
+			labelPart = `${titlePart} ${applyBaseTextColor(theme, textColor, `(${resetText}${leftSuffix})`)}`;
 		} else if (resetTimePosition === "integrated") {
-			labelPart = `${theme.fg(textColor, `${resetText}/`)}${titlePart}`;
+			labelPart = `${applyBaseTextColor(theme, textColor, `${resetText}/`)}${titlePart}`;
 		} else if (resetTimePosition === "back") {
 			labelPart = titlePart;
 		}
@@ -363,7 +389,7 @@ export function formatUsageWindowParts(
 
 	const resetPart =
 		resetTimePosition === "back" && resetText
-			? theme.fg(textColor, `(${resetText}${leftSuffix})`)
+			? applyBaseTextColor(theme, textColor, `(${resetText}${leftSuffix})`)
 			: "";
 
 	return {
@@ -388,7 +414,9 @@ export function formatUsageStatus(
 
 	// If no windows, just show the provider name with error
 	if (usage.windows.length === 0) {
-		const errorMsg = usage.error ? theme.fg(baseTextColor, `(${formatErrorForDisplay(usage.error)})`) : "";
+		const errorMsg = usage.error
+			? applyBaseTextColor(theme, baseTextColor, `(${formatErrorForDisplay(usage.error)})`)
+			: "";
 		if (!label) {
 			return errorMsg;
 		}
@@ -411,7 +439,7 @@ export function formatUsageStatus(
 	// Add extra usage lines (extra usage off, copilot multiplier, etc.)
 	const extras = getUsageExtras(usage, settings, modelId);
 	for (const extra of extras) {
-		parts.push(theme.fg(baseTextColor, extra.label));
+		parts.push(applyBaseTextColor(theme, baseTextColor, extra.label));
 	}
 
 	// Build divider from settings
@@ -446,7 +474,9 @@ export function formatUsageStatusWithWidth(
 
 	// If no windows, just show the provider name with error
 	if (usage.windows.length === 0) {
-		const errorMsg = usage.error ? theme.fg(baseTextColor, `(${formatErrorForDisplay(usage.error)})`) : "";
+		const errorMsg = usage.error
+			? applyBaseTextColor(theme, baseTextColor, `(${formatErrorForDisplay(usage.error)})`)
+			: "";
 		if (!label) {
 			return errorMsg;
 		}
@@ -485,7 +515,7 @@ export function formatUsageStatusWithWidth(
 
 	const barEligibleCount = hasBar ? windows.length : 0;
 	const extras = getUsageExtras(usage, settings, modelId);
-	const extraParts = extras.map((extra) => theme.fg(baseTextColor, extra.label));
+	const extraParts = extras.map((extra) => applyBaseTextColor(theme, baseTextColor, extra.label));
 
 	const barSpacerWidth = hasBar ? 1 : 0;
 	const baseWindowWidths = windows.map((w) =>

@@ -7,8 +7,8 @@
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
-import type { Settings } from "./src/settings-types.js";
-import { resolveBaseTextColor, resolveDividerColor } from "./src/settings-types.js";
+import type { Settings, BaseTextColor } from "./src/settings-types.js";
+import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./src/settings-types.js";
 import { buildDividerLine } from "./src/dividers.js";
 import type { CoreSettings } from "pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
@@ -29,6 +29,24 @@ type SubCoreAction = {
 	force?: boolean;
 };
 
+function applyBackground(lines: string[], theme: Theme, color: BaseTextColor): string[] {
+	const bgAnsi = isBackgroundColor(color)
+		? theme.getBgAnsi(color as Parameters<Theme["getBgAnsi"]>[0])
+		: theme.getFgAnsi(resolveDividerColor(color)).replace(/\x1b\[38;/g, "\x1b[48;").replace(/\x1b\[39m/g, "\x1b[49m");
+	if (!bgAnsi || bgAnsi === "\x1b[49m") return lines;
+	return lines.map((line) => `${bgAnsi}${line}\x1b[49m`);
+}
+
+function applyBaseTextColor(theme: Theme, color: BaseTextColor, text: string): string {
+	if (isBackgroundColor(color)) {
+		const fgAnsi = theme
+			.getBgAnsi(color as Parameters<Theme["getBgAnsi"]>[0])
+			.replace(/\x1b\[48;/g, "\x1b[38;")
+			.replace(/\x1b\[49m/g, "\x1b[39m");
+		return `${fgAnsi}${text}\x1b[39m`;
+	}
+	return theme.fg(resolveDividerColor(color), text);
+}
 
 /**
  * Create the extension
@@ -66,7 +84,7 @@ export default function createExtension(pi: ExtensionAPI) {
 					const shouldAlign = !hasFill && !wantsSplit && (alignment === "center" || alignment === "right");
 					const baseTextColor = resolveBaseTextColor(settings.display.baseTextColor);
 					const formatted = message
-						? theme.fg(baseTextColor, message)
+						? applyBaseTextColor(theme, baseTextColor, message)
 						: (hasFill || wantsSplit)
 							? formatUsageStatusWithWidth(theme, usage!, contentWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
 							: formatUsageStatus(theme, usage!, ctx.model?.id, settings);
@@ -109,7 +127,8 @@ export default function createExtension(pi: ExtensionAPI) {
 							: dividerLine;
 						lines = [...lines, footerLine];
 					}
-					return lines;
+					const backgroundColor = resolveBaseTextColor(settings.display.backgroundColor);
+					return applyBackground(lines, theme, backgroundColor);
 				},
 				invalidate() {},
 			}),

@@ -4,7 +4,12 @@
 
 import type { SettingItem } from "@mariozechner/pi-tui";
 import type { Settings, BarStyle, BarType, ColorScheme, BarCharacter, DividerCharacter, WidgetWrapping, DisplayAlignment, BarWidth, DividerBlanks, ProviderLabel, BaseTextColor, WidgetPlacement, ResetTimeFormat, StatusIndicatorMode, StatusIconPack, DividerColor } from "../settings-types.js";
-import { DIVIDER_COLOR_OPTIONS, normalizeDividerColor, normalizeBaseTextColor } from "../settings-types.js";
+import {
+	BASE_COLOR_OPTIONS,
+	DIVIDER_COLOR_OPTIONS,
+	normalizeBaseTextColor,
+	normalizeDividerColor,
+} from "../settings-types.js";
 
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
@@ -66,8 +71,15 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 			id: "baseTextColor",
 			label: "Base Color",
 			currentValue: normalizeBaseTextColor(settings.display.baseTextColor),
-			values: [...DIVIDER_COLOR_OPTIONS] as BaseTextColor[],
+			values: [...BASE_COLOR_OPTIONS] as BaseTextColor[],
 			description: "Base color for neutral labels and dividers.",
+		},
+		{
+			id: "backgroundColor",
+			label: "Background Color",
+			currentValue: normalizeBaseTextColor(settings.display.backgroundColor),
+			values: [...BASE_COLOR_OPTIONS] as BaseTextColor[],
+			description: "Background color for the widget line.",
 		},
 		{
 			id: "colorScheme",
@@ -377,6 +389,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "baseTextColor":
 			settings.display.baseTextColor = normalizeBaseTextColor(value);
+			break;
+		case "backgroundColor":
+			settings.display.backgroundColor = normalizeBaseTextColor(value);
 			break;
 		case "showUsageLabels":
 			settings.display.showUsageLabels = value === "on";
