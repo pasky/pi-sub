@@ -7,6 +7,15 @@ Releases are manual and run via the **Release (manual)** GitHub Actions workflow
 - `NPM_TOKEN` secret in GitHub (publish token for `pi-sub-core`, `pi-sub-bar`, `pi-sub-shared`).
 - Maintainership access to trigger workflows.
 
+## Release
+
+### npm token (GitHub Actions)
+
+1. Generate an npm **Automation** token at https://www.npmjs.com/settings/<your-user>/tokens (or run `npm token create --automation`).
+2. Add it to GitHub → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
+   - Name: `NPM_TOKEN`
+   - Value: `<your token>`
+
 ## Standard release flow
 
 1. **Create a changeset** for your changes:
@@ -33,4 +42,4 @@ The workflow runs `npm run check` and `npm run test` first, but the publish step
 
 - The workflow only runs on `main` (`workflow_dispatch` + branch check).
 - Versions are locked across packages via Changesets `fixed` groups.
-- GitHub Releases are created automatically by `changesets/action` when publishing.
+- GitHub Releases are created automatically by the workflow (`gh release create --generate-notes`).
