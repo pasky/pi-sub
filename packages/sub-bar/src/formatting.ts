@@ -202,7 +202,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const error = usage.error;
 	const fetchError = Boolean(error && !isExpectedMissingData(error));
 	const baseStatus = showStatus ? usage.status : undefined;
-	const fetchStatus: ProviderStatus | undefined = fetchError && (!baseStatus || baseStatus.indicator === "none")
+	const fetchStatus: ProviderStatus | undefined = fetchError && (!baseStatus || baseStatus.indicator === "none" || baseStatus.indicator === "unknown")
 		? { indicator: "minor", description: "Fetch failed" }
 		: undefined;
 	const status = showStatus ? (fetchStatus ?? baseStatus) : undefined;
