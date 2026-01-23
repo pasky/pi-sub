@@ -105,7 +105,8 @@ export function createUsageController(deps: Dependencies) {
 			if (!fallback || fallback.windows.length === 0) {
 				const cache = readCache();
 				const cachedEntry = cache[provider];
-				fallback = cachedEntry?.usage ? { ...cachedEntry.usage, status: cachedEntry.status } : undefined;
+				const cachedUsage = cachedEntry?.usage ? { ...cachedEntry.usage, status: cachedEntry.status } : undefined;
+				fallback = cachedUsage && cachedUsage.windows.length > 0 ? cachedUsage : undefined;
 			}
 			if (fallback && fallback.windows.length > 0) {
 				state.cachedUsage = {

@@ -230,6 +230,9 @@ async function waitForLockAndRecheck(
 
 	const cache = readCache();
 	const entry = cache[provider];
+	if (entry && entry.usage?.error && !isExpectedMissingData(entry.usage.error)) {
+		return null;
+	}
 	if (entry && Date.now() - entry.fetchedAt < ttlMs) {
 		return entry;
 	}
@@ -245,16 +248,20 @@ export async function getCachedData(
 ): Promise<CacheEntry | null> {
 	const cache = readCache();
 	const entry = cache[provider];
-	
+
 	if (!entry) {
 		return null;
 	}
-	
+
+	if (entry.usage?.error && !isExpectedMissingData(entry.usage.error)) {
+		return null;
+	}
+
 	const age = Date.now() - entry.fetchedAt;
 	if (age < ttlMs) {
 		return entry;
 	}
-	
+
 	return null;
 }
 
@@ -294,9 +301,10 @@ export async function fetchWithCache<T extends { usage?: UsageSnapshot; status?:
 		// Fetch fresh data
 		const result = await fetchFn();
 		
-		// Only cache if we got valid usage data (not just no-credentials errors)
+		// Only cache if we got valid usage data (not just no-credentials/errors)
 		const hasCredentialError = result.usage?.error && isExpectedMissingData(result.usage.error);
-		const shouldCache = result.usage && !hasCredentialError;
+		const hasError = Boolean(result.usage?.error);
+		const shouldCache = result.usage && !hasCredentialError && !hasError;
 		
 		const cache = readCache();
 		
