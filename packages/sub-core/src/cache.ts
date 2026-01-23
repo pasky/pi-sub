@@ -100,7 +100,22 @@ export function readCache(): Cache {
 		if (storage.exists(CACHE_PATH)) {
 			const content = storage.readFile(CACHE_PATH);
 			if (content) {
-				return JSON.parse(content) as Cache;
+				try {
+					return JSON.parse(content) as Cache;
+				} catch (error) {
+					const lastBrace = content.lastIndexOf("}");
+					if (lastBrace > 0) {
+						const trimmed = content.slice(0, lastBrace + 1);
+						try {
+							const parsed = JSON.parse(trimmed) as Cache;
+							writeCache(parsed);
+							return parsed;
+						} catch {
+							// fall through to log below
+						}
+					}
+					console.error("Failed to read cache:", error);
+				}
 			}
 		}
 	} catch (error) {
@@ -117,7 +132,9 @@ function writeCache(cache: Cache): void {
 	try {
 		ensureCacheDir();
 		const content = JSON.stringify(cache, null, 2);
-		storage.writeFile(CACHE_PATH, content);
+		const tempPath = `${CACHE_PATH}.${process.pid}.tmp`;
+		fs.writeFileSync(tempPath, content, "utf-8");
+		fs.renameSync(tempPath, CACHE_PATH);
 	} catch (error) {
 		console.error("Failed to write cache:", error);
 	}
