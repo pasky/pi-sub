@@ -317,6 +317,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	});
 
 	pi.on("session_shutdown", async () => {
+		saveSettings(settings);
 		lastContext = undefined;
 	});
 }

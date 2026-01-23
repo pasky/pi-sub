@@ -98,7 +98,16 @@ export function createUsageController(deps: Dependencies) {
 		emitUpdate(state, onUpdate);
 
 		const result = await fetchUsageForProvider(deps, settings, provider, options);
-		state.cachedUsage = result.usage ? { ...result.usage, status: result.status } : undefined;
+		const fetchError = result.usage?.error && !isExpectedMissingData(result.usage.error);
+		if (fetchError && state.cachedUsage?.windows.length) {
+			state.cachedUsage = {
+				...state.cachedUsage,
+				error: result.usage?.error,
+				status: { indicator: "minor", description: "Fetch failed" },
+			};
+		} else {
+			state.cachedUsage = result.usage ? { ...result.usage, status: result.status } : undefined;
+		}
 		emitUpdate(state, onUpdate);
 	}
 

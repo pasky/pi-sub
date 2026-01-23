@@ -4,7 +4,7 @@
 
 import type { Theme } from "@mariozechner/pi-coding-agent";
 import { visibleWidth } from "@mariozechner/pi-tui";
-import type { RateWindow, UsageSnapshot } from "./types.js";
+import type { RateWindow, UsageSnapshot, ProviderStatus } from "./types.js";
 import type {
 	BaseTextColor,
 	BarStyle,
@@ -17,7 +17,7 @@ import type {
 	Settings,
 } from "./settings-types.js";
 import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./settings-types.js";
-import { formatErrorForDisplay } from "./errors.js";
+import { formatErrorForDisplay, isExpectedMissingData } from "./errors.js";
 import { getStatusIcon, getStatusLabel } from "./status.js";
 import { shouldShowWindow } from "./providers/windows.js";
 import { getUsageExtras } from "./providers/extras.js";
@@ -199,7 +199,13 @@ function renderBarSegments(
 function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Settings): string {
 	const showProviderName = settings?.display.showProviderName ?? true;
 	const showStatus = settings?.providers[usage.provider]?.showStatus ?? true;
-	const status = showStatus ? usage.status : undefined;
+	const error = usage.error;
+	const fetchError = Boolean(error && !isExpectedMissingData(error));
+	const baseStatus = showStatus ? usage.status : undefined;
+	const fetchStatus: ProviderStatus | undefined = fetchError && (!baseStatus || baseStatus.indicator === "none")
+		? { indicator: "minor", description: "Fetch failed" }
+		: undefined;
+	const status = showStatus ? (fetchStatus ?? baseStatus) : undefined;
 	const statusDismissOk = settings?.display.statusDismissOk ?? true;
 	const statusMode = settings?.display.statusIndicatorMode ?? "icon";
 	const statusIconPack = settings?.display.statusIconPack ?? "emoji";
@@ -469,6 +475,13 @@ export function formatUsageStatus(
 		parts.push(applyBaseTextColor(theme, baseTextColor, extra.label));
 	}
 
+	const error = usage.error;
+	const fetchError = Boolean(error && !isExpectedMissingData(error));
+	const showStatusText = settings?.display.statusText ?? false;
+	if (fetchError && !showStatusText && error) {
+		parts.push(applyBaseTextColor(theme, baseTextColor, `(${formatErrorForDisplay(error)})`));
+	}
+
 	// Build divider from settings
 	const dividerChar = settings?.display.dividerCharacter ?? "•";
 	const dividerColor = resolveDividerColor(settings?.display.dividerColor);
@@ -543,6 +556,12 @@ export function formatUsageStatusWithWidth(
 	const barEligibleCount = hasBar ? windows.length : 0;
 	const extras = getUsageExtras(usage, settings, modelId);
 	const extraParts = extras.map((extra) => applyBaseTextColor(theme, baseTextColor, extra.label));
+	const error = usage.error;
+	const fetchError = Boolean(error && !isExpectedMissingData(error));
+	const showStatusText = settings?.display.statusText ?? false;
+	if (fetchError && !showStatusText && error) {
+		extraParts.push(applyBaseTextColor(theme, baseTextColor, `(${formatErrorForDisplay(error)})`));
+	}
 
 	const barSpacerWidth = hasBar ? 1 : 0;
 	const baseWindowWidths = windows.map((w) =>
