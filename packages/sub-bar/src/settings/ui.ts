@@ -651,9 +651,9 @@ export async function showSettingsUI(
 						}
 						if (item.value === "save") {
 							settings = upsertDisplayPreset(settings, candidate.name, candidate.display, "imported");
+							restoreBackup();
 							saveSettings(settings);
 							notifyImported();
-							restoreBackup();
 							importCandidate = null;
 							importBackup = null;
 							currentCategory = "display-theme-manage";

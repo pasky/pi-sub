@@ -5,7 +5,7 @@
  */
 
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
-import { SelectList, truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
+import { Container, Input, SelectList, Spacer, Text, truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import * as fs from "node:fs";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
@@ -90,6 +90,32 @@ export default function createExtension(pi: ExtensionAPI) {
 					resolve("cancel");
 				};
 				return list;
+			});
+		});
+	}
+
+	async function promptImportString(ctx: ExtensionContext): Promise<string | undefined> {
+		return new Promise((resolve) => {
+			ctx.ui.custom<void>((_tui, theme, _kb, done) => {
+				const input = new Input();
+				input.focused = true;
+				input.onSubmit = (value) => {
+					done(undefined);
+					resolve(value.trim());
+				};
+				input.onEscape = () => {
+					done(undefined);
+					resolve(undefined);
+				};
+				const container = new Container();
+				container.addChild(new Text(theme.fg("muted", "Share string"), 1, 0));
+				container.addChild(new Spacer(1));
+				container.addChild(input);
+				return {
+					render: (width: number) => container.render(width),
+					invalidate: () => container.invalidate(),
+					handleInput: (data: string) => input.handleInput(data),
+				};
 			});
 		});
 	}
@@ -397,8 +423,9 @@ export default function createExtension(pi: ExtensionAPI) {
 				input = input.replace(/^sub-bar:import\s*/i, "").trim();
 			}
 			if (!input) {
-				ctx.ui.notify("Enter a share string", "warning");
-				return;
+				const typed = await promptImportString(ctx);
+				if (!typed) return;
+				input = typed;
 			}
 			const decoded = decodeDisplayShareString(input);
 			if (!decoded) {
@@ -438,8 +465,13 @@ export default function createExtension(pi: ExtensionAPI) {
 
 			if (action === "save") {
 				settings = upsertDisplayPreset(settings, decoded.name, decoded.display, "imported");
+				settings.display = { ...backup };
 				saveSettings(settings);
 				notifyImported();
+				if (lastContext) {
+					renderUsageWidget(lastContext, currentUsage);
+				}
+				return;
 			}
 
 			settings.display = { ...backup };
