@@ -28,6 +28,38 @@ function ensureSettingsDir(): void {
 }
 
 /**
+ * Parse settings file contents
+ */
+function parseSettings(content: string): Settings {
+	const loaded = JSON.parse(content) as Partial<Settings> & {
+		displayThemes?: Settings["displayPresets"];
+	};
+	return mergeSettings({
+		version: loaded.version,
+		display: loaded.display,
+		providers: loaded.providers,
+		displayPresets: loaded.displayThemes ?? loaded.displayPresets,
+		displayUserPreset: loaded.displayUserPreset,
+		pinnedProvider: loaded.pinnedProvider,
+	} as Partial<Settings>);
+}
+
+function loadSettingsFromDisk(): Settings | null {
+	const storage = getStorage();
+	try {
+		if (storage.exists(SETTINGS_PATH)) {
+			const content = storage.readFile(SETTINGS_PATH);
+			if (content) {
+				return parseSettings(content);
+			}
+		}
+	} catch {
+		return null;
+	}
+	return null;
+}
+
+/**
  * Load settings from disk
  */
 export function loadSettings(): Settings {
@@ -35,24 +67,11 @@ export function loadSettings(): Settings {
 		return cachedSettings;
 	}
 
-	const storage = getStorage();
 	try {
-		if (storage.exists(SETTINGS_PATH)) {
-			const content = storage.readFile(SETTINGS_PATH);
-			if (content) {
-				const loaded = JSON.parse(content) as Partial<Settings> & {
-					displayThemes?: Settings["displayPresets"];
-				};
-				cachedSettings = mergeSettings({
-					version: loaded.version,
-					display: loaded.display,
-					providers: loaded.providers,
-					displayPresets: loaded.displayThemes ?? loaded.displayPresets,
-					displayUserPreset: loaded.displayUserPreset,
-					pinnedProvider: loaded.pinnedProvider,
-				} as Partial<Settings>);
-				return cachedSettings;
-			}
+		const diskSettings = loadSettingsFromDisk();
+		if (diskSettings) {
+			cachedSettings = diskSettings;
+			return cachedSettings;
 		}
 	} catch (error) {
 		console.error(`Failed to load settings from ${SETTINGS_PATH}:`, error);
@@ -70,16 +89,37 @@ export function saveSettings(settings: Settings): boolean {
 	const storage = getStorage();
 	try {
 		ensureSettingsDir();
+		let next = settings;
+		if (cachedSettings) {
+			const diskSettings = loadSettingsFromDisk();
+			if (diskSettings) {
+				const displayChanged = JSON.stringify(settings.display) !== JSON.stringify(cachedSettings.display);
+				const providersChanged = JSON.stringify(settings.providers) !== JSON.stringify(cachedSettings.providers);
+				const presetsChanged = JSON.stringify(settings.displayPresets) !== JSON.stringify(cachedSettings.displayPresets);
+				const userPresetChanged = JSON.stringify(settings.displayUserPreset) !== JSON.stringify(cachedSettings.displayUserPreset);
+				const pinnedChanged = settings.pinnedProvider !== cachedSettings.pinnedProvider;
+
+				next = {
+					...diskSettings,
+					version: settings.version,
+					display: displayChanged ? settings.display : diskSettings.display,
+					providers: providersChanged ? settings.providers : diskSettings.providers,
+					displayPresets: presetsChanged ? settings.displayPresets : diskSettings.displayPresets,
+					displayUserPreset: userPresetChanged ? settings.displayUserPreset : diskSettings.displayUserPreset,
+					pinnedProvider: pinnedChanged ? settings.pinnedProvider : diskSettings.pinnedProvider,
+				};
+			}
+		}
 		const content = JSON.stringify({
-			version: settings.version,
-			display: settings.display,
-			providers: settings.providers,
-			displayThemes: settings.displayPresets,
-			displayUserPreset: settings.displayUserPreset,
-			pinnedProvider: settings.pinnedProvider,
+			version: next.version,
+			display: next.display,
+			providers: next.providers,
+			displayThemes: next.displayPresets,
+			displayUserPreset: next.displayUserPreset,
+			pinnedProvider: next.pinnedProvider,
 		}, null, 2);
 		storage.writeFile(SETTINGS_PATH, content);
-		cachedSettings = settings;
+		cachedSettings = next;
 		return true;
 	} catch (error) {
 		console.error(`Failed to save settings to ${SETTINGS_PATH}:`, error);
