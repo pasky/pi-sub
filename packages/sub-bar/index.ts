@@ -6,13 +6,14 @@
 
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
+import * as fs from "node:fs";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
 import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./src/settings-types.js";
 import { buildDividerLine } from "./src/dividers.js";
 import type { CoreSettings } from "pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
-import { loadSettings, saveSettings } from "./src/settings.js";
+import { clearSettingsCache, loadSettings, saveSettings, SETTINGS_PATH } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
 import { getFallbackCoreSettings } from "./src/core-settings.js";
 
@@ -56,6 +57,87 @@ export default function createExtension(pi: ExtensionAPI) {
 	let currentUsage: UsageSnapshot | undefined;
 	let coreAvailable = false;
 	let coreSettings: CoreSettings = getFallbackCoreSettings(settings);
+	let settingsWatcher: fs.FSWatcher | undefined;
+	let settingsPoll: NodeJS.Timeout | undefined;
+	let settingsDebounce: NodeJS.Timeout | undefined;
+	let settingsSnapshot = "";
+	let settingsMtimeMs = 0;
+	let settingsWatchStarted = false;
+
+	function readSettingsFile(): string | undefined {
+		try {
+			return fs.readFileSync(SETTINGS_PATH, "utf-8");
+		} catch {
+			return undefined;
+		}
+	}
+
+	function applySettingsFromDisk(): void {
+		clearSettingsCache();
+		const loaded = loadSettings();
+		settings = {
+			...settings,
+			version: loaded.version,
+			display: loaded.display,
+			providers: loaded.providers,
+			displayPresets: loaded.displayPresets,
+			displayUserPreset: loaded.displayUserPreset,
+		};
+		coreSettings = getFallbackCoreSettings(settings);
+		if (lastContext) {
+			renderCurrent(lastContext);
+		}
+	}
+
+	function refreshSettingsSnapshot(): void {
+		const content = readSettingsFile();
+		if (!content || content === settingsSnapshot) return;
+		try {
+			JSON.parse(content);
+		} catch {
+			return;
+		}
+		settingsSnapshot = content;
+		applySettingsFromDisk();
+	}
+
+	function checkSettingsFile(): void {
+		try {
+			const stat = fs.statSync(SETTINGS_PATH, { throwIfNoEntry: false });
+			if (!stat || !stat.mtimeMs) return;
+			if (stat.mtimeMs === settingsMtimeMs) return;
+			settingsMtimeMs = stat.mtimeMs;
+			refreshSettingsSnapshot();
+		} catch {
+			// Ignore missing files
+		}
+	}
+
+	function scheduleSettingsRefresh(): void {
+		if (settingsDebounce) clearTimeout(settingsDebounce);
+		settingsDebounce = setTimeout(() => checkSettingsFile(), 200);
+	}
+
+	function startSettingsWatch(): void {
+		if (settingsWatchStarted) return;
+		settingsWatchStarted = true;
+		const content = readSettingsFile();
+		if (content) {
+			settingsSnapshot = content;
+			try {
+				const stat = fs.statSync(SETTINGS_PATH, { throwIfNoEntry: false });
+				if (stat?.mtimeMs) settingsMtimeMs = stat.mtimeMs;
+			} catch {
+				// Ignore
+			}
+		}
+		try {
+			settingsWatcher = fs.watch(SETTINGS_PATH, scheduleSettingsRefresh);
+		} catch {
+			settingsWatcher = undefined;
+		}
+		settingsPoll = setInterval(() => checkSettingsFile(), 2000);
+	}
 
 	function renderUsageWidget(ctx: ExtensionContext, usage: UsageSnapshot | undefined, message?: string): void {
 		if (!usage && !message) {
@@ -299,6 +381,16 @@ export default function createExtension(pi: ExtensionAPI) {
 		lastContext = ctx;
 		settings = loadSettings();
 		coreSettings = getFallbackCoreSettings(settings);
+		const content = readSettingsFile();
+		if (content) {
+			settingsSnapshot = content;
+			try {
+				const stat = fs.statSync(SETTINGS_PATH, { throwIfNoEntry: false });
+				if (stat?.mtimeMs) settingsMtimeMs = stat.mtimeMs;
+			} catch {
+				// Ignore
+			}
+		}
 		const state = await requestCoreState();
 		if (state) {
 			coreAvailable = true;
@@ -320,4 +412,6 @@ export default function createExtension(pi: ExtensionAPI) {
 		saveSettings(settings);
 		lastContext = undefined;
 	});
+
+	startSettingsWatch();
 }
