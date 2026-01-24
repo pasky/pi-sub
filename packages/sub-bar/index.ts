@@ -434,6 +434,9 @@ export default function createExtension(pi: ExtensionAPI) {
 		handler: async (_args, ctx) => {
 			const newSettings = await showSettingsUI(ctx, {
 				coreSettings,
+				onOpenCoreSettings: async () => {
+					ctx.ui.setEditorText("/sub-core:settings");
+				},
 				onSettingsChange: async (updatedSettings) => {
 					settings = updatedSettings;
 					if (lastContext) {

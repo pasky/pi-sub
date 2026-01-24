@@ -33,9 +33,9 @@ export function buildMainMenuItems(settings: Settings, pinnedProvider?: Provider
 		},
 		{
 			value: "open-core-settings",
-			label: "Change additional settings in sub-core",
-			description: "open sub-core settings",
-			tooltip: "Open sub-core settings for refresh behavior and provider enablement.",
+			label: "Additional settings …",
+			description: "in /sub-core:settings",
+			tooltip: "Open /sub-core:settings for refresh behavior and provider enablement.",
 		},
 	];
 }

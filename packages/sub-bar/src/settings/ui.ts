@@ -77,12 +77,14 @@ export async function showSettingsUI(
 		coreSettings?: CoreSettings;
 		onSettingsChange?: (settings: Settings) => void | Promise<void>;
 		onCoreSettingsChange?: (patch: Partial<CoreSettings>, next: CoreSettings) => void | Promise<void>;
+		onOpenCoreSettings?: () => void | Promise<void>;
 		onDisplayPresetApplied?: (name: string, options?: { source?: "manual" }) => void | Promise<void>;
 		onDisplayThemeShared?: (name: string, shareString: string) => void | Promise<void>;
 	}
 ): Promise<Settings> {
 	const onSettingsChange = options?.onSettingsChange;
 	const onCoreSettingsChange = options?.onCoreSettingsChange;
+	const onOpenCoreSettings = options?.onOpenCoreSettings;
 	let settings = getSettings();
 	let coreSettings = options?.coreSettings ?? getFallbackCoreSettings(settings);
 	const onDisplayPresetApplied = options?.onDisplayPresetApplied;
@@ -307,9 +309,11 @@ export async function showSettingsUI(
 					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
 						if (item.value === "open-core-settings") {
-							ctx.ui.notify("Run sub-core:settings to edit core settings", "info");
 							saveSettings(settings);
 							done(settings);
+							if (onOpenCoreSettings) {
+								setTimeout(() => void onOpenCoreSettings(), 0);
+							}
 							return;
 						}
 						currentCategory = item.value as SettingsCategory;
