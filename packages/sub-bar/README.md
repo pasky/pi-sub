@@ -124,6 +124,7 @@ Use Display Settings → Theme to save, share, import, and manage display themes
 | Braille Empty Fill | on/off | off | Fill empty braille segments with dim ⣿ |
 | Bar Style | bar, percentage, both | both | How to display usage |
 | Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
+| Usage Color Targets | title, timer, bar, usage label | all | Select which elements use usage colors |
 | Reset Timer | off, front, back, integrated | front | Show time until quota resets |
 | Reset Timer Format | relative, datetime | relative | Show relative countdown or reset datetime |
 | Reset Timer Containment | none, blank, (), [], <> | () | Wrap reset timer text |

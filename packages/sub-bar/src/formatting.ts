@@ -123,6 +123,16 @@ function applyBaseTextColor(theme: Theme, color: BaseTextColor, text: string): s
 	return theme.fg(resolveDividerColor(color), text);
 }
 
+function resolveUsageColorTargets(settings?: Settings): { title: boolean; timer: boolean; bar: boolean; usageLabel: boolean } {
+	const targets = settings?.display.usageColorTargets;
+	return {
+		title: targets?.title ?? true,
+		timer: targets?.timer ?? true,
+		bar: targets?.bar ?? true,
+		usageLabel: targets?.usageLabel ?? true,
+	};
+}
+
 function wrapResetContainment(text: string, containment: ResetTimerContainment): { wrapped: string; attachWithSpace: boolean } {
 	switch (containment) {
 		case "none":
@@ -267,6 +277,7 @@ export function formatUsageWindow(
 ): string {
 	const parts = formatUsageWindowParts(theme, window, isCodex, settings, usage, options);
 	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
+	const usageTargets = resolveUsageColorTargets(settings);
 
 	// Special handling for Extra usage label
 	if (window.label.startsWith("Extra [")) {
@@ -280,6 +291,10 @@ export function formatUsageWindow(
 						+ applyBaseTextColor(theme, baseTextColor, suffix)
 					: applyBaseTextColor(theme, baseTextColor, window.label);
 			const extraParts = [styledLabel, parts.bar, parts.pct].filter(Boolean);
+			return extraParts.join(" ");
+		}
+		if (!usageTargets.title) {
+			const extraParts = [applyBaseTextColor(theme, baseTextColor, window.label), parts.bar, parts.pct].filter(Boolean);
 			return extraParts.join(" ");
 		}
 		const extraColor = getUsageColor(window.usedPercent, false, settings?.display.colorScheme ?? "base-warning-error");
@@ -330,12 +345,19 @@ export function formatUsageWindowParts(
 	const empty = Math.max(0, barWidth - filled);
 
 	const baseColor = getUsageColor(displayPct, isRemaining, colorScheme, errorThreshold, warningThreshold, successThreshold);
-	const barColor = (options?.useNormalColors && baseColor === "base") ? "text" : baseColor === "base" ? "muted" : baseColor;
-	const textColor = (options?.useNormalColors && baseColor === "base")
+	const usageTargets = resolveUsageColorTargets(settings);
+	const usageTextColor = (options?.useNormalColors && baseColor === "base")
 		? "text"
 		: baseColor === "base"
 			? baseTextColor
 			: baseColor;
+	const neutralTextColor = options?.useNormalColors ? "text" : baseTextColor;
+	const titleColor = usageTargets.title ? usageTextColor : neutralTextColor;
+	const timerColor = usageTargets.timer ? usageTextColor : neutralTextColor;
+	const usageLabelColor = usageTargets.usageLabel ? usageTextColor : neutralTextColor;
+	const barUsageColor = (options?.useNormalColors && baseColor === "base") ? "text" : baseColor === "base" ? "muted" : baseColor;
+	const neutralBarColor = baseTextColor === "dim" ? "dim" : "muted";
+	const barColor = usageTargets.bar ? barUsageColor : neutralBarColor;
 	const char = getBarCharacter(barCharacter);
 
 	const emptyColor = "dim";
@@ -380,17 +402,17 @@ export function formatUsageWindowParts(
 			if (quotaDisplay === "requests" && usage.requestsRemaining !== undefined && usage.requestsEntitlement !== undefined) {
 				const used = usage.requestsEntitlement - usage.requestsRemaining;
 				const suffix = showUsageLabels ? " used" : "";
-				pctStr = applyBaseTextColor(theme, textColor, `${used}/${usage.requestsEntitlement}${suffix}`);
+				pctStr = applyBaseTextColor(theme, usageLabelColor, `${used}/${usage.requestsEntitlement}${suffix}`);
 			} else {
 				const suffix = showUsageLabels ? " used" : "";
-				pctStr = applyBaseTextColor(theme, textColor, `${usedPct}%${suffix}`);
+				pctStr = applyBaseTextColor(theme, usageLabelColor, `${usedPct}%${suffix}`);
 			}
 		} else if (isCodex) {
 			const suffix = showUsageLabels ? " rem." : "";
-			pctStr = applyBaseTextColor(theme, textColor, `${displayPct}%${suffix}`);
+			pctStr = applyBaseTextColor(theme, usageLabelColor, `${displayPct}%${suffix}`);
 		} else {
 			const suffix = showUsageLabels ? " used" : "";
-			pctStr = applyBaseTextColor(theme, textColor, `${usedPct}%${suffix}`);
+			pctStr = applyBaseTextColor(theme, usageLabelColor, `${usedPct}%${suffix}`);
 		}
 	}
 
@@ -403,18 +425,18 @@ export function formatUsageWindowParts(
 	const resetContainment = settings?.display.resetTimeContainment ?? "()";
 	const leftSuffix = resetText && resetTimeFormat === "relative" && showUsageLabels ? " left" : "";
 
-	const coloredTitle = applyBaseTextColor(theme, textColor, window.label);
+	const coloredTitle = applyBaseTextColor(theme, titleColor, window.label);
 	const titlePart = boldWindowTitle ? theme.bold(coloredTitle) : coloredTitle;
 
 	let labelPart = titlePart;
 	if (resetText) {
 		const resetBody = `${resetText}${leftSuffix}`;
 		const { wrapped, attachWithSpace } = wrapResetContainment(resetBody, resetContainment);
-		const coloredReset = applyBaseTextColor(theme, textColor, wrapped);
+		const coloredReset = applyBaseTextColor(theme, timerColor, wrapped);
 		if (resetTimePosition === "front") {
 			labelPart = attachWithSpace ? `${titlePart} ${coloredReset}` : `${titlePart}${coloredReset}`;
 		} else if (resetTimePosition === "integrated") {
-			labelPart = `${applyBaseTextColor(theme, textColor, `${wrapped}/`)}${titlePart}`;
+			labelPart = `${applyBaseTextColor(theme, timerColor, `${wrapped}/`)}${titlePart}`;
 		} else if (resetTimePosition === "back") {
 			labelPart = titlePart;
 		}
@@ -422,7 +444,7 @@ export function formatUsageWindowParts(
 
 	const resetPart =
 		resetTimePosition === "back" && resetText
-			? applyBaseTextColor(theme, textColor, wrapResetContainment(`${resetText}${leftSuffix}`, resetContainment).wrapped)
+			? applyBaseTextColor(theme, timerColor, wrapResetContainment(`${resetText}${leftSuffix}`, resetContainment).wrapped)
 			: "";
 
 	return {

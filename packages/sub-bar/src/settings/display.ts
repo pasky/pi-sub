@@ -22,6 +22,7 @@ import type {
 	StatusIndicatorMode,
 	StatusIconPack,
 	DividerColor,
+	UsageColorTargets,
 } from "../settings-types.js";
 import {
 	BASE_COLOR_OPTIONS,
@@ -83,6 +84,62 @@ export function buildDisplayResetItems(settings: Settings): SettingItem[] {
 	];
 }
 
+export function resolveUsageColorTargets(targets?: UsageColorTargets): UsageColorTargets {
+	return {
+		title: targets?.title ?? true,
+		timer: targets?.timer ?? true,
+		bar: targets?.bar ?? true,
+		usageLabel: targets?.usageLabel ?? true,
+	};
+}
+
+export function formatUsageColorTargetsSummary(targets?: UsageColorTargets): string {
+	const resolved = resolveUsageColorTargets(targets);
+	const enabled = [
+		resolved.title ? "Title" : null,
+		resolved.timer ? "Timer" : null,
+		resolved.bar ? "Bar" : null,
+		resolved.usageLabel ? "Usage label" : null,
+	].filter(Boolean) as string[];
+	if (enabled.length === 0) return "off";
+	if (enabled.length === 4) return "all";
+	return enabled.join(", ");
+}
+
+export function buildUsageColorTargetItems(settings: Settings): SettingItem[] {
+	const targets = resolveUsageColorTargets(settings.display.usageColorTargets);
+	return [
+		{
+			id: "usageColorTitle",
+			label: "Title",
+			currentValue: targets.title ? "on" : "off",
+			values: ["on", "off"],
+			description: "Color the window title by usage.",
+		},
+		{
+			id: "usageColorTimer",
+			label: "Timer",
+			currentValue: targets.timer ? "on" : "off",
+			values: ["on", "off"],
+			description: "Color the reset timer by usage.",
+		},
+		{
+			id: "usageColorBar",
+			label: "Bar",
+			currentValue: targets.bar ? "on" : "off",
+			values: ["on", "off"],
+			description: "Color the usage bar by usage.",
+		},
+		{
+			id: "usageColorLabel",
+			label: "Usage label",
+			currentValue: targets.usageLabel ? "on" : "off",
+			values: ["on", "off"],
+			description: "Color the percentage text by usage.",
+		},
+	];
+}
+
 export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 	return [
 		{
@@ -109,6 +166,12 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 				"monochrome",
 			] as ColorScheme[],
 			description: "Choose how usage levels are color-coded.",
+		},
+		{
+			id: "usageColorTargets",
+			label: "Usage Color Targets",
+			currentValue: formatUsageColorTargetsSummary(settings.display.usageColorTargets),
+			description: "Pick which elements use the usage color scheme.",
 		},
 		{
 			id: "errorThreshold",
@@ -392,6 +455,33 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "colorScheme":
 			settings.display.colorScheme = value as ColorScheme;
+			break;
+		case "usageColorTitle":
+			settings.display.usageColorTargets = {
+				...resolveUsageColorTargets(settings.display.usageColorTargets),
+				title: value === "on",
+			};
+			break;
+		case "usageColorTimer":
+			settings.display.usageColorTargets = {
+				...resolveUsageColorTargets(settings.display.usageColorTargets),
+				timer: value === "on",
+			};
+			break;
+		case "usageColorBar":
+			settings.display.usageColorTargets = {
+				...resolveUsageColorTargets(settings.display.usageColorTargets),
+				bar: value === "on",
+			};
+			break;
+		case "usageColorLabel":
+			settings.display.usageColorTargets = {
+				...resolveUsageColorTargets(settings.display.usageColorTargets),
+				usageLabel: value === "on",
+			};
+			break;
+		case "usageColorTargets":
+			settings.display.usageColorTargets = resolveUsageColorTargets(settings.display.usageColorTargets);
 			break;
 		case "resetTimePosition":
 			settings.display.resetTimePosition = value as "off" | "front" | "back" | "integrated";

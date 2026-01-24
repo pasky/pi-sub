@@ -84,6 +84,13 @@ export type StatusIndicatorMode = "icon" | "color" | "icon+color";
  */
 export type StatusIconPack = "minimal" | "emoji";
 
+export interface UsageColorTargets {
+	title: boolean;
+	timer: boolean;
+	bar: boolean;
+	usageLabel: boolean;
+}
+
 /**
  * Divider color options (subset of theme colors).
  */
@@ -266,6 +273,8 @@ export interface DisplaySettings {
 	brailleFillEmpty: boolean;
 	/** Color scheme for bars */
 	colorScheme: ColorScheme;
+	/** Elements colored by the usage scheme */
+	usageColorTargets: UsageColorTargets;
 	/** Reset time display position */
 	resetTimePosition: "off" | "front" | "back" | "integrated";
 	/** Reset time format */
@@ -415,6 +424,12 @@ export function getDefaultSettings(): Settings {
 			containBar: false,
 			brailleFillEmpty: false,
 			colorScheme: "base-warning-error",
+			usageColorTargets: {
+				title: true,
+				timer: true,
+				bar: true,
+				usageLabel: true,
+			},
 			resetTimePosition: "front",
 			resetTimeFormat: "relative",
 			resetTimeContainment: "()",

@@ -22,6 +22,8 @@ import {
 	buildDisplayProviderItems,
 	buildDisplayStatusItems,
 	buildDisplayDividerItems,
+	buildUsageColorTargetItems,
+	formatUsageColorTargetsSummary,
 	applyDisplayChange,
 } from "./display.js";
 import {
@@ -213,6 +215,27 @@ export async function showSettingsUI(
 					if (!handler) continue;
 					item.submenu = handler;
 				}
+			};
+
+			const buildUsageColorSubmenu = () => {
+				return (_currentValue: string, done: (selectedValue?: string) => void) => {
+					const items = buildUsageColorTargetItems(settings);
+					const handleChange = (id: string, value: string) => {
+						settings = applyDisplayChange(settings, id, value);
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+					};
+					const list = new SettingsList(
+						items,
+						Math.min(items.length + 2, 10),
+						getSettingsListTheme(),
+						handleChange,
+						() => {
+							done(formatUsageColorTargetsSummary(settings.display.usageColorTargets));
+						}
+					);
+					return list;
+				};
 			};
 
 			function rebuild(): void {
@@ -660,6 +683,10 @@ export async function showSettingsUI(
 						customHandlers.errorThreshold = buildInputSubmenu("Error Threshold (%)", (value) => parseInteger(value, 0, 100));
 						customHandlers.warningThreshold = buildInputSubmenu("Warning Threshold (%)", (value) => parseInteger(value, 0, 100));
 						customHandlers.successThreshold = buildInputSubmenu("Success Threshold (%)", (value) => parseInteger(value, 0, 100));
+						const usageColorItem = items.find((item) => item.id === "usageColorTargets");
+						if (usageColorItem) {
+							usageColorItem.submenu = buildUsageColorSubmenu();
+						}
 					}
 					if (currentCategory === "display-bar") {
 						customHandlers.barWidth = buildInputSubmenu("Bar Width", parseBarWidth);
