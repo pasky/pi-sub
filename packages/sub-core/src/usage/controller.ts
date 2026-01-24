@@ -15,7 +15,6 @@ import { hasProviderCredentials } from "../providers/registry.js";
 export interface UsageControllerState {
 	currentProvider?: ProviderName;
 	cachedUsage?: UsageSnapshot;
-	pinnedProvider?: ProviderName;
 	providerCycleIndex: number;
 }
 
@@ -43,9 +42,6 @@ export function createUsageController(deps: Dependencies) {
 		settings: Settings,
 		state: UsageControllerState
 	): ProviderName | undefined {
-		if (state.pinnedProvider && isProviderAvailable(settings, state.pinnedProvider)) {
-			return state.pinnedProvider;
-		}
 		if (settings.defaultProvider && isProviderAvailable(settings, settings.defaultProvider)) {
 			return settings.defaultProvider;
 		}
@@ -76,7 +72,6 @@ export function createUsageController(deps: Dependencies) {
 		if (!provider) {
 			state.currentProvider = undefined;
 			state.cachedUsage = undefined;
-			state.pinnedProvider = undefined;
 			emitUpdate(state, onUpdate);
 			return;
 		}
@@ -133,7 +128,6 @@ export function createUsageController(deps: Dependencies) {
 		if (enabledProviders.length === 0) {
 			state.currentProvider = undefined;
 			state.cachedUsage = undefined;
-			state.pinnedProvider = undefined;
 			emitUpdate(state, onUpdate);
 			return;
 		}
@@ -153,14 +147,12 @@ export function createUsageController(deps: Dependencies) {
 			if (!isUsageAvailable(result.usage)) {
 				continue;
 			}
-			state.pinnedProvider = nextProvider;
 			state.currentProvider = nextProvider;
 			state.cachedUsage = result.usage ? { ...result.usage, status: result.status } : undefined;
 			emitUpdate(state, onUpdate);
 			return;
 		}
 
-		state.pinnedProvider = undefined;
 		state.currentProvider = undefined;
 		state.cachedUsage = undefined;
 		emitUpdate(state, onUpdate);

@@ -49,6 +49,7 @@ export function loadSettings(): Settings {
 					providers: loaded.providers,
 					displayPresets: loaded.displayThemes ?? loaded.displayPresets,
 					displayUserPreset: loaded.displayUserPreset,
+					pinnedProvider: loaded.pinnedProvider,
 				} as Partial<Settings>);
 				return cachedSettings;
 			}
@@ -75,6 +76,7 @@ export function saveSettings(settings: Settings): boolean {
 			providers: settings.providers,
 			displayThemes: settings.displayPresets,
 			displayUserPreset: settings.displayUserPreset,
+			pinnedProvider: settings.pinnedProvider,
 		}, null, 2);
 		storage.writeFile(SETTINGS_PATH, content);
 		cachedSettings = settings;
@@ -97,6 +99,7 @@ export function resetSettings(): Settings {
 		providers: defaults.providers,
 		displayPresets: defaults.displayPresets,
 		displayUserPreset: defaults.displayUserPreset,
+		pinnedProvider: defaults.pinnedProvider,
 		version: defaults.version,
 	};
 	saveSettings(next);

@@ -2,7 +2,7 @@
  * Settings types and defaults for sub-bar
  */
 
-import type { CoreSettings } from "pi-sub-shared";
+import type { CoreSettings, ProviderName } from "pi-sub-shared";
 import { PROVIDERS } from "pi-sub-shared";
 import type { ThemeColor } from "@mariozechner/pi-coding-agent";
 
@@ -355,6 +355,8 @@ export interface Settings extends Omit<CoreSettings, "providers"> {
 	displayPresets: DisplayPreset[];
 	/** Snapshot of the previous display settings */
 	displayUserPreset: DisplaySettings | null;
+	/** Pinned provider override for display */
+	pinnedProvider: ProviderName | null;
 }
 
 /**
@@ -462,6 +464,7 @@ export function getDefaultSettings(): Settings {
 
 		displayPresets: [],
 		displayUserPreset: null,
+		pinnedProvider: null,
 
 		behavior: {
 			refreshInterval: 60,

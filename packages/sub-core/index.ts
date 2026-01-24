@@ -31,8 +31,7 @@ type SubCoreRequest =
 	  };
 
 type SubCoreAction = {
-	type: "refresh" | "cycleProvider" | "pinProvider";
-	provider?: ProviderName;
+	type: "refresh" | "cycleProvider";
 	force?: boolean;
 };
 
@@ -77,7 +76,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 	const controllerState = {
 		currentProvider: undefined as ProviderName | undefined,
 		cachedUsage: undefined as UsageSnapshot | undefined,
-		pinnedProvider: undefined as ProviderName | undefined,
 		providerCycleIndex: 0,
 	};
 
@@ -272,12 +270,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 			case "cycleProvider":
 				void cycleProvider(lastContext);
 				break;
-			case "pinProvider":
-				controllerState.pinnedProvider = action.provider;
-				controllerState.currentProvider = undefined;
-				controllerState.cachedUsage = undefined;
-				void refresh(lastContext, { force: true });
-				break;
 		}
 	});
 
@@ -308,21 +300,18 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 
 	pi.on("session_switch", async (_event, ctx) => {
 		controllerState.currentProvider = undefined;
-		controllerState.pinnedProvider = undefined;
 		controllerState.cachedUsage = undefined;
 		await refresh(ctx);
 	});
 
 	pi.on("session_branch" as unknown as "session_start", async (_event: unknown, ctx: ExtensionContext) => {
 		controllerState.currentProvider = undefined;
-		controllerState.pinnedProvider = undefined;
 		controllerState.cachedUsage = undefined;
 		await refresh(ctx);
 	});
 
 	pi.on("model_select" as unknown as "session_start", async (_event: unknown, ctx: ExtensionContext) => {
 		controllerState.currentProvider = undefined;
-		controllerState.pinnedProvider = undefined;
 		controllerState.cachedUsage = undefined;
 		void refresh(ctx, { force: true, allowStaleCache: true });
 	});

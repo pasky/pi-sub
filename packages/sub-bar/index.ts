@@ -7,7 +7,7 @@
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { Container, Input, SelectList, Spacer, Text, truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import * as fs from "node:fs";
-import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
+import type { ProviderName, ProviderUsageEntry, SubCoreAllState, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
 import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./src/settings-types.js";
 import { buildDividerLine } from "./src/dividers.js";
@@ -19,15 +19,20 @@ import { decodeDisplayShareString } from "./src/share.js";
 import { upsertDisplayPreset } from "./src/settings/presets.js";
 import { getFallbackCoreSettings } from "./src/core-settings.js";
 
-type SubCoreRequest = {
-	type?: "current";
-	includeSettings?: boolean;
-	reply: (payload: { state: SubCoreState; settings?: CoreSettings }) => void;
-};
+type SubCoreRequest =
+	| {
+			type?: "current";
+			includeSettings?: boolean;
+			reply: (payload: { state: SubCoreState; settings?: CoreSettings }) => void;
+	  }
+	| {
+			type: "entries";
+			force?: boolean;
+			reply: (payload: { entries: ProviderUsageEntry[] }) => void;
+	  };
 
 type SubCoreAction = {
-	type: "refresh" | "cycleProvider" | "pinProvider";
-	provider?: ProviderName;
+	type: "refresh" | "cycleProvider";
 	force?: boolean;
 };
 
@@ -57,6 +62,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	let lastContext: ExtensionContext | undefined;
 	let settings: Settings = loadSettings();
 	let currentUsage: UsageSnapshot | undefined;
+	let usageEntries: Partial<Record<ProviderName, UsageSnapshot>> = {};
 	let coreAvailable = false;
 	let coreSettings: CoreSettings = getFallbackCoreSettings(settings);
 	let settingsWatcher: fs.FSWatcher | undefined;
@@ -138,6 +144,7 @@ export default function createExtension(pi: ExtensionAPI) {
 			providers: loaded.providers,
 			displayPresets: loaded.displayPresets,
 			displayUserPreset: loaded.displayUserPreset,
+			pinnedProvider: loaded.pinnedProvider,
 		};
 		coreSettings = getFallbackCoreSettings(settings);
 		if (lastContext) {
@@ -274,12 +281,31 @@ export default function createExtension(pi: ExtensionAPI) {
 		
 	}
 
+	function resolveDisplayedUsage(): UsageSnapshot | undefined {
+		const pinned = settings.pinnedProvider ?? null;
+		if (pinned) {
+			return usageEntries[pinned] ?? currentUsage;
+		}
+		return currentUsage;
+	}
+
+	function updateEntries(entries: ProviderUsageEntry[] | undefined): void {
+		if (!entries) return;
+		const next: Partial<Record<ProviderName, UsageSnapshot>> = {};
+		for (const entry of entries) {
+			if (!entry.usage) continue;
+			next[entry.provider] = entry.usage;
+		}
+		usageEntries = next;
+	}
+
 	function renderCurrent(ctx: ExtensionContext): void {
 		if (!coreAvailable) {
 			renderUsageWidget(ctx, undefined, "sub-core not installed");
 			return;
 		}
-		renderUsageWidget(ctx, currentUsage);
+		const usage = resolveDisplayedUsage();
+		renderUsageWidget(ctx, usage);
 	}
 
 	function updateUsage(usage: UsageSnapshot | undefined): void {
@@ -347,6 +373,39 @@ export default function createExtension(pi: ExtensionAPI) {
 		});
 	}
 
+	function requestCoreEntries(timeoutMs = 1000): Promise<ProviderUsageEntry[] | undefined> {
+		return new Promise((resolve) => {
+			let resolved = false;
+			const timer = setTimeout(() => {
+				if (!resolved) {
+					resolved = true;
+					resolve(undefined);
+				}
+			}, timeoutMs);
+
+			const request: SubCoreRequest = {
+				type: "entries",
+				reply: (payload) => {
+					if (resolved) return;
+					resolved = true;
+					clearTimeout(timer);
+					resolve(payload.entries);
+				},
+			};
+
+			pi.events.emit("sub-core:request", request);
+		});
+	}
+
+
+	pi.events.on("sub-core:update-all", (payload) => {
+		coreAvailable = true;
+		const state = payload as { state?: SubCoreAllState };
+		updateEntries(state.state?.entries);
+		if (lastContext) {
+			renderCurrent(lastContext);
+		}
+	});
 
 	pi.events.on("sub-core:update-current", (payload) => {
 		coreAvailable = true;
@@ -519,6 +578,13 @@ export default function createExtension(pi: ExtensionAPI) {
 		if (state) {
 			coreAvailable = true;
 			updateUsage(state.usage);
+			if (settings.pinnedProvider) {
+				const entries = await requestCoreEntries();
+				updateEntries(entries);
+				if (lastContext) {
+					renderCurrent(lastContext);
+				}
+			}
 		} else if (lastContext) {
 			coreAvailable = false;
 			renderCurrent(lastContext);

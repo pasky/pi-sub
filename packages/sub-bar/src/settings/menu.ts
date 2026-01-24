@@ -10,7 +10,8 @@ import { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 
 export type TooltipSelectItem = SelectItem & { tooltip?: string };
 
-export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
+export function buildMainMenuItems(settings: Settings, pinnedProvider?: ProviderName | null): TooltipSelectItem[] {
+	const pinnedLabel = pinnedProvider ? PROVIDER_DISPLAY_NAMES[pinnedProvider] : "auto (current provider)";
 	return [
 		{
 			value: "providers",
@@ -23,6 +24,12 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 			label: "Display Settings",
 			description: `${settings.display.barStyle} style, divider: ${settings.display.dividerCharacter}`,
 			tooltip: "Adjust layout, colors, bar styling, status indicators, and dividers.",
+		},
+		{
+			value: "pin-provider",
+			label: "Provider Shown",
+			description: pinnedLabel,
+			tooltip: "Select which provider is shown in the widget.",
 		},
 		{
 			value: "open-core-settings",

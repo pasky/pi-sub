@@ -51,6 +51,7 @@ type ProviderCategory = `provider-${ProviderName}`;
 type SettingsCategory =
 	| "main"
 	| "providers"
+	| "pin-provider"
 	| ProviderCategory
 	| "display"
 	| "display-theme"
@@ -269,6 +270,7 @@ export async function showSettingsUI(
 				const titles: Record<string, string> = {
 					main: "sub-bar Settings",
 					providers: "Provider Settings",
+					"pin-provider": "Pinned Provider",
 					display: "Display Settings",
 					"display-theme": "Theme",
 					"display-theme-save": "Save Theme",
@@ -294,7 +296,7 @@ export async function showSettingsUI(
 				container.addChild(new Spacer(1));
 
 				if (currentCategory === "main") {
-					const items = buildMainMenuItems(settings);
+					const items = buildMainMenuItems(settings, settings.pinnedProvider);
 					const selectList = new SelectList(items, Math.min(items.length, 10), {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
 						selectedText: (t: string) => theme.fg("accent", t),
@@ -317,6 +319,45 @@ export async function showSettingsUI(
 					selectList.onCancel = () => {
 						saveSettings(settings);
 						done(settings);
+					};
+					activeList = selectList;
+					container.addChild(selectList);
+				} else if (currentCategory === "pin-provider") {
+					const orderedProviders = settings.providerOrder.length > 0 ? settings.providerOrder : (Object.keys(settings.providers) as ProviderName[]);
+					const items: TooltipSelectItem[] = [
+						{
+							value: "none",
+							label: "Auto",
+							description: "current provider",
+							tooltip: "Show the current provider automatically.",
+						},
+						...orderedProviders.map((provider) => ({
+							value: provider,
+							label: PROVIDER_DISPLAY_NAMES[provider],
+							description: provider === settings.pinnedProvider ? "pinned" : "",
+							tooltip: `Pin ${PROVIDER_DISPLAY_NAMES[provider]} as the current provider.`,
+						})),
+					];
+					const selectList = new SelectList(items, Math.min(items.length, 10), {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					attachTooltip(items, selectList);
+					selectList.onSelect = (item) => {
+						settings.pinnedProvider = item.value === "none" ? null : (item.value as ProviderName);
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						currentCategory = "main";
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						currentCategory = "main";
+						rebuild();
+						tui.requestRender();
 					};
 					activeList = selectList;
 					container.addChild(selectList);
