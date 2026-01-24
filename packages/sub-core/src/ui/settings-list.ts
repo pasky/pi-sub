@@ -209,9 +209,8 @@ export class SettingsList implements Component {
 		const nextIndex = (currentIndex + direction + values.length) % values.length;
 		const newValue = values[nextIndex];
 		if (newValue === CUSTOM_OPTION) {
-			if (item.submenu) {
-				this.openSubmenu(item);
-			}
+			item.currentValue = newValue;
+			this.onChange(item.id, newValue);
 			return;
 		}
 		item.currentValue = newValue;

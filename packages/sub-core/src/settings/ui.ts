@@ -13,7 +13,7 @@ import { getSettings, saveSettings, resetSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
 import { buildBehaviorItems, applyBehaviorChange } from "./behavior.js";
-import { buildMainMenuItems, buildProviderListItems, buildProviderOrderItems, buildDefaultProviderItems, type TooltipSelectItem } from "./menu.js";
+import { buildMainMenuItems, buildProviderListItems, buildProviderOrderItems, type TooltipSelectItem } from "./menu.js";
 
 /**
  * Settings category
@@ -65,7 +65,7 @@ export async function showSettingsUI(
 				return (currentValue: string, done: (selectedValue?: string) => void) => {
 					const input = new Input();
 					input.focused = true;
-					input.setValue(formatInitial ? formatInitial(currentValue) : currentValue);
+					input.setValue(formatInitial ? formatInitial("") : "");
 					input.onSubmit = (value) => {
 						const parsed = parseValue(value);
 						if (!parsed) return;
@@ -160,8 +160,6 @@ export async function showSettingsUI(
 							ctx.ui.notify("Settings reset to defaults", "info");
 							rebuild();
 							tui.requestRender();
-						} else if (item.value === "default-provider") {
-							showDefaultProviderSelector();
 						} else {
 							currentCategory = item.value as SettingsCategory;
 							rebuild();
@@ -358,58 +356,6 @@ export async function showSettingsUI(
 				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 			}
 
-			function showDefaultProviderSelector(): void {
-				const items = buildDefaultProviderItems(settings);
-				const selectList = new SelectList(items, Math.min(items.length, 10), {
-					selectedPrefix: (t: string) => theme.fg("accent", t),
-					selectedText: (t: string) => theme.fg("accent", t),
-					description: (t: string) => theme.fg("muted", t),
-					scrollInfo: (t: string) => theme.fg("dim", t),
-					noMatch: (t: string) => theme.fg("warning", t),
-				});
-				const hasTooltip = items.some((item) => item.tooltip);
-				const tooltipText = hasTooltip ? new Text("", 1, 0) : null;
-
-				if (tooltipText) {
-					const setTooltip = (item?: TooltipSelectItem | null) => {
-						const tooltip = item?.tooltip?.trim();
-						tooltipText.setText(tooltip ? theme.fg("dim", tooltip) : "");
-					};
-					setTooltip(selectList.getSelectedItem() as TooltipSelectItem | null);
-					selectList.onSelectionChange = (item) => {
-						setTooltip(item as TooltipSelectItem);
-						tui.requestRender();
-					};
-				}
-
-				container = new Container();
-				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
-				container.addChild(new Text(theme.fg("accent", theme.bold("Pinned Provider")), 1, 0));
-				container.addChild(new Spacer(1));
-				container.addChild(selectList);
-				if (tooltipText) {
-					container.addChild(new Spacer(1));
-					container.addChild(tooltipText);
-				}
-				container.addChild(new Spacer(1));
-				container.addChild(new Text(theme.fg("dim", "↑↓ navigate • Enter/Space select • Esc back"), 1, 0));
-				container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
-
-				selectList.onSelect = (item) => {
-					settings.defaultProvider = item.value === "auto" ? null : item.value as ProviderName;
-					saveSettings(settings);
-					if (onSettingsChange) void onSettingsChange(settings);
-					ctx.ui.notify(`Pinned provider: ${item.value === "auto" ? "none" : item.value}`, "info");
-					rebuild();
-					tui.requestRender();
-				};
-				selectList.onCancel = () => {
-					rebuild();
-					tui.requestRender();
-				};
-				activeList = selectList;
-				tui.requestRender();
-			}
 
 			rebuild();
 

@@ -76,7 +76,7 @@ Why: awaiting fetches inside `pi.on("session_start")` / `pi.on("model_select")` 
 
 **Actions (mutate core state)**
 - `sub-core:settings:patch` → `{ patch }` (persists core settings)
-- `sub-core:action` → `{ type: "refresh" | "cycleProvider" | "pinProvider", provider?, force? }`
+- `sub-core:action` → `{ type: "refresh" | "cycleProvider", force? }`
 
 UI extensions like `sub-bar` listen for updates and render the current provider state.
 

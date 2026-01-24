@@ -12,6 +12,7 @@ export type {
 	UsageErrorCode,
 	ProviderUsageEntry,
 	SubCoreState,
+	SubCoreAllState,
 	SubCoreEvents,
 } from "pi-sub-shared";
 

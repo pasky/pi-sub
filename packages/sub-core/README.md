@@ -138,7 +138,7 @@ The `reply` callback receives `{ state }` or `{ entries }` immediately if availa
 
 ### Actions (mutate core state)
 - `sub-core:settings:patch` → `{ patch }` (updates refresh interval/provider settings and persists)
-- `sub-core:action` → `{ type: "refresh" | "cycleProvider" | "pinProvider", provider?, force? }`
+- `sub-core:action` → `{ type: "refresh" | "cycleProvider", force? }`
 
 After an action, sub-core emits `sub-core:update-current` with the new state.
 

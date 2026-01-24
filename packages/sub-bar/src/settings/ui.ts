@@ -109,7 +109,7 @@ export async function showSettingsUI(
 				return (currentValue: string, done: (selectedValue?: string) => void) => {
 					const input = new Input();
 					input.focused = true;
-					input.setValue(formatInitial ? formatInitial(currentValue) : currentValue);
+					input.setValue(formatInitial ? formatInitial("") : "");
 					input.onSubmit = (value) => {
 						const parsed = parseValue(value);
 						if (!parsed) return;
@@ -270,7 +270,7 @@ export async function showSettingsUI(
 				const titles: Record<string, string> = {
 					main: "sub-bar Settings",
 					providers: "Provider Settings",
-					"pin-provider": "Pinned Provider",
+					"pin-provider": "Provider Shown",
 					display: "Display Settings",
 					"display-theme": "Theme",
 					"display-theme-save": "Save Theme",

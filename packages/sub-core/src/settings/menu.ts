@@ -33,12 +33,6 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 			tooltip: "Reorder providers for cycling and auto-selection.",
 		},
 		{
-			value: "default-provider",
-			label: "Pinned Provider",
-			description: settings.defaultProvider ?? "none",
-			tooltip: "Pin a provider or leave auto-detect enabled.",
-		},
-		{
 			value: "reset",
 			label: "Reset to Defaults",
 			description: "restore all settings",
@@ -73,30 +67,3 @@ export function buildProviderOrderItems(settings: Settings): TooltipSelectItem[]
 	}));
 }
 
-export function buildDefaultProviderItems(settings: Settings): TooltipSelectItem[] {
-	const items: TooltipSelectItem[] = [
-		{
-			value: "auto",
-			label: settings.defaultProvider === null ? "None (auto-detect) - current" : "None (auto-detect)",
-			description: "detect from current model",
-			tooltip: "Use the current model to auto-detect the provider.",
-		},
-	];
-
-	for (const provider of settings.providerOrder) {
-		const enabled = settings.providers[provider].enabled;
-		if (enabled !== "off" && enabled !== false) {
-			items.push({
-				value: provider,
-				label:
-					settings.defaultProvider === provider
-						? `${PROVIDER_DISPLAY_NAMES[provider]} (current)`
-						: PROVIDER_DISPLAY_NAMES[provider],
-				description: `pin ${provider}`,
-				tooltip: `Pin ${PROVIDER_DISPLAY_NAMES[provider]} as the default provider.`,
-			});
-		}
-	}
-
-	return items;
-}
