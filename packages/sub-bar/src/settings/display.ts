@@ -242,13 +242,22 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 	);
 
 	if (settings.display.barType === "braille") {
-		items.push({
-			id: "brailleFillEmpty",
-			label: "Braille Empty Fill",
-			currentValue: settings.display.brailleFillEmpty ? "on" : "off",
-			values: ["on", "off"],
-			description: "Fill empty braille cells with dim blocks.",
-		});
+		items.push(
+			{
+				id: "brailleFillEmpty",
+				label: "Braille Empty Fill",
+				currentValue: settings.display.brailleFillEmpty ? "on" : "off",
+				values: ["on", "off"],
+				description: "Fill empty braille cells with dim blocks.",
+			},
+			{
+				id: "brailleFullBlocks",
+				label: "Braille Full Blocks",
+				currentValue: settings.display.brailleFullBlocks ? "on" : "off",
+				values: ["on", "off"],
+				description: "Use full 8-dot braille blocks for filled segments.",
+			},
+		);
 	}
 
 	items.push({
@@ -452,6 +461,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "brailleFillEmpty":
 			settings.display.brailleFillEmpty = value === "on";
+			break;
+		case "brailleFullBlocks":
+			settings.display.brailleFullBlocks = value === "on";
 			break;
 		case "colorScheme":
 			settings.display.colorScheme = value as ColorScheme;

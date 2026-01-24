@@ -123,6 +123,7 @@ Use Display Settings → Theme to save, share, import, and manage display themes
 | Bar Width | 1, 4, 6, 8, 10, 12, fill | 6 | Width of progress bar in characters |
 | Contain Bar | on/off | off | Wrap bar with ▕ and ▏ |
 | Braille Empty Fill | on/off | off | Fill empty braille segments with dim ⣿ |
+| Braille Full Blocks | on/off | off | Use full 8-dot braille blocks for filled segments |
 | Bar Style | bar, percentage, both | both | How to display usage |
 | Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
 | Usage Color Targets | title, timer, bar, usage label | all | Select which elements use usage colors |

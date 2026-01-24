@@ -280,6 +280,8 @@ export interface DisplaySettings {
 	containBar: boolean;
 	/** Fill empty braille segments with dim full blocks */
 	brailleFillEmpty: boolean;
+	/** Use full braille blocks for filled segments */
+	brailleFullBlocks: boolean;
 	/** Color scheme for bars */
 	colorScheme: ColorScheme;
 	/** Elements colored by the usage scheme */
@@ -442,6 +444,7 @@ export function getDefaultSettings(): Settings {
 			barCharacter: "heavy",
 			containBar: false,
 			brailleFillEmpty: false,
+			brailleFullBlocks: false,
 			colorScheme: "base-warning-error",
 			usageColorTargets: {
 				title: true,

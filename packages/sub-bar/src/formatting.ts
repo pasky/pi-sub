@@ -325,6 +325,7 @@ export function formatUsageWindowParts(
 	const barWidth = options?.barWidthOverride ?? (typeof barWidthSetting === "number" ? barWidthSetting : 6);
 	const barType: BarType = settings?.display.barType ?? "horizontal-bar";
 	const brailleFillEmpty = settings?.display.brailleFillEmpty ?? false;
+	const brailleFullBlocks = settings?.display.brailleFullBlocks ?? false;
 	const barCharacter: BarCharacter = settings?.display.barCharacter ?? "heavy";
 	const colorScheme: ColorScheme = settings?.display.colorScheme ?? "base-warning-error";
 	const resetTimePosition = settings?.display.resetTimePosition ?? "front";
@@ -364,7 +365,10 @@ export function formatUsageWindowParts(
 	
 	let barStr = "";
 	if ((barStyle === "bar" || barStyle === "both") && barWidth > 0) {
-		const levels = getBarTypeLevels(barType);
+		let levels = getBarTypeLevels(barType);
+		if (barType === "braille" && brailleFullBlocks) {
+			levels = ["⣿"];
+		}
 		if (!levels || barType === "horizontal-bar") {
 			barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], char.repeat(filled)) + theme.fg(emptyColor, char.repeat(empty));
 		} else {
