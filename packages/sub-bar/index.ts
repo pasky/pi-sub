@@ -5,7 +5,7 @@
  */
 
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
-import { truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
+import { SelectList, truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import * as fs from "node:fs";
 import type { ProviderName, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
@@ -15,6 +15,8 @@ import type { CoreSettings } from "pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { clearSettingsCache, loadSettings, saveSettings, SETTINGS_PATH } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
+import { decodeDisplayShareString } from "./src/share.js";
+import { upsertDisplayPreset } from "./src/settings/presets.js";
 import { getFallbackCoreSettings } from "./src/core-settings.js";
 
 type SubCoreRequest = {
@@ -63,6 +65,34 @@ export default function createExtension(pi: ExtensionAPI) {
 	let settingsSnapshot = "";
 	let settingsMtimeMs = 0;
 	let settingsWatchStarted = false;
+
+	async function promptImportAction(ctx: ExtensionContext): Promise<"save-apply" | "save" | "cancel"> {
+		return new Promise((resolve) => {
+			ctx.ui.custom<void>((_tui, theme, _kb, done) => {
+				const items = [
+					{ value: "save-apply", label: "Save & apply", description: "save and use this theme" },
+					{ value: "save", label: "Save", description: "save without applying" },
+					{ value: "cancel", label: "Cancel", description: "discard import" },
+				];
+				const list = new SelectList(items, items.length, {
+					selectedPrefix: (t: string) => theme.fg("accent", t),
+					selectedText: (t: string) => theme.fg("accent", t),
+					description: (t: string) => theme.fg("muted", t),
+					scrollInfo: (t: string) => theme.fg("dim", t),
+					noMatch: (t: string) => theme.fg("warning", t),
+				});
+				list.onSelect = (item) => {
+					done(undefined);
+					resolve(item.value as "save-apply" | "save" | "cancel");
+				};
+				list.onCancel = () => {
+					done(undefined);
+					resolve("cancel");
+				};
+				return list;
+			});
+		});
+	}
 
 	function readSettingsFile(): string | undefined {
 		try {
@@ -345,12 +375,74 @@ export default function createExtension(pi: ExtensionAPI) {
 				onDisplayThemeShared: (_name, shareString) => {
 					pi.sendMessage({
 						customType: "sub-bar",
-						content: `[sub-bar Theme share string]\n${shareString}\nCopy and share this string, can be imported using /sub-bar:settings -> Display Settings -> Theme -> Manage themes -> Import theme`,
+						content: `Theme share string:\n/sub-bar:import ${shareString}`,
 						display: true,
 					});
 				},
 			});
 			settings = newSettings;
+			if (lastContext) {
+				renderUsageWidget(lastContext, currentUsage);
+			}
+		},
+	});
+
+	pi.registerCommand("sub-bar:import", {
+		description: "Import a shared display theme",
+		handler: async (args, ctx) => {
+			let input = String(args ?? "").trim();
+			if (input.startsWith("/sub-bar:import")) {
+				input = input.replace(/^\/sub-bar:import\s*/i, "").trim();
+			} else if (input.startsWith("sub-bar:import")) {
+				input = input.replace(/^sub-bar:import\s*/i, "").trim();
+			}
+			if (!input) {
+				ctx.ui.notify("Enter a share string", "warning");
+				return;
+			}
+			const decoded = decodeDisplayShareString(input);
+			if (!decoded) {
+				ctx.ui.notify("Invalid theme share string", "error");
+				return;
+			}
+			const backup = { ...settings.display };
+			settings.display = { ...decoded.display };
+			if (lastContext) {
+				renderUsageWidget(lastContext, currentUsage);
+			}
+
+			const action = await promptImportAction(ctx);
+			const notifyImported = () => {
+				const message = decoded.isNewerVersion
+					? `Imported ${decoded.name} (newer version, some fields may be ignored)`
+					: `Imported ${decoded.name}`;
+				ctx.ui.notify(message, decoded.isNewerVersion ? "warning" : "info");
+			};
+
+			if (action === "save-apply") {
+				settings.displayUserPreset = { ...backup };
+				settings = upsertDisplayPreset(settings, decoded.name, decoded.display, "imported");
+				settings.display = { ...decoded.display };
+				saveSettings(settings);
+				if (lastContext) {
+					renderUsageWidget(lastContext, currentUsage);
+				}
+				notifyImported();
+				pi.sendMessage({
+					customType: "sub-bar",
+					content: `sub-bar Theme ${decoded.name} loaded`,
+					display: true,
+				});
+				return;
+			}
+
+			if (action === "save") {
+				settings = upsertDisplayPreset(settings, decoded.name, decoded.display, "imported");
+				saveSettings(settings);
+				notifyImported();
+			}
+
+			settings.display = { ...backup };
 			if (lastContext) {
 				renderUsageWidget(lastContext, currentUsage);
 			}

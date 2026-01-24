@@ -41,7 +41,7 @@ import {
 	saveDisplayPreset,
 	upsertDisplayPreset,
 } from "./presets.js";
-import { buildDisplayShareString, decodeDisplayShareString } from "../share.js";
+import { buildDisplayShareString, decodeDisplayShareString, type DecodedDisplayShare } from "../share.js";
 
 /**
  * Settings category
@@ -58,6 +58,7 @@ type SettingsCategory =
 	| "display-theme-manage"
 	| "display-theme-action"
 	| "display-theme-import"
+	| "display-theme-import-action"
 	| "display-layout"
 	| "display-bar"
 	| "display-provider"
@@ -93,6 +94,8 @@ export async function showSettingsUI(
 			let activeList: SelectList | SettingsList | { handleInput: (data: string) => void } | null = null;
 			let presetActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
 			let displayPreviewBackup: Settings["display"] | null = null;
+			let importCandidate: DecodedDisplayShare | null = null;
+			let importBackup: Settings["display"] | null = null;
 			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 			const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -554,14 +557,14 @@ export async function showSettingsUI(
 							ctx.ui.notify("Invalid theme share string", "error");
 							return;
 						}
-						settings = upsertDisplayPreset(settings, decoded.name, decoded.display, "imported");
-						saveSettings(settings);
+						if (!displayPreviewBackup) {
+							displayPreviewBackup = { ...settings.display };
+						}
+						importBackup = displayPreviewBackup;
+						importCandidate = decoded;
+						settings.display = { ...decoded.display };
 						if (onSettingsChange) void onSettingsChange(settings);
-						const message = decoded.isNewerVersion
-							? `Imported ${decoded.name} (newer version, some fields may be ignored)`
-							: `Imported ${decoded.name}`;
-						ctx.ui.notify(message, decoded.isNewerVersion ? "warning" : "info");
-						currentCategory = "display-theme-manage";
+						currentCategory = "display-theme-import-action";
 						rebuild();
 						tui.requestRender();
 					};
@@ -574,6 +577,107 @@ export async function showSettingsUI(
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 					activeList = input;
+				} else if (currentCategory === "display-theme-import-action") {
+					const candidate = importCandidate;
+					if (!candidate) {
+						currentCategory = "display-theme-manage";
+						rebuild();
+						tui.requestRender();
+						return;
+					}
+
+					const importItems: TooltipSelectItem[] = [
+						{
+							value: "save-apply",
+							label: "Save & apply",
+							description: "save and use this theme",
+							tooltip: "Save the theme and keep it applied.",
+						},
+						{
+							value: "save",
+							label: "Save",
+							description: "save without applying",
+							tooltip: "Save the theme and restore the previous display.",
+						},
+						{
+							value: "cancel",
+							label: "Cancel",
+							description: "discard import",
+							tooltip: "Discard and restore the previous display.",
+						},
+					];
+
+					const notifyImported = () => {
+						const message = candidate.isNewerVersion
+							? `Imported ${candidate.name} (newer version, some fields may be ignored)`
+							: `Imported ${candidate.name}`;
+						ctx.ui.notify(message, candidate.isNewerVersion ? "warning" : "info");
+					};
+
+					const restoreBackup = () => {
+						if (importBackup) {
+							settings.display = { ...importBackup };
+							if (onSettingsChange) void onSettingsChange(settings);
+						}
+					};
+
+					const selectList = new SelectList(importItems, importItems.length, {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					attachTooltip(importItems, selectList);
+
+					selectList.onSelect = (item) => {
+						if (item.value === "save-apply") {
+							if (importBackup) {
+								settings.displayUserPreset = { ...importBackup };
+							}
+							settings = upsertDisplayPreset(settings, candidate.name, candidate.display, "imported");
+							settings.display = { ...candidate.display };
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+							if (onDisplayPresetApplied) void onDisplayPresetApplied(candidate.name, { source: "manual" });
+							notifyImported();
+							displayPreviewBackup = null;
+							importCandidate = null;
+							importBackup = null;
+							currentCategory = "display-theme";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						if (item.value === "save") {
+							settings = upsertDisplayPreset(settings, candidate.name, candidate.display, "imported");
+							saveSettings(settings);
+							notifyImported();
+							restoreBackup();
+							importCandidate = null;
+							importBackup = null;
+							currentCategory = "display-theme-manage";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						restoreBackup();
+						importCandidate = null;
+						importBackup = null;
+						currentCategory = "display-theme-manage";
+						rebuild();
+						tui.requestRender();
+					};
+					selectList.onCancel = () => {
+						restoreBackup();
+						importCandidate = null;
+						importBackup = null;
+						currentCategory = "display-theme-manage";
+						rebuild();
+						tui.requestRender();
+					};
+					activeList = selectList;
+					container.addChild(selectList);
 				} else if (currentCategory === "display-theme-action") {
 					const target = presetActionTarget;
 					if (!target) {

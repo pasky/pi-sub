@@ -81,6 +81,7 @@ Until then, manual paths/symlinks work as documented above.
 The extension loads automatically. Use:
 
 - `sub-bar:settings` - Open display + provider UI settings
+- `sub-bar:import <share string>` - Preview a shared theme and choose to save/apply
 - `sub-core:settings` - Configure provider enablement/order + behavior settings
 - `Ctrl+Alt+P` - Cycle through available providers
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
