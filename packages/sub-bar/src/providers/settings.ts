@@ -10,6 +10,7 @@ import type {
 	AnthropicProviderSettings,
 	CopilotProviderSettings,
 	GeminiProviderSettings,
+	AntigravityProviderSettings,
 	CodexProviderSettings,
 	KiroProviderSettings,
 	ZaiProviderSettings,
@@ -121,6 +122,33 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 				currentValue: geminiSettings.windows.showFlash ? "on" : "off",
 				values: ["on", "off"],
 				description: "Show the Flash quota window.",
+			},
+		);
+	}
+
+	if (provider === "antigravity") {
+		const antigravitySettings = ps as AntigravityProviderSettings;
+		items.push(
+			{
+				id: "showClaude",
+				label: "Show Claude Window",
+				currentValue: antigravitySettings.windows.showClaude ? "on" : "off",
+				values: ["on", "off"],
+				description: "Show the Claude quota window.",
+			},
+			{
+				id: "showPro",
+				label: "Show Pro Window",
+				currentValue: antigravitySettings.windows.showPro ? "on" : "off",
+				values: ["on", "off"],
+				description: "Show the Gemini Pro quota window.",
+			},
+			{
+				id: "showFlash",
+				label: "Show Flash Window",
+				currentValue: antigravitySettings.windows.showFlash ? "on" : "off",
+				values: ["on", "off"],
+				description: "Show the Gemini Flash quota window.",
 			},
 		);
 	}
@@ -241,6 +269,21 @@ export function applyProviderSettingsChange(
 				break;
 			case "showFlash":
 				geminiSettings.windows.showFlash = value === "on";
+				break;
+		}
+	}
+
+	if (provider === "antigravity") {
+		const antigravitySettings = ps as AntigravityProviderSettings;
+		switch (id) {
+			case "showClaude":
+				antigravitySettings.windows.showClaude = value === "on";
+				break;
+			case "showPro":
+				antigravitySettings.windows.showPro = value === "on";
+				break;
+			case "showFlash":
+				antigravitySettings.windows.showFlash = value === "on";
 				break;
 		}
 	}

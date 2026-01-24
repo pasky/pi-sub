@@ -2,7 +2,7 @@
  * Shared types and metadata for sub-* extensions.
  */
 
-export const PROVIDERS = ["anthropic", "copilot", "gemini", "codex", "kiro", "zai"] as const;
+export const PROVIDERS = ["anthropic", "copilot", "gemini", "antigravity", "codex", "kiro", "zai"] as const;
 
 export type ProviderName = (typeof PROVIDERS)[number];
 
@@ -67,6 +67,7 @@ export interface CoreProviderSettingsMap {
 	anthropic: CoreProviderSettings;
 	copilot: CoreProviderSettings;
 	gemini: CoreProviderSettings;
+	antigravity: CoreProviderSettings;
 	codex: CoreProviderSettings;
 	kiro: CoreProviderSettings;
 	zai: CoreProviderSettings;
@@ -158,6 +159,11 @@ export const PROVIDER_METADATA: Record<ProviderName, ProviderMetadata> = {
 		displayName: "Google Gemini",
 		status: { type: "google-workspace" },
 		detection: { providerTokens: ["google", "gemini"], modelTokens: ["gemini"] },
+	},
+	antigravity: {
+		displayName: "Antigravity",
+		status: { type: "google-workspace" },
+		detection: { providerTokens: ["antigravity"], modelTokens: ["antigravity"] },
 	},
 	codex: {
 		displayName: "OpenAI Codex",

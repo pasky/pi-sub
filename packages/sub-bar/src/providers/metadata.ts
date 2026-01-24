@@ -43,6 +43,15 @@ const geminiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window
 	return true;
 };
 
+const antigravityWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+	if (!settings) return true;
+	const ps = settings.providers.antigravity;
+	if (window.label === "Claude") return ps.windows.showClaude;
+	if (window.label === "Pro") return ps.windows.showPro;
+	if (window.label === "Flash") return ps.windows.showFlash;
+	return true;
+};
+
 const codexWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
 	if (!settings) return true;
 	const ps = settings.providers.codex;
@@ -108,6 +117,10 @@ export const PROVIDER_METADATA: Record<ProviderName, ProviderMetadata> = {
 	gemini: {
 		...BASE_METADATA.gemini,
 		isWindowVisible: geminiWindowVisible,
+	},
+	antigravity: {
+		...BASE_METADATA.antigravity,
+		isWindowVisible: antigravityWindowVisible,
 	},
 	codex: {
 		...BASE_METADATA.codex,

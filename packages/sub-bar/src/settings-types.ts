@@ -221,6 +221,14 @@ export interface GeminiProviderSettings extends BaseProviderSettings {
 	};
 }
 
+export interface AntigravityProviderSettings extends BaseProviderSettings {
+	windows: {
+		showClaude: boolean;
+		showPro: boolean;
+		showFlash: boolean;
+	};
+}
+
 export interface CodexProviderSettings extends BaseProviderSettings {
 	invertUsage: boolean;
 	windows: {
@@ -246,6 +254,7 @@ export interface ProviderSettingsMap {
 	anthropic: AnthropicProviderSettings;
 	copilot: CopilotProviderSettings;
 	gemini: GeminiProviderSettings;
+	antigravity: AntigravityProviderSettings;
 	codex: CodexProviderSettings;
 	kiro: KiroProviderSettings;
 	zai: ZaiProviderSettings;
@@ -391,6 +400,14 @@ export function getDefaultSettings(): Settings {
 			gemini: {
 				showStatus: true,
 				windows: {
+					showPro: true,
+					showFlash: true,
+				},
+			},
+			antigravity: {
+				showStatus: false,
+				windows: {
+					showClaude: true,
 					showPro: true,
 					showFlash: true,
 				},

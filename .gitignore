@@ -2,3 +2,6 @@ node_modules
 .DS_Store
 *.log
 *.tsbuildinfo
+
+packages/sub-bar/settings.json
+packages/sub-core/settings.json
