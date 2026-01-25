@@ -128,7 +128,7 @@ test("unknown status shows label even when status text off", () => {
 		settings,
 	);
 	assert.ok(output.includes("❓"));
-	assert.ok(output.includes("Unknown"));
+	assert.ok(output.includes("Status Unknown"));
 });
 
 test("fetch errors rely on status text instead of appended warning", () => {

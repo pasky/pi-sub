@@ -45,6 +45,6 @@ export function getStatusLabel(status: ProviderStatus | undefined): string {
 			return "Maintenance";
 		case "unknown":
 		default:
-			return "Unknown";
+			return "Status Unknown";
 	}
 }
