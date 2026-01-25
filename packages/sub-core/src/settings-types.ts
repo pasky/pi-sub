@@ -35,6 +35,7 @@ export function getDefaultSettings(): Settings {
 		version: SETTINGS_VERSION,
 		providers: coreDefaults.providers,
 		behavior: coreDefaults.behavior,
+		statusRefresh: coreDefaults.statusRefresh,
 		providerOrder: coreDefaults.providerOrder,
 		defaultProvider: coreDefaults.defaultProvider,
 	};

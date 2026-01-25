@@ -82,8 +82,8 @@ export interface BehaviorSettings {
 
 export const DEFAULT_BEHAVIOR_SETTINGS: BehaviorSettings = {
 	refreshInterval: 60,
-	refreshOnTurnStart: true,
-	refreshOnToolResult: true,
+	refreshOnTurnStart: false,
+	refreshOnToolResult: false,
 };
 
 export function getDefaultCoreProviderSettings(): CoreProviderSettingsMap {
@@ -101,6 +101,7 @@ export function getDefaultCoreSettings(): CoreSettings {
 	return {
 		providers: getDefaultCoreProviderSettings(),
 		behavior: { ...DEFAULT_BEHAVIOR_SETTINGS },
+		statusRefresh: { ...DEFAULT_BEHAVIOR_SETTINGS },
 		providerOrder: [...PROVIDERS],
 		defaultProvider: null,
 	};
@@ -109,6 +110,7 @@ export function getDefaultCoreSettings(): CoreSettings {
 export interface CoreSettings {
 	providers: CoreProviderSettingsMap;
 	behavior: BehaviorSettings;
+	statusRefresh: BehaviorSettings;
 	providerOrder: ProviderName[];
 	defaultProvider: ProviderName | null;
 }

@@ -8,7 +8,7 @@ import type { Settings } from "../settings-types.js";
 import { detectProviderFromModel } from "../providers/detection.js";
 import { isExpectedMissingData } from "../errors.js";
 import { formatElapsedSince } from "../utils.js";
-import { fetchUsageForProvider } from "./fetch.js";
+import { fetchUsageForProvider, refreshStatusForProvider } from "./fetch.js";
 import type { Dependencies } from "../types.js";
 import { getCachedData, readCache } from "../cache.js";
 import { hasProviderCredentials } from "../providers/registry.js";
@@ -63,7 +63,7 @@ export function createUsageController(deps: Dependencies) {
 		settings: Settings,
 		state: UsageControllerState,
 		onUpdate: UsageUpdateHandler,
-		options?: { force?: boolean; allowStaleCache?: boolean }
+		options?: { force?: boolean; allowStaleCache?: boolean; forceStatus?: boolean }
 	): Promise<void> {
 		const provider = resolveProvider(ctx, settings, state);
 		if (!provider) {
@@ -134,6 +134,51 @@ export function createUsageController(deps: Dependencies) {
 		emitUpdate(state, onUpdate);
 	}
 
+	async function refreshStatus(
+		ctx: ExtensionContext,
+		settings: Settings,
+		state: UsageControllerState,
+		onUpdate: UsageUpdateHandler,
+		options?: { force?: boolean; allowStaleCache?: boolean }
+	): Promise<void> {
+		const provider = resolveProvider(ctx, settings, state);
+		if (!provider) {
+			state.currentProvider = undefined;
+			state.cachedUsage = undefined;
+			emitUpdate(state, onUpdate);
+			return;
+		}
+
+		const providerChanged = provider !== state.currentProvider;
+		state.currentProvider = provider;
+		if (providerChanged) {
+			state.cachedUsage = undefined;
+		}
+
+		let cachedEntry = await getCachedData(provider, settings.behavior.refreshInterval * 1000);
+		if (!cachedEntry && options?.allowStaleCache) {
+			const cache = readCache();
+			cachedEntry = cache[provider] ?? null;
+		}
+		if (cachedEntry?.usage) {
+			state.cachedUsage = {
+				...cachedEntry.usage,
+				status: cachedEntry.status,
+				lastSuccessAt: cachedEntry.fetchedAt,
+			};
+			if (!cachedEntry.usage.error) {
+				state.lastSuccessAt = cachedEntry.fetchedAt;
+			}
+		}
+
+		const status = await refreshStatusForProvider(deps, settings, provider, { force: options?.force });
+		if (status && state.cachedUsage) {
+			state.cachedUsage = { ...state.cachedUsage, status };
+		}
+
+		emitUpdate(state, onUpdate);
+	}
+
 	async function cycleProvider(
 		ctx: ExtensionContext,
 		settings: Settings,
@@ -185,6 +230,7 @@ export function createUsageController(deps: Dependencies) {
 		getEnabledProviders,
 		resolveProvider,
 		refresh,
+		refreshStatus,
 		cycleProvider,
 	};
 }

@@ -6,7 +6,7 @@ import type { Dependencies, ProviderName, ProviderStatus, UsageSnapshot } from "
 import type { Settings } from "../settings-types.js";
 import type { ProviderUsageEntry } from "./types.js";
 import { createProvider } from "../providers/registry.js";
-import { fetchWithCache, getCachedData } from "../cache.js";
+import { fetchWithCache, getCachedData, readCache, updateCacheStatus } from "../cache.js";
 import { fetchProviderStatusWithFallback, providerHasStatus } from "../providers/status.js";
 import { hasProviderCredentials } from "../providers/registry.js";
 import { isExpectedMissingData } from "../errors.js";
@@ -15,11 +15,62 @@ export function getCacheTtlMs(settings: Settings): number {
 	return settings.behavior.refreshInterval * 1000;
 }
 
-export async function fetchUsageForProvider(
+export function getStatusCacheTtlMs(settings: Settings): number {
+	return settings.statusRefresh.refreshInterval * 1000;
+}
+
+function resolveStatusFetchedAt(entry?: { fetchedAt: number; statusFetchedAt?: number } | null): number | undefined {
+	if (!entry) return undefined;
+	return entry.statusFetchedAt ?? entry.fetchedAt;
+}
+
+function shouldRefreshStatus(
+	settings: Settings,
+	entry?: { fetchedAt: number; statusFetchedAt?: number } | null,
+	options?: { force?: boolean }
+): boolean {
+	if (options?.force) return true;
+	const ttlMs = getStatusCacheTtlMs(settings);
+	if (ttlMs <= 0) return true;
+	const fetchedAt = resolveStatusFetchedAt(entry);
+	if (!fetchedAt) return true;
+	return Date.now() - fetchedAt >= ttlMs;
+}
+
+export async function refreshStatusForProvider(
 	deps: Dependencies,
 	settings: Settings,
 	provider: ProviderName,
 	options?: { force?: boolean }
+): Promise<ProviderStatus | undefined> {
+	const enabledSetting = settings.providers[provider].enabled;
+	if (enabledSetting === "off" || enabledSetting === false) {
+		return undefined;
+	}
+	if (enabledSetting === "auto" && !hasProviderCredentials(provider, deps)) {
+		return undefined;
+	}
+	if (!settings.providers[provider].fetchStatus) {
+		return undefined;
+	}
+
+	const cache = readCache();
+	const entry = cache[provider];
+	const providerInstance = createProvider(provider);
+	const shouldFetch = providerHasStatus(provider, providerInstance) && shouldRefreshStatus(settings, entry, options);
+	if (!shouldFetch) {
+		return entry?.status;
+	}
+	const status = await fetchProviderStatusWithFallback(provider, providerInstance, deps);
+	await updateCacheStatus(provider, status, { statusFetchedAt: Date.now() });
+	return status;
+}
+
+export async function fetchUsageForProvider(
+	deps: Dependencies,
+	settings: Settings,
+	provider: ProviderName,
+	options?: { force?: boolean; forceStatus?: boolean }
 ): Promise<{ usage?: UsageSnapshot; status?: ProviderStatus }> {
 	const enabledSetting = settings.providers[provider].enabled;
 	if (enabledSetting === "off" || enabledSetting === false) {
@@ -30,21 +81,41 @@ export async function fetchUsageForProvider(
 	}
 
 	const ttlMs = getCacheTtlMs(settings);
+	const cache = readCache();
+	const cachedEntry = cache[provider];
+	const cachedStatus = cachedEntry?.status;
+	const providerInstance = createProvider(provider);
+	const shouldFetchStatus = Boolean(options?.forceStatus)
+		&& settings.providers[provider].fetchStatus
+		&& providerHasStatus(provider, providerInstance);
+
+	if (!options?.force) {
+		const cachedUsage = await getCachedData(provider, ttlMs);
+		if (cachedUsage) {
+			let status = cachedUsage.status;
+			if (shouldFetchStatus) {
+				status = await refreshStatusForProvider(deps, settings, provider, { force: options?.forceStatus ?? options?.force });
+			}
+			const usage = cachedUsage.usage ? { ...cachedUsage.usage, status } : undefined;
+			return { usage, status };
+		}
+	}
 
 	return fetchWithCache(
 		provider,
 		ttlMs,
 		async () => {
-			const providerInstance = createProvider(provider);
 			const usage = await providerInstance.fetchUsage(deps);
-			let status;
-			if (settings.providers[provider].fetchStatus && providerHasStatus(provider, providerInstance)) {
+			let status = cachedStatus;
+			let statusFetchedAt = resolveStatusFetchedAt(cachedEntry);
+			if (shouldFetchStatus) {
 				status = await fetchProviderStatusWithFallback(provider, providerInstance, deps);
-			} else {
+				statusFetchedAt = Date.now();
+			} else if (!status) {
 				status = { indicator: "none" as const };
 			}
 
-			return { usage, status };
+			return { usage, status, statusFetchedAt };
 		},
 		options,
 	);

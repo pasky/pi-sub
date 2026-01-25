@@ -18,6 +18,7 @@ export function getFallbackCoreSettings(settings: Settings): CoreSettings {
 	return {
 		providers,
 		behavior: settings.behavior,
+		statusRefresh: settings.statusRefresh ?? settings.behavior,
 		providerOrder: settings.providerOrder,
 		defaultProvider: settings.defaultProvider ?? null,
 	};

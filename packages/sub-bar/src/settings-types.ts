@@ -488,8 +488,13 @@ export function getDefaultSettings(): Settings {
 
 		behavior: {
 			refreshInterval: 60,
-			refreshOnTurnStart: true,
-			refreshOnToolResult: true,
+			refreshOnTurnStart: false,
+			refreshOnToolResult: false,
+		},
+		statusRefresh: {
+			refreshInterval: 60,
+			refreshOnTurnStart: false,
+			refreshOnToolResult: false,
 		},
 		providerOrder: [...PROVIDERS],
 		defaultProvider: null,

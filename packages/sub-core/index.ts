@@ -67,7 +67,8 @@ function stripUsageProvider(usage?: UsageSnapshot): Omit<UsageSnapshot, "provide
  * Create the extension
  */
 export default function createExtension(pi: ExtensionAPI, deps: Dependencies = createDefaultDependencies()): void {
-	let refreshInterval: ReturnType<typeof setInterval> | undefined;
+	let usageRefreshInterval: ReturnType<typeof setInterval> | undefined;
+	let statusRefreshInterval: ReturnType<typeof setInterval> | undefined;
 	let lastContext: ExtensionContext | undefined;
 	let settings: Settings = loadSettings();
 	let lastState: SubCoreState = {};
@@ -128,23 +129,41 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		await controller.refresh(ctx, settings, controllerState, emitUpdate, options);
 	}
 
+	async function refreshStatus(ctx: ExtensionContext, options?: { force?: boolean; allowStaleCache?: boolean }) {
+		lastContext = ctx;
+		await controller.refreshStatus(ctx, settings, controllerState, emitUpdate, options);
+	}
+
 	async function cycleProvider(ctx: ExtensionContext): Promise<void> {
 		await controller.cycleProvider(ctx, settings, controllerState, emitUpdate);
 	}
 
 	function setupRefreshInterval(): void {
-		if (refreshInterval) {
-			clearInterval(refreshInterval);
-			refreshInterval = undefined;
+		if (usageRefreshInterval) {
+			clearInterval(usageRefreshInterval);
+			usageRefreshInterval = undefined;
+		}
+		if (statusRefreshInterval) {
+			clearInterval(statusRefreshInterval);
+			statusRefreshInterval = undefined;
 		}
 
-		const intervalMs = settings.behavior.refreshInterval * 1000;
-		if (intervalMs > 0) {
-			refreshInterval = setInterval(() => {
+		const usageIntervalMs = settings.behavior.refreshInterval * 1000;
+		if (usageIntervalMs > 0) {
+			usageRefreshInterval = setInterval(() => {
 				if (lastContext) {
 					void refresh(lastContext);
 				}
-			}, intervalMs);
+			}, usageIntervalMs);
+		}
+
+		const statusIntervalMs = settings.statusRefresh.refreshInterval * 1000;
+		if (statusIntervalMs > 0) {
+			statusRefreshInterval = setInterval(() => {
+				if (lastContext) {
+					void refreshStatus(lastContext);
+				}
+			}, statusIntervalMs);
 		}
 	}
 
@@ -242,6 +261,9 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		const request = payload as SubCoreRequest;
 		if (request.type === "entries") {
 			const entries = await getEntries(request.force);
+			if (lastContext && settings.statusRefresh.refreshInterval > 0) {
+				await refreshStatus(lastContext, { force: request.force });
+			}
 			request.reply({ entries });
 			return;
 		}
@@ -279,6 +301,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		setupRefreshInterval();
 		void refreshAnthropicOverageCurrency();
 		void refresh(ctx, { force: true, allowStaleCache: true });
+		void refreshStatus(ctx, { force: true, allowStaleCache: true });
 		pi.events.emit("sub-core:ready", { state: lastState, settings });
 	});
 
@@ -286,11 +309,17 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		if (settings.behavior.refreshOnTurnStart) {
 			await refresh(ctx);
 		}
+		if (settings.statusRefresh.refreshOnTurnStart) {
+			await refreshStatus(ctx);
+		}
 	});
 
 	pi.on("tool_result", async (_event, ctx) => {
 		if (settings.behavior.refreshOnToolResult) {
 			await refresh(ctx, { force: true });
+		}
+		if (settings.statusRefresh.refreshOnToolResult) {
+			await refreshStatus(ctx, { force: true });
 		}
 	});
 
@@ -302,24 +331,31 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		controllerState.currentProvider = undefined;
 		controllerState.cachedUsage = undefined;
 		await refresh(ctx);
+		await refreshStatus(ctx);
 	});
 
 	pi.on("session_branch" as unknown as "session_start", async (_event: unknown, ctx: ExtensionContext) => {
 		controllerState.currentProvider = undefined;
 		controllerState.cachedUsage = undefined;
 		await refresh(ctx);
+		await refreshStatus(ctx);
 	});
 
 	pi.on("model_select" as unknown as "session_start", async (_event: unknown, ctx: ExtensionContext) => {
 		controllerState.currentProvider = undefined;
 		controllerState.cachedUsage = undefined;
 		void refresh(ctx, { force: true, allowStaleCache: true });
+		void refreshStatus(ctx, { force: true, allowStaleCache: true });
 	});
 
 	pi.on("session_shutdown", async () => {
-		if (refreshInterval) {
-			clearInterval(refreshInterval);
-			refreshInterval = undefined;
+		if (usageRefreshInterval) {
+			clearInterval(usageRefreshInterval);
+			usageRefreshInterval = undefined;
+		}
+		if (statusRefreshInterval) {
+			clearInterval(statusRefreshInterval);
+			statusRefreshInterval = undefined;
 		}
 		unsubscribeCache();
 		unsubscribeCacheSnapshot();

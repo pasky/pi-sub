@@ -22,9 +22,15 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 		},
 		{
 			value: "behavior",
-			label: "Usage Settings",
+			label: "Usage Refresh Settings",
 			description: `refresh ${settings.behavior.refreshInterval}s`,
-			tooltip: "Control refresh interval and auto-refresh triggers.",
+			tooltip: "Control usage refresh interval and triggers.",
+		},
+		{
+			value: "status-refresh",
+			label: "Status Refresh Settings",
+			description: `refresh ${settings.statusRefresh.refreshInterval}s`,
+			tooltip: "Control status refresh interval and triggers.",
 		},
 		{
 			value: "provider-order",

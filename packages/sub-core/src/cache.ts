@@ -16,6 +16,7 @@ import { tryAcquireFileLock, releaseFileLock, waitForLockRelease } from "./stora
  */
 export interface CacheEntry {
 	fetchedAt: number;
+	statusFetchedAt?: number;
 	usage?: UsageSnapshot;
 	status?: ProviderStatus;
 }
@@ -269,7 +270,7 @@ export async function getCachedData(
  * Fetch data with lock coordination
  * Returns cached data if fresh, or executes fetchFn if cache is stale
  */
-export async function fetchWithCache<T extends { usage?: UsageSnapshot; status?: ProviderStatus }>(
+export async function fetchWithCache<T extends { usage?: UsageSnapshot; status?: ProviderStatus; statusFetchedAt?: number }>(
 	provider: ProviderName,
 	ttlMs: number,
 	fetchFn: () => Promise<T>,
@@ -310,8 +311,12 @@ export async function fetchWithCache<T extends { usage?: UsageSnapshot; status?:
 		
 		if (shouldCache) {
 			// Update cache with valid data
+			const fetchedAt = Date.now();
+			const previous = cache[provider];
+			const statusFetchedAt = result.statusFetchedAt ?? (result.status ? fetchedAt : previous?.statusFetchedAt);
 			cache[provider] = {
-				fetchedAt: Date.now(),
+				fetchedAt,
+				statusFetchedAt,
 				usage: result.usage,
 				status: result.status,
 			};
@@ -329,6 +334,35 @@ export async function fetchWithCache<T extends { usage?: UsageSnapshot; status?:
 		}
 		
 		return result;
+	} finally {
+		if (lockAcquired) {
+			releaseFileLock(LOCK_PATH);
+		}
+	}
+}
+
+export async function updateCacheStatus(
+	provider: ProviderName,
+	status: ProviderStatus,
+	options?: { statusFetchedAt?: number }
+): Promise<void> {
+	const lockAcquired = tryAcquireFileLock(LOCK_PATH, LOCK_TIMEOUT_MS);
+	if (!lockAcquired) {
+		await waitForLockRelease(LOCK_PATH, 3000);
+	}
+	try {
+		const cache = readCache();
+		const entry = cache[provider];
+		const statusFetchedAt = options?.statusFetchedAt ?? Date.now();
+		cache[provider] = {
+			fetchedAt: entry?.fetchedAt ?? 0,
+			statusFetchedAt,
+			usage: entry?.usage,
+			status,
+		};
+		writeCache(cache);
+		emitCacheUpdate(provider, cache[provider]);
+		emitCacheSnapshot(cache);
 	} finally {
 		if (lockAcquired) {
 			releaseFileLock(LOCK_PATH);

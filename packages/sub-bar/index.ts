@@ -339,6 +339,7 @@ export default function createExtension(pi: ExtensionAPI) {
 		if (!next) return;
 		coreSettings = next;
 		settings.behavior = next.behavior ?? settings.behavior;
+		settings.statusRefresh = next.statusRefresh ?? settings.statusRefresh;
 		settings.providerOrder = next.providerOrder ?? settings.providerOrder;
 		settings.defaultProvider = next.defaultProvider ?? settings.defaultProvider;
 	}
@@ -354,6 +355,9 @@ export default function createExtension(pi: ExtensionAPI) {
 		}
 		if (patch.behavior) {
 			coreSettings.behavior = { ...coreSettings.behavior, ...patch.behavior };
+		}
+		if (patch.statusRefresh) {
+			coreSettings.statusRefresh = { ...coreSettings.statusRefresh, ...patch.statusRefresh };
 		}
 		if (patch.providerOrder) {
 			coreSettings.providerOrder = [...patch.providerOrder];

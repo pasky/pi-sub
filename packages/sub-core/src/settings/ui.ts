@@ -12,7 +12,7 @@ import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings, resetSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
-import { buildBehaviorItems, applyBehaviorChange } from "./behavior.js";
+import { buildRefreshItems, applyRefreshChange } from "./behavior.js";
 import { buildMainMenuItems, buildProviderListItems, buildProviderOrderItems, type TooltipSelectItem } from "./menu.js";
 
 /**
@@ -25,6 +25,7 @@ type SettingsCategory =
 	| "providers"
 	| ProviderCategory
 	| "behavior"
+	| "status-refresh"
 	| "provider-order";
 
 /**
@@ -133,7 +134,8 @@ export async function showSettingsUI(
 				const titles: Record<string, string> = {
 					main: "sub-core Settings",
 					providers: "Provider Settings",
-					behavior: "Usage Settings",
+					behavior: "Usage Refresh Settings",
+					"status-refresh": "Status Refresh Settings",
 					"provider-order": "Provider Order",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
@@ -290,7 +292,8 @@ export async function showSettingsUI(
 						};
 						backCategory = "providers";
 					} else {
-						items = buildBehaviorItems(settings);
+						const refreshTarget = currentCategory === "status-refresh" ? settings.statusRefresh : settings.behavior;
+						items = buildRefreshItems(refreshTarget);
 						const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {
 							refreshInterval: buildInputSubmenu("Auto-refresh Interval (seconds)", parseRefreshInterval),
 						};
@@ -300,7 +303,7 @@ export async function showSettingsUI(
 							}
 						}
 						handleChange = (id, value) => {
-							settings = applyBehaviorChange(settings, id, value);
+							applyRefreshChange(refreshTarget, id, value);
 							saveSettings(settings);
 							if (onSettingsChange) void onSettingsChange(settings);
 						};
@@ -332,7 +335,7 @@ export async function showSettingsUI(
 					container.addChild(settingsList);
 				}
 
-				const usesSettingsList = currentCategory === "behavior" || getProviderFromCategory(currentCategory) !== null;
+				const usesSettingsList = currentCategory === "behavior" || currentCategory === "status-refresh" || getProviderFromCategory(currentCategory) !== null;
 				if (!usesSettingsList) {
 					let helpText: string;
 					if (currentCategory === "main" || currentCategory === "providers") {
