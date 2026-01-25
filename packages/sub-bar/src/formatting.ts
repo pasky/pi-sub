@@ -643,8 +643,8 @@ export function formatUsageStatusWithWidth(
 	const dividerChar = settings?.display.dividerCharacter ?? "•";
 	const charToDisplay = dividerChar === "blank" ? " " : dividerChar === "none" ? "" : dividerChar;
 	const dividerBaseWidth = (charToDisplay ? 1 : 0) + baseDividerBlanks * 2;
-	const labelGapEnabled = label !== "" && partCount > 0;
-	const providerDividerActive = showProviderDivider && charToDisplay !== "";
+	const labelGapEnabled = partCount > 0 && (label !== "" || labelGapFill);
+	const providerDividerActive = showProviderDivider && charToDisplay !== "" && label !== "";
 	const labelGapBaseWidth = labelGapEnabled
 		? providerDividerActive
 			? dividerBaseWidth

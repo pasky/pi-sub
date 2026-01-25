@@ -14,16 +14,16 @@ export function buildMainMenuItems(settings: Settings, pinnedProvider?: Provider
 	const pinnedLabel = pinnedProvider ? PROVIDER_DISPLAY_NAMES[pinnedProvider] : "auto (current provider)";
 	return [
 		{
-			value: "providers",
-			label: "Provider Settings",
-			description: `${Object.keys(settings.providers).length} providers`,
-			tooltip: "Configure provider display toggles and window visibility.",
-		},
-		{
 			value: "display",
 			label: "Display Settings",
 			description: "layout, bars, colors",
 			tooltip: "Adjust layout, colors, bar styling, status indicators, and dividers.",
+		},
+		{
+			value: "providers",
+			label: "Provider Settings",
+			description: `${Object.keys(settings.providers).length} providers`,
+			tooltip: "Configure provider display toggles and window visibility.",
 		},
 		{
 			value: "pin-provider",
@@ -133,10 +133,22 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 			tooltip: "Save the current display theme with a custom name.",
 		},
 		{
-			value: "display-theme-manage",
-			label: "Manage themes",
-			description: "load, share, import, delete",
-			tooltip: "Load, share, import, or delete saved themes.",
+			value: "display-theme-load",
+			label: "Load theme",
+			description: "restore or apply",
+			tooltip: "Load a saved or default theme.",
+		},
+		{
+			value: "display-theme-import",
+			label: "Import theme",
+			description: "from share string",
+			tooltip: "Import a shared theme string.",
+		},
+		{
+			value: "display-theme-random",
+			label: "Random theme",
+			description: "generate a new theme",
+			tooltip: "Generate a new random display theme.",
 		},
 	];
 }

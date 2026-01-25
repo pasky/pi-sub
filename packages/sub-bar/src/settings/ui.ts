@@ -57,10 +57,11 @@ type SettingsCategory =
 	| "display"
 	| "display-theme"
 	| "display-theme-save"
-	| "display-theme-manage"
+	| "display-theme-load"
 	| "display-theme-action"
 	| "display-theme-import"
 	| "display-theme-import-action"
+	| "display-theme-random"
 	| "display-layout"
 	| "display-bar"
 	| "display-provider"
@@ -284,7 +285,7 @@ export async function showSettingsUI(
 					display: "Display Settings",
 					"display-theme": "Theme",
 					"display-theme-save": "Save Theme",
-					"display-theme-manage": "Manage Themes",
+					"display-theme-load": "Load Theme",
 					"display-theme-action": "Manage Theme",
 					"display-theme-import": "Import Theme",
 					"display-layout": "Layout & Structure",
@@ -548,24 +549,15 @@ export async function showSettingsUI(
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 					activeList = input;
-				} else if (currentCategory === "display-theme-manage") {
+				} else if (currentCategory === "display-theme-load") {
 					if (!displayPreviewBackup) {
 						displayPreviewBackup = { ...settings.display };
 					}
 					const defaults = getDefaultSettings();
 					const fallbackUser = settings.displayUserTheme ?? displayPreviewBackup;
 					const themeItems = buildDisplayThemeItems(settings);
-					const manageItems: TooltipSelectItem[] = [
-						{
-							value: "import",
-							label: "Import theme",
-							description: "from share string",
-							tooltip: "Import a shared theme string.",
-						},
-						...themeItems,
-					];
 
-					const selectList = new SelectList(manageItems, Math.min(manageItems.length, 10), {
+					const selectList = new SelectList(themeItems, Math.min(themeItems.length, 10), {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
 						selectedText: (t: string) => theme.fg("accent", t),
 						description: (t: string) => theme.fg("muted", t),
@@ -573,43 +565,34 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					selectList.onSelectionChange = (item) => {
-						if (!item || item.value === "import" || item.value === "random") return;
+						if (!item) return;
 						const target = resolveDisplayThemeTarget(item.value, settings, defaults, fallbackUser);
 						if (!target) return;
 						settings.display = { ...target.display };
 						if (onSettingsChange) void onSettingsChange(settings);
 						tui.requestRender();
 					};
-					attachTooltip(manageItems, selectList);
+					attachTooltip(themeItems, selectList);
 
 					selectList.onSelect = (item) => {
-						if (item.value === "import") {
-							if (displayPreviewBackup) {
-								settings.display = { ...displayPreviewBackup };
-								if (onSettingsChange) void onSettingsChange(settings);
-							}
-							currentCategory = "display-theme-import";
+						const target = resolveDisplayThemeTarget(item.value, settings, defaults, fallbackUser);
+						if (!target) return;
+						if (item.value.startsWith("theme:")) {
+							themeActionTarget = target;
+							currentCategory = "display-theme-action";
 							rebuild();
 							tui.requestRender();
 							return;
 						}
-						if (item.value === "random") {
-							if (!randomThemeBackup) {
-								randomThemeBackup = { ...settings.display };
-								settings.displayUserTheme = { ...randomThemeBackup };
-							}
-							const randomDisplay = buildRandomDisplay(settings.display);
-							settings.display = { ...randomDisplay };
-							saveSettings(settings);
-							if (onSettingsChange) void onSettingsChange(settings);
-							displayPreviewBackup = { ...settings.display };
-							tui.requestRender();
-							return;
-						}
-						const target = resolveDisplayThemeTarget(item.value, settings, defaults, fallbackUser);
-						if (!target) return;
-						themeActionTarget = target;
-						currentCategory = "display-theme-action";
+
+						const backup = displayPreviewBackup ?? settings.display;
+						settings.displayUserTheme = { ...backup };
+						settings.display = { ...target.display };
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						if (onDisplayThemeApplied) void onDisplayThemeApplied(target.name, { source: "manual" });
+						displayPreviewBackup = null;
+						currentCategory = "display-theme";
 						rebuild();
 						tui.requestRender();
 					};
@@ -625,6 +608,18 @@ export async function showSettingsUI(
 					};
 					activeList = selectList;
 					container.addChild(selectList);
+				} else if (currentCategory === "display-theme-random") {
+					if (!randomThemeBackup) {
+						randomThemeBackup = { ...settings.display };
+						settings.displayUserTheme = { ...randomThemeBackup };
+					}
+					const randomDisplay = buildRandomDisplay(settings.display);
+					settings.display = { ...randomDisplay };
+					saveSettings(settings);
+					if (onSettingsChange) void onSettingsChange(settings);
+					currentCategory = "display-theme";
+					rebuild();
+					tui.requestRender();
 				} else if (currentCategory === "display-theme-import") {
 					const input = new Input();
 					input.focused = true;
@@ -652,7 +647,7 @@ export async function showSettingsUI(
 						tui.requestRender();
 					};
 					input.onEscape = () => {
-						currentCategory = "display-theme-manage";
+						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 					};
@@ -663,7 +658,7 @@ export async function showSettingsUI(
 				} else if (currentCategory === "display-theme-import-action") {
 					const candidate = importCandidate;
 					if (!candidate) {
-						currentCategory = "display-theme-manage";
+						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 						return;
@@ -748,7 +743,7 @@ export async function showSettingsUI(
 							notifyImported();
 							importCandidate = null;
 							importBackup = null;
-							currentCategory = "display-theme-manage";
+							currentCategory = "display-theme-load";
 							rebuild();
 							tui.requestRender();
 							return;
@@ -756,7 +751,7 @@ export async function showSettingsUI(
 						restoreBackup();
 						importCandidate = null;
 						importBackup = null;
-						currentCategory = "display-theme-manage";
+						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 					};
@@ -764,7 +759,7 @@ export async function showSettingsUI(
 						restoreBackup();
 						importCandidate = null;
 						importBackup = null;
-						currentCategory = "display-theme-manage";
+						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 					};
@@ -773,7 +768,7 @@ export async function showSettingsUI(
 				} else if (currentCategory === "display-theme-action") {
 					const target = themeActionTarget;
 					if (!target) {
-						currentCategory = "display-theme-manage";
+						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 						return;
@@ -814,7 +809,7 @@ export async function showSettingsUI(
 								ctx.ui.notify(shareString, "info");
 							}
 							themeActionTarget = null;
-							currentCategory = "display-theme-manage";
+							currentCategory = "display-theme-load";
 							rebuild();
 							tui.requestRender();
 							return;
@@ -827,13 +822,13 @@ export async function showSettingsUI(
 								if (onSettingsChange) void onSettingsChange(settings);
 							}
 							themeActionTarget = null;
-							currentCategory = "display-theme-manage";
+							currentCategory = "display-theme-load";
 							rebuild();
 							tui.requestRender();
 						}
 					};
 					selectList.onCancel = () => {
-						currentCategory = "display-theme-manage";
+						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 					};
@@ -956,15 +951,28 @@ export async function showSettingsUI(
 					let helpText: string;
 					if (currentCategory === "display-theme-save") {
 						helpText = "Type name • Enter to save • Esc back";
-					} else if (currentCategory === "display-theme-import") {
+					} else if (currentCategory === "display-theme-random") {
+					if (!randomThemeBackup) {
+						randomThemeBackup = { ...settings.display };
+						settings.displayUserTheme = { ...randomThemeBackup };
+					}
+					const randomDisplay = buildRandomDisplay(settings.display);
+					settings.display = { ...randomDisplay };
+					saveSettings(settings);
+					if (onSettingsChange) void onSettingsChange(settings);
+					currentCategory = "display-theme";
+					rebuild();
+					tui.requestRender();
+				} else if (currentCategory === "display-theme-import") {
 						helpText = "Paste share string • Enter to import • Esc back";
 					} else if (
 						currentCategory === "main" ||
 						currentCategory === "providers" ||
 						currentCategory === "display" ||
 						currentCategory === "display-theme" ||
-						currentCategory === "display-theme-manage" ||
-						currentCategory === "display-theme-action"
+						currentCategory === "display-theme-load" ||
+						currentCategory === "display-theme-action" ||
+						currentCategory === "display-theme-random"
 					) {
 						helpText = "↑↓ navigate • Enter/Space select • Esc back";
 					} else {
