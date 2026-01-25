@@ -263,7 +263,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const statusActive = Boolean(status && (!statusDismissOk || status.indicator !== "none"));
 	const showIcon = statusActive && (statusMode === "icon" || statusMode === "icon+color");
 	const showColor = statusActive && (statusMode === "color" || statusMode === "icon+color");
-	const showText = statusActive && showStatusText;
+	const showText = statusActive && (showStatusText || status?.indicator === "unknown");
 
 	const labelSuffix = providerLabelSetting === "plan"
 		? "Plan"

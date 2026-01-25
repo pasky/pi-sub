@@ -114,6 +114,23 @@ test("status dismiss ok hides operational text", () => {
 	assert.ok(!output.includes("✅"));
 });
 
+test("unknown status shows label even when status text off", () => {
+	const settings = getDefaultSettings();
+	settings.display.statusIndicatorMode = "icon";
+	settings.display.statusIconPack = "emoji";
+	settings.display.statusText = false;
+	settings.display.statusDismissOk = false;
+
+	const output = formatUsageStatus(
+		theme,
+		buildUsageWithStatus("unknown"),
+		undefined,
+		settings,
+	);
+	assert.ok(output.includes("❓"));
+	assert.ok(output.includes("Unknown"));
+});
+
 test("fetch errors rely on status text instead of appended warning", () => {
 	const settings = getDefaultSettings();
 	settings.display.statusText = true;
