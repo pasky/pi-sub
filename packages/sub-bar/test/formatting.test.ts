@@ -112,15 +112,18 @@ test("status dismiss ok hides operational text", () => {
 	assert.ok(!output.includes("✅"));
 });
 
-test("fetch errors append warning text while preserving cached windows", () => {
+test("fetch errors rely on status text instead of appended warning", () => {
 	const settings = getDefaultSettings();
-	settings.display.statusText = false;
+	settings.display.statusText = true;
 
 	const usage = buildUsage();
 	usage.error = { code: "FETCH_FAILED", message: "Fetch failed" };
+	usage.lastSuccessAt = Date.now() - 5 * 60 * 1000;
+	usage.status = { indicator: "minor", description: "Fetch failed" };
 
 	const output = formatUsageStatus(theme, usage, undefined, settings);
 	assert.ok(output);
-	assert.ok(output.includes("(Fetch failed)"));
+	assert.ok(output.includes("5m ago"));
+	assert.ok(!output.includes("(Fetch failed)"));
 	assert.ok(output.includes("5h"));
 });

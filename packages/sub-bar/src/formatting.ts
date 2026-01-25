@@ -133,6 +133,22 @@ function resolveUsageColorTargets(settings?: Settings): { title: boolean; timer:
 	};
 }
 
+function formatElapsedSince(timestamp: number): string {
+	const diffMs = Date.now() - timestamp;
+	if (diffMs < 60000) return "just now";
+
+	const diffMins = Math.floor(diffMs / 60000);
+	if (diffMins < 60) return `${diffMins}m`;
+
+	const hours = Math.floor(diffMins / 60);
+	const mins = diffMins % 60;
+	if (hours < 24) return mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+
+	const days = Math.floor(hours / 24);
+	const remHours = hours % 24;
+	return remHours > 0 ? `${days}d${remHours}h` : `${days}d`;
+}
+
 function wrapResetContainment(text: string, containment: ResetTimerContainment): { wrapped: string; attachWithSpace: boolean } {
 	switch (containment) {
 		case "none":
@@ -212,8 +228,11 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const error = usage.error;
 	const fetchError = Boolean(error && !isExpectedMissingData(error));
 	const baseStatus = showStatus ? usage.status : undefined;
-	const fetchStatus: ProviderStatus | undefined = fetchError && (!baseStatus || baseStatus.indicator === "none" || baseStatus.indicator === "unknown")
-		? { indicator: "minor", description: "Fetch failed" }
+	const lastSuccessAt = usage.lastSuccessAt;
+	const elapsed = lastSuccessAt ? formatElapsedSince(lastSuccessAt) : undefined;
+	const fetchDescription = elapsed ? (elapsed === "just now" ? "just now" : `${elapsed} ago`) : "Fetch failed";
+	const fetchStatus: ProviderStatus | undefined = fetchError
+		? { indicator: "minor", description: fetchDescription }
 		: undefined;
 	const status = showStatus ? (fetchStatus ?? baseStatus) : undefined;
 	const statusDismissOk = settings?.display.statusDismissOk ?? true;
@@ -501,13 +520,6 @@ export function formatUsageStatus(
 		parts.push(applyBaseTextColor(theme, baseTextColor, extra.label));
 	}
 
-	const error = usage.error;
-	const fetchError = Boolean(error && !isExpectedMissingData(error));
-	const showStatusText = settings?.display.statusText ?? false;
-	if (fetchError && !showStatusText && error) {
-		parts.push(applyBaseTextColor(theme, baseTextColor, `(${formatErrorForDisplay(error)})`));
-	}
-
 	// Build divider from settings
 	const dividerChar = settings?.display.dividerCharacter ?? "•";
 	const dividerColor = resolveDividerColor(settings?.display.dividerColor);
@@ -582,12 +594,6 @@ export function formatUsageStatusWithWidth(
 	const barEligibleCount = hasBar ? windows.length : 0;
 	const extras = getUsageExtras(usage, settings, modelId);
 	const extraParts = extras.map((extra) => applyBaseTextColor(theme, baseTextColor, extra.label));
-	const error = usage.error;
-	const fetchError = Boolean(error && !isExpectedMissingData(error));
-	const showStatusText = settings?.display.statusText ?? false;
-	if (fetchError && !showStatusText && error) {
-		extraParts.push(applyBaseTextColor(theme, baseTextColor, `(${formatErrorForDisplay(error)})`));
-	}
 
 	const barSpacerWidth = hasBar ? 1 : 0;
 	const baseWindowWidths = windows.map((w) =>

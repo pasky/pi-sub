@@ -25,6 +25,25 @@ export function formatReset(date: Date): string {
 }
 
 /**
+ * Format elapsed time since a timestamp (milliseconds)
+ */
+export function formatElapsedSince(timestamp: number): string {
+	const diffMs = Date.now() - timestamp;
+	if (diffMs < 60000) return "just now";
+
+	const diffMins = Math.floor(diffMs / 60000);
+	if (diffMins < 60) return `${diffMins}m`;
+
+	const hours = Math.floor(diffMins / 60);
+	const mins = diffMins % 60;
+	if (hours < 24) return mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+
+	const days = Math.floor(hours / 24);
+	const remHours = hours % 24;
+	return remHours > 0 ? `${days}d${remHours}h` : `${days}d`;
+}
+
+/**
  * Strip ANSI escape codes from a string
  */
 export function stripAnsi(text: string): string {

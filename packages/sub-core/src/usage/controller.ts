@@ -7,6 +7,7 @@ import type { ProviderName, UsageSnapshot } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import { detectProviderFromModel } from "../providers/detection.js";
 import { isExpectedMissingData } from "../errors.js";
+import { formatElapsedSince } from "../utils.js";
 import { fetchUsageForProvider } from "./fetch.js";
 import type { Dependencies } from "../types.js";
 import { getCachedData, readCache } from "../cache.js";
@@ -15,6 +16,7 @@ import { hasProviderCredentials } from "../providers/registry.js";
 export interface UsageControllerState {
 	currentProvider?: ProviderName;
 	cachedUsage?: UsageSnapshot;
+	lastSuccessAt?: number;
 	providerCycleIndex: number;
 }
 
@@ -85,7 +87,14 @@ export function createUsageController(deps: Dependencies) {
 			cachedEntry = cache[provider] ?? null;
 		}
 		if (cachedEntry?.usage) {
-			state.cachedUsage = { ...cachedEntry.usage, status: cachedEntry.status };
+			state.cachedUsage = {
+				...cachedEntry.usage,
+				status: cachedEntry.status,
+				lastSuccessAt: cachedEntry.fetchedAt,
+			};
+			if (!cachedEntry.usage.error) {
+				state.lastSuccessAt = cachedEntry.fetchedAt;
+			}
 		}
 		emitUpdate(state, onUpdate);
 
@@ -94,23 +103,35 @@ export function createUsageController(deps: Dependencies) {
 		const fetchError = Boolean(error && !isExpectedMissingData(error));
 		if (fetchError) {
 			let fallback = state.cachedUsage;
+			let fallbackFetchedAt = state.lastSuccessAt;
 			if (!fallback || fallback.windows.length === 0) {
 				const cache = readCache();
 				const cachedEntry = cache[provider];
 				const cachedUsage = cachedEntry?.usage ? { ...cachedEntry.usage, status: cachedEntry.status } : undefined;
 				fallback = cachedUsage && cachedUsage.windows.length > 0 ? cachedUsage : undefined;
+				if (cachedEntry?.fetchedAt) fallbackFetchedAt = cachedEntry.fetchedAt;
 			}
 			if (fallback && fallback.windows.length > 0) {
+				const lastSuccessAt = fallbackFetchedAt ?? state.lastSuccessAt;
+				const elapsed = lastSuccessAt ? formatElapsedSince(lastSuccessAt) : undefined;
+				const description = elapsed ? (elapsed === "just now" ? "just now" : `${elapsed} ago`) : "Fetch failed";
 				state.cachedUsage = {
 					...fallback,
+					lastSuccessAt,
 					error,
-					status: { indicator: "minor", description: "Fetch failed" },
+					status: { indicator: "minor", description },
 				};
 			} else {
 				state.cachedUsage = result.usage ? { ...result.usage, status: result.status } : undefined;
 			}
 		} else {
-			state.cachedUsage = result.usage ? { ...result.usage, status: result.status } : undefined;
+			const successAt = Date.now();
+			state.cachedUsage = result.usage
+				? { ...result.usage, status: result.status, lastSuccessAt: successAt }
+				: undefined;
+			if (result.usage && !result.usage.error) {
+				state.lastSuccessAt = successAt;
+			}
 		}
 		emitUpdate(state, onUpdate);
 	}

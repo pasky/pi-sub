@@ -26,6 +26,7 @@ export interface UsageSnapshot {
 	windows: RateWindow[];
 	extraUsageEnabled?: boolean;
 	fiveHourUsage?: number;
+	lastSuccessAt?: number;
 	error?: UsageError;
 	status?: ProviderStatus;
 	requestsSummary?: string;

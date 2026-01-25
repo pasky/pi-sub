@@ -65,6 +65,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	let usageEntries: Partial<Record<ProviderName, UsageSnapshot>> = {};
 	let coreAvailable = false;
 	let coreSettings: CoreSettings = getFallbackCoreSettings(settings);
+	let fetchFailureTimer: NodeJS.Timeout | undefined;
 	let settingsWatcher: fs.FSWatcher | undefined;
 	let settingsPoll: NodeJS.Timeout | undefined;
 	let settingsDebounce: NodeJS.Timeout | undefined;
@@ -147,6 +148,7 @@ export default function createExtension(pi: ExtensionAPI) {
 			pinnedProvider: loaded.pinnedProvider,
 		};
 		coreSettings = getFallbackCoreSettings(settings);
+		updateFetchFailureTicker();
 		if (lastContext) {
 			renderCurrent(lastContext);
 		}
@@ -297,6 +299,22 @@ export default function createExtension(pi: ExtensionAPI) {
 			next[entry.provider] = entry.usage;
 		}
 		usageEntries = next;
+		updateFetchFailureTicker();
+	}
+
+	function updateFetchFailureTicker(): void {
+		const usage = resolveDisplayedUsage();
+		const shouldTick = Boolean(usage?.error && usage.lastSuccessAt);
+		if (shouldTick && !fetchFailureTimer) {
+			fetchFailureTimer = setInterval(() => {
+				if (!lastContext) return;
+				renderCurrent(lastContext);
+			}, 60000);
+		}
+		if (!shouldTick && fetchFailureTimer) {
+			clearInterval(fetchFailureTimer);
+			fetchFailureTimer = undefined;
+		}
 	}
 
 	function renderCurrent(ctx: ExtensionContext): void {
@@ -310,6 +328,7 @@ export default function createExtension(pi: ExtensionAPI) {
 
 	function updateUsage(usage: UsageSnapshot | undefined): void {
 		currentUsage = usage;
+		updateFetchFailureTicker();
 		if (lastContext) {
 			renderCurrent(lastContext);
 		}
@@ -439,6 +458,7 @@ export default function createExtension(pi: ExtensionAPI) {
 				},
 				onSettingsChange: async (updatedSettings) => {
 					settings = updatedSettings;
+					updateFetchFailureTicker();
 					if (lastContext) {
 						renderUsageWidget(lastContext, currentUsage);
 					}
@@ -603,6 +623,10 @@ export default function createExtension(pi: ExtensionAPI) {
 
 	pi.on("session_shutdown", async () => {
 		lastContext = undefined;
+		if (fetchFailureTimer) {
+			clearInterval(fetchFailureTimer);
+			fetchFailureTimer = undefined;
+		}
 	});
 
 	startSettingsWatch();
