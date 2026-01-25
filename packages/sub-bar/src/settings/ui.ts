@@ -193,9 +193,10 @@ export async function showSettingsUI(
 				if (["light", "heavy", "double", "block"].includes(normalized)) {
 					return normalized;
 				}
-				const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
-				const first = iterator.next().value?.segment ?? trimmed[0];
-				return first;
+				const segments = Array.from(segmenter.segment(raw), (entry) => entry.segment).filter((segment) => segment !== "\n" && segment !== "\r");
+				const first = segments[0] ?? trimmed[0];
+				const second = segments[1];
+				return second ? `${first}${second}` : first;
 			};
 
 			const parseProviderLabel = (raw: string): string | null => {

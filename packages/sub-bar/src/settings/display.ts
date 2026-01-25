@@ -220,7 +220,7 @@ export function buildDisplayBarItems(settings: Settings): SettingItem[] {
 			label: "H. Bar Character",
 			currentValue: settings.display.barCharacter,
 			values: ["light", "heavy", "double", "block", CUSTOM_OPTION],
-			description: "Select the horizontal bar line weight.",
+			description: "Choose the bar glyph (custom supports 1–2 chars; second is empty).",
 		});
 	}
 

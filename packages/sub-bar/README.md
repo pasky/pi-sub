@@ -123,7 +123,7 @@ Use Display Settings → Theme to save, share, import, and manage display themes
 |---------|---------|---------|-------------|
 | Alignment | left, center, right, split | left | Alignment for the widget (split fills the gap after the provider name) |
 | Bar Type | horizontal-bar, horizontal-single, vertical, braille, shade | horizontal-bar | Bar rendering style |
-| H. Bar Character | light, heavy, double, block | heavy | Character used for horizontal bar (─, ━, ═, █) |
+| H. Bar Character | light, heavy, double, block | heavy | Character used for horizontal bar (custom supports 1–2 chars; second is empty) |
 | Bar Width | 1, 4, 6, 8, 10, 12, fill | 6 | Width of progress bar in characters |
 | Contain Bar | on/off | off | Wrap bar with ▕ and ▏ |
 | Braille Empty Fill | on/off | off | Fill empty braille segments with dim ⣿ |

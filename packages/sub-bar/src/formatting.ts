@@ -30,26 +30,42 @@ export interface UsageWindowParts {
 }
 
 /**
- * Get the character to use for progress bars
+ * Get the characters to use for progress bars
  */
-function getBarCharacter(barCharacter: BarCharacter): string {
+function getBarCharacters(barCharacter: BarCharacter): { filled: string; empty: string } {
+	let filled = "━";
+	let empty = "━";
 	switch (barCharacter) {
 		case "light":
-			return "─";
+			filled = "─";
+			empty = "─";
+			break;
 		case "heavy":
-			return "━";
+			filled = "━";
+			empty = "━";
+			break;
 		case "double":
-			return "═";
+			filled = "═";
+			empty = "═";
+			break;
 		case "block":
-			return "█";
+			filled = "█";
+			empty = "█";
+			break;
 		default: {
-			const trimmed = String(barCharacter).trim();
-			if (!trimmed) return "━";
+			const raw = String(barCharacter);
+			const trimmed = raw.trim();
+			if (!trimmed) return { filled, empty };
 			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
-			const iterator = segmenter.segment(trimmed)[Symbol.iterator]();
-			return iterator.next().value?.segment ?? trimmed[0] ?? "━";
+			const segments = Array.from(segmenter.segment(raw), (entry) => entry.segment);
+			const first = segments[0] ?? trimmed[0] ?? "━";
+			const second = segments[1];
+			filled = first;
+			empty = second ?? first;
+			break;
 		}
 	}
+	return { filled, empty };
 }
 
 /**
@@ -378,7 +394,7 @@ export function formatUsageWindowParts(
 	const barUsageColor = (options?.useNormalColors && baseColor === "base") ? "text" : baseColor === "base" ? "muted" : baseColor;
 	const neutralBarColor = baseTextColor === "dim" ? "dim" : "muted";
 	const barColor = usageTargets.bar ? barUsageColor : neutralBarColor;
-	const char = getBarCharacter(barCharacter);
+	const { filled: filledChar, empty: emptyChar } = getBarCharacters(barCharacter);
 
 	const emptyColor = "dim";
 	
@@ -389,7 +405,20 @@ export function formatUsageWindowParts(
 			levels = ["⣿"];
 		}
 		if (!levels || barType === "horizontal-bar") {
-			barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], char.repeat(filled)) + theme.fg(emptyColor, char.repeat(empty));
+			const filledCharWidth = Math.max(1, visibleWidth(filledChar));
+			const emptyCharWidth = Math.max(1, visibleWidth(emptyChar));
+			const segmentWidth = Math.max(filledCharWidth, emptyCharWidth);
+			const segmentCount = barWidth > 0 ? Math.max(1, Math.floor(barWidth / segmentWidth)) : 0;
+			const filledSegments = Math.round((barPercent / 100) * segmentCount);
+			const emptySegments = Math.max(0, segmentCount - filledSegments);
+			const filledStr = filledChar.repeat(filledSegments);
+			const emptyStr = emptyChar.repeat(emptySegments);
+			const emptyRendered = emptyChar === " " ? emptyStr : theme.fg(emptyColor, emptyStr);
+			barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], filledStr) + emptyRendered;
+			const barVisualWidth = visibleWidth(barStr);
+			if (barVisualWidth < barWidth) {
+				barStr += " ".repeat(barWidth - barVisualWidth);
+			}
 		} else {
 			const emptyChar = barType === "braille" && brailleFillEmpty && barWidth > 1 ? "⣿" : " ";
 			const { segments, minimal } = renderBarSegments(barPercent, barWidth, levels, {
