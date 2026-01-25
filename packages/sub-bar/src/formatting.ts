@@ -441,8 +441,8 @@ export function formatUsageWindowParts(
 		}
 
 		if (settings?.display.containBar && barStr) {
-			const leftCap = applyBaseTextColor(theme, baseTextColor, "▕");
-			const rightCap = applyBaseTextColor(theme, baseTextColor, "▏");
+			const leftCap = theme.fg(barColor as Parameters<typeof theme.fg>[0], "▕");
+			const rightCap = theme.fg(barColor as Parameters<typeof theme.fg>[0], "▏");
 			barStr = leftCap + barStr + rightCap;
 		}
 	}
