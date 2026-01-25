@@ -22,7 +22,7 @@ export function buildMainMenuItems(settings: Settings, pinnedProvider?: Provider
 		{
 			value: "display",
 			label: "Display Settings",
-			description: `${settings.display.barStyle} style, divider: ${settings.display.dividerCharacter}`,
+			description: "layout, bars, colors",
 			tooltip: "Adjust layout, colors, bar styling, status indicators, and dividers.",
 		},
 		{
