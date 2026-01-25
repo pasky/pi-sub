@@ -86,7 +86,7 @@ The extension loads automatically. Use:
 
 - `sub-bar:settings` - Open display + provider UI settings (includes Provider Shown)
 - `sub-bar:import <share string>` - Preview a shared theme and choose to save/apply
-- `sub-core:settings` - Configure provider enablement/order + behavior settings
+- `sub-core:settings` - Configure provider enablement/order + usage/status refresh settings
 - `Ctrl+Alt+P` - Cycle through available providers
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
 
@@ -113,11 +113,11 @@ Use `sub-bar:settings` → Provider Settings to control enabled state (auto/on/o
 
 ### Core Settings
 
-Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch status, refresh behavior, and provider order.
+Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch status, usage refresh settings, status refresh settings, and provider order.
 
 ### Display Settings
 
-Use Display Settings → Theme to save, share, import, and manage display themes.
+Use Display Settings → Theme to save, load, import, and randomize display themes.
 
 Display Settings cover layout, bars, labels/text, reset timers, status indicators, dividers, and color tuning. Open `sub-bar:settings` → Display Settings to explore the full list in the UI.
 
