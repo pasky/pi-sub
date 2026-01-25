@@ -107,6 +107,7 @@ export async function showSettingsUI(
 				label: string,
 				parseValue: (value: string) => string | null,
 				formatInitial?: (value: string) => string,
+				description?: string,
 			) => {
 				return (currentValue: string, done: (selectedValue?: string) => void) => {
 					const input = new Input();
@@ -123,6 +124,9 @@ export async function showSettingsUI(
 
 					const container = new Container();
 					container.addChild(new Text(theme.fg("muted", label), 1, 0));
+					if (description) {
+						container.addChild(new Text(theme.fg("dim", description), 1, 0));
+					}
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 
@@ -841,7 +845,12 @@ export async function showSettingsUI(
 					}
 					if (currentCategory === "display-bar") {
 						customHandlers.barWidth = buildInputSubmenu("Bar Width", parseBarWidth);
-						customHandlers.barCharacter = buildInputSubmenu("Bar Character", parseBarCharacter);
+						customHandlers.barCharacter = buildInputSubmenu(
+							"Bar Character",
+							parseBarCharacter,
+							undefined,
+							"Custom bar character(s), set 1 or 2 (fill/empty)",
+						);
 					}
 					if (currentCategory === "display-provider") {
 						customHandlers.providerLabel = buildInputSubmenu("Provider Label", parseProviderLabel);
