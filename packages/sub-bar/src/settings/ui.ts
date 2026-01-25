@@ -711,6 +711,15 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					selectList.onSelectionChange = (item) => {
+						if (!item) return;
+						if (item.value === "save-apply") {
+							settings.display = { ...candidate.display };
+							if (onSettingsChange) void onSettingsChange(settings);
+							return;
+						}
+						restoreBackup();
+					};
 					attachTooltip(importItems, selectList);
 
 					selectList.onSelect = (item) => {
