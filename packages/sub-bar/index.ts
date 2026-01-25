@@ -11,7 +11,7 @@ import type { ProviderName, ProviderUsageEntry, SubCoreAllState, SubCoreState, U
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
 import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./src/settings-types.js";
 import { buildDividerLine } from "./src/dividers.js";
-import type { CoreSettings } from "pi-sub-shared";
+import type { CoreSettings } from "@marckrenn/pi-sub-shared";
 import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.js";
 import { clearSettingsCache, loadSettings, saveSettings, SETTINGS_PATH } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";

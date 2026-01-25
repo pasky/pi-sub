@@ -8,7 +8,7 @@ Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), 
 
 - **sub-core**: fetches usage + status, manages cache/locks, owns provider selection, and emits updates via `pi.events`.
 - **sub-bar**: UI widget that renders the current usage state above the editor.
-- **sub-shared**: shared types + event contract (published to npm as `pi-sub-shared`).
+- **sub-shared**: shared types + event contract (published to npm as `@marckrenn/pi-sub-shared`).
 
 `sub-core` can power multiple `sub-*` extensions at once (some with UI, some headless).
 
@@ -46,8 +46,8 @@ Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
 Once the package manager from pi-mono issue #645 ships, users should be able to install via:
 
 ```bash
-pi install npm:pi-sub-core
-pi install npm:pi-sub-bar
+pi install npm:@marckrenn/pi-sub-core
+pi install npm:@marckrenn/pi-sub-bar
 ```
 
 ## Communication model (core ↔ clients)
@@ -149,9 +149,9 @@ npm run check
 Per-package checks:
 
 ```bash
-npm run check -w pi-sub-core
-npm run check -w pi-sub-bar
-npm run check -w pi-sub-shared
+npm run check -w @marckrenn/pi-sub-core
+npm run check -w @marckrenn/pi-sub-bar
+npm run check -w @marckrenn/pi-sub-shared
 ```
 
 Sub-bar tests:
@@ -180,11 +180,11 @@ We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in 
 
 ### Required secrets
 
-- `NPM_TOKEN`: npm publish token with access to `pi-sub-core`, `pi-sub-bar`, `pi-sub-shared`.
+- `NPM_TOKEN`: npm publish token with access to `@marckrenn/pi-sub-core`, `@marckrenn/pi-sub-bar`, `@marckrenn/pi-sub-shared`.
 
 ## Publishing (planned)
 
-- NPM package names: `pi-sub-core`, `pi-sub-bar`, `pi-sub-shared`.
+- NPM package names: `@marckrenn/pi-sub-core`, `@marckrenn/pi-sub-bar`, `@marckrenn/pi-sub-shared`.
 - Extension/command names stay `sub-*` (no user-facing breaking change).
 - Start with lockstep versions across packages.
 - Use GitHub Actions + `NPM_TOKEN` for publishing.

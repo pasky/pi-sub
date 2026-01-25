@@ -74,8 +74,8 @@ npm install
 The draft in pi-mono issue #645 expects npm packages with a `pi` field in `package.json`. This repo already declares `pi.extensions`, so once `pi install` lands you should be able to do:
 
 ```bash
-pi install npm:pi-sub-core
-pi install npm:pi-sub-bar
+pi install npm:@marckrenn/pi-sub-core
+pi install npm:@marckrenn/pi-sub-bar
 ```
 
 Until then, manual paths/symlinks work as documented above.

@@ -1,4 +1,4 @@
-# pi-sub-shared
+# @marckrenn/pi-sub-shared
 
 Shared types, metadata, and event contracts for the `sub-*` ecosystem.
 

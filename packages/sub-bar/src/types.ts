@@ -14,6 +14,6 @@ export type {
 	SubCoreState,
 	SubCoreAllState,
 	SubCoreEvents,
-} from "pi-sub-shared";
+} from "@marckrenn/pi-sub-shared";
 
-export { PROVIDERS } from "pi-sub-shared";
+export { PROVIDERS } from "@marckrenn/pi-sub-shared";

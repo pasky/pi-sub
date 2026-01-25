@@ -5,10 +5,10 @@
 import type { RateWindow, UsageSnapshot, ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
 import { getModelMultiplier } from "../utils.js";
-import { PROVIDER_METADATA as BASE_METADATA, type ProviderMetadata as BaseProviderMetadata } from "pi-sub-shared";
+import { PROVIDER_METADATA as BASE_METADATA, type ProviderMetadata as BaseProviderMetadata } from "@marckrenn/pi-sub-shared";
 
-export { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "pi-sub-shared";
-export type { ProviderStatusConfig, ProviderDetectionConfig } from "pi-sub-shared";
+export { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "@marckrenn/pi-sub-shared";
+export type { ProviderStatusConfig, ProviderDetectionConfig } from "@marckrenn/pi-sub-shared";
 
 export interface UsageExtra {
 	label: string;

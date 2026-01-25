@@ -2,8 +2,8 @@
  * Settings types and defaults for sub-core
  */
 
-import type { CoreSettings, CoreProviderSettingsMap, CoreProviderSettings, BehaviorSettings, ProviderName, ProviderEnabledSetting } from "pi-sub-shared";
-import { PROVIDERS, getDefaultCoreSettings } from "pi-sub-shared";
+import type { CoreSettings, CoreProviderSettingsMap, CoreProviderSettings, BehaviorSettings, ProviderName, ProviderEnabledSetting } from "@marckrenn/pi-sub-shared";
+import { PROVIDERS, getDefaultCoreSettings } from "@marckrenn/pi-sub-shared";
 
 export type {
 	CoreProviderSettings,
@@ -11,7 +11,7 @@ export type {
 	BehaviorSettings,
 	CoreSettings,
 	ProviderEnabledSetting,
-} from "pi-sub-shared";
+} from "@marckrenn/pi-sub-shared";
 
 /**
  * All settings

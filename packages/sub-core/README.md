@@ -73,7 +73,7 @@ For a UI, also install a display extension like `sub-bar`. Other `sub-*` extensi
 The plan in pi-mono issue #645 expects packages to declare extension entry points via the `pi` field in `package.json` (already done here). To stay compatible:
 
 - Keep `pi.extensions` pointing at `./index.ts`
-- Publish the package to npm (e.g. `pi-sub-core`) so future `pi install npm:pi-sub-core` can work
+- Publish the package to npm (e.g. `@marckrenn/pi-sub-core`) so future `pi install npm:@marckrenn/pi-sub-core` can work
 - Avoid repo-specific assumptions in docs (manual paths still work)
 
 ## Cache

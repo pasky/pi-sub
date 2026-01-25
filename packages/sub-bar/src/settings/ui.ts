@@ -8,7 +8,7 @@ import { Container, Input, SelectList, Spacer, Text } from "@mariozechner/pi-tui
 import { SettingsList, type SettingItem, CUSTOM_OPTION } from "../ui/settings-list.js";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
-import type { CoreSettings } from "pi-sub-shared";
+import type { CoreSettings } from "@marckrenn/pi-sub-shared";
 import { getFallbackCoreSettings } from "../core-settings.js";
 import { getDefaultSettings } from "../settings-types.js";
 import { getSettings, saveSettings } from "../settings.js";
@@ -951,19 +951,7 @@ export async function showSettingsUI(
 					let helpText: string;
 					if (currentCategory === "display-theme-save") {
 						helpText = "Type name • Enter to save • Esc back";
-					} else if (currentCategory === "display-theme-random") {
-					if (!randomThemeBackup) {
-						randomThemeBackup = { ...settings.display };
-						settings.displayUserTheme = { ...randomThemeBackup };
-					}
-					const randomDisplay = buildRandomDisplay(settings.display);
-					settings.display = { ...randomDisplay };
-					saveSettings(settings);
-					if (onSettingsChange) void onSettingsChange(settings);
-					currentCategory = "display-theme";
-					rebuild();
-					tui.requestRender();
-				} else if (currentCategory === "display-theme-import") {
+					} else if (currentCategory === "display-theme-import") {
 						helpText = "Paste share string • Enter to import • Esc back";
 					} else if (
 						currentCategory === "main" ||
