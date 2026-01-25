@@ -410,6 +410,7 @@ export async function showSettingsUI(
 						label: "Enabled",
 						currentValue: enabledValue,
 						values: ["auto", "on", "off"],
+						description: "Auto enables if credentials are detected.",
 					});
 					const handleChange = (id: string, value: string) => {
 						if (id === "enabled") {
