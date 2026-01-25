@@ -407,11 +407,12 @@ export function formatUsageWindowParts(
 		if (!levels || barType === "horizontal-bar") {
 			const filledCharWidth = Math.max(1, visibleWidth(filledChar));
 			const emptyCharWidth = Math.max(1, visibleWidth(emptyChar));
-			const segmentWidth = Math.max(filledCharWidth, emptyCharWidth);
-			const segmentCount = barWidth > 0 ? Math.max(1, Math.floor(barWidth / segmentWidth)) : 0;
-			const filledSegments = Math.round((barPercent / 100) * segmentCount);
-			const emptySegments = Math.max(0, segmentCount - filledSegments);
+			const segmentCount = barWidth > 0 ? Math.floor(barWidth / filledCharWidth) : 0;
+			const filledSegments = segmentCount > 0 ? Math.round((barPercent / 100) * segmentCount) : 0;
 			const filledStr = filledChar.repeat(filledSegments);
+			const filledWidth = filledSegments * filledCharWidth;
+			const remainingWidth = Math.max(0, barWidth - filledWidth);
+			const emptySegments = emptyCharWidth > 0 ? Math.floor(remainingWidth / emptyCharWidth) : 0;
 			const emptyStr = emptyChar.repeat(emptySegments);
 			const emptyRendered = emptyChar === " " ? emptyStr : theme.fg(emptyColor, emptyStr);
 			barStr = theme.fg(barColor as Parameters<typeof theme.fg>[0], filledStr) + emptyRendered;

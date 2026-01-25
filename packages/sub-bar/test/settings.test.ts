@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { Theme } from "@mariozechner/pi-coding-agent";
+import { visibleWidth } from "@mariozechner/pi-tui";
 import { formatUsageStatus, formatUsageWindowParts } from "../src/formatting.js";
 import { buildDisplayShareString, decodeDisplayShareString } from "../src/share.js";
 import { applyDisplayChange } from "../src/settings/display.js";
@@ -47,6 +48,22 @@ test("custom bar character is used", () => {
 	const usage = buildUsage();
 	const parts = formatUsageWindowParts(theme, usage.windows[0], false, settings, usage);
 	assert.ok(parts.bar.includes("★"));
+});
+
+test("mixed bar characters fill full width", () => {
+	const settings = getDefaultSettings();
+	settings.display.barType = "horizontal-bar";
+	settings.display.barStyle = "bar";
+	settings.display.barWidth = 22;
+	settings.display.barCharacter = "🚀_";
+
+	const usage = buildUsage();
+	usage.windows[0].usedPercent = 57;
+
+	const parts = formatUsageWindowParts(theme, usage.windows[0], false, settings, usage);
+	assert.equal(visibleWidth(parts.bar), 22);
+	assert.ok(parts.bar.includes("🚀"));
+	assert.ok(parts.bar.includes("_"));
 });
 
 test("applyDisplayChange clamps custom numeric values", () => {
