@@ -312,6 +312,8 @@ export interface DisplaySettings {
 	baseTextColor: BaseTextColor;
 	/** Background color for the widget line */
 	backgroundColor: BaseTextColor;
+	/** Show window titles (5h, Week, etc.) */
+	showWindowTitle: boolean;
 	/** Bold window titles (5h, Week, etc.) */
 	boldWindowTitle: boolean;
 	/** Show usage labels (used/rem.) */
@@ -465,6 +467,7 @@ export function getDefaultSettings(): Settings {
 			providerLabelBold: true,
 			baseTextColor: "muted",
 			backgroundColor: "text",
+			showWindowTitle: true,
 			boldWindowTitle: true,
 			showUsageLabels: true,
 			dividerCharacter: "│",

@@ -309,6 +309,13 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 			description: "Show “used/rem.” labels after percentages.",
 		},
 		{
+			id: "showWindowTitle",
+			label: "Show Title",
+			currentValue: settings.display.showWindowTitle ? "on" : "off",
+			values: ["on", "off"],
+			description: "Show window titles like 5h, Week, etc.",
+		},
+		{
 			id: "boldWindowTitle",
 			label: "Bold Title",
 			currentValue: settings.display.boldWindowTitle ? "on" : "off",
@@ -536,6 +543,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "showUsageLabels":
 			settings.display.showUsageLabels = value === "on";
+			break;
+		case "showWindowTitle":
+			settings.display.showWindowTitle = value === "on";
 			break;
 		case "boldWindowTitle":
 			settings.display.boldWindowTitle = value === "on";

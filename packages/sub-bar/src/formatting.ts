@@ -170,7 +170,7 @@ function wrapResetContainment(text: string, containment: ResetTimerContainment):
 		case "none":
 			return { wrapped: text, attachWithSpace: true };
 		case "blank":
-			return { wrapped: ` ${text} `, attachWithSpace: false };
+			return { wrapped: text, attachWithSpace: true };
 		case "[]":
 			return { wrapped: `[${text}]`, attachWithSpace: true };
 		case "<>":
@@ -366,6 +366,7 @@ export function formatUsageWindowParts(
 	const resetTimePosition = settings?.display.resetTimePosition ?? "front";
 	const resetTimeFormat = settings?.display.resetTimeFormat ?? "relative";
 	const showUsageLabels = settings?.display.showUsageLabels ?? true;
+	const showWindowTitle = settings?.display.showWindowTitle ?? true;
 	const boldWindowTitle = settings?.display.boldWindowTitle ?? false;
 	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
 	const errorThreshold = settings?.display.errorThreshold ?? 25;
@@ -479,7 +480,7 @@ export function formatUsageWindowParts(
 	const leftSuffix = resetText && resetTimeFormat === "relative" && showUsageLabels ? " left" : "";
 
 	const coloredTitle = applyBaseTextColor(theme, titleColor, window.label);
-	const titlePart = boldWindowTitle ? theme.bold(coloredTitle) : coloredTitle;
+	const titlePart = showWindowTitle ? (boldWindowTitle ? theme.bold(coloredTitle) : coloredTitle) : "";
 
 	let labelPart = titlePart;
 	if (resetText) {
@@ -487,12 +488,18 @@ export function formatUsageWindowParts(
 		const { wrapped, attachWithSpace } = wrapResetContainment(resetBody, resetContainment);
 		const coloredReset = applyBaseTextColor(theme, timerColor, wrapped);
 		if (resetTimePosition === "front") {
-			labelPart = attachWithSpace ? `${titlePart} ${coloredReset}` : `${titlePart}${coloredReset}`;
+			if (!titlePart) {
+				labelPart = coloredReset;
+			} else {
+				labelPart = attachWithSpace ? `${titlePart} ${coloredReset}` : `${titlePart}${coloredReset}`;
+			}
 		} else if (resetTimePosition === "integrated") {
-			labelPart = `${applyBaseTextColor(theme, timerColor, `${wrapped}/`)}${titlePart}`;
+			labelPart = titlePart ? `${applyBaseTextColor(theme, timerColor, `${wrapped}/`)}${titlePart}` : coloredReset;
 		} else if (resetTimePosition === "back") {
 			labelPart = titlePart;
 		}
+	} else if (!titlePart) {
+		labelPart = "";
 	}
 
 	const resetPart =
