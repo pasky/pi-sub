@@ -348,7 +348,7 @@ export interface DisplaySettings {
 /**
  * All settings
  */
-export interface DisplayPreset {
+export interface DisplayTheme {
 	id: string;
 	name: string;
 	display: DisplaySettings;
@@ -362,10 +362,10 @@ export interface Settings extends Omit<CoreSettings, "providers"> {
 	providers: ProviderSettingsMap;
 	/** Display settings */
 	display: DisplaySettings;
-	/** Stored display presets */
-	displayPresets: DisplayPreset[];
-	/** Snapshot of the previous display settings */
-	displayUserPreset: DisplaySettings | null;
+	/** Stored display themes */
+	displayThemes: DisplayTheme[];
+	/** Snapshot of the previous display theme */
+	displayUserTheme: DisplaySettings | null;
 	/** Pinned provider override for display */
 	pinnedProvider: ProviderName | null;
 }
@@ -482,8 +482,8 @@ export function getDefaultSettings(): Settings {
 			successThreshold: 75,
 		},
 
-		displayPresets: [],
-		displayUserPreset: null,
+		displayThemes: [],
+		displayUserTheme: null,
 		pinnedProvider: null,
 
 		behavior: {

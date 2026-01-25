@@ -16,7 +16,7 @@ import { formatUsageStatus, formatUsageStatusWithWidth } from "./src/formatting.
 import { clearSettingsCache, loadSettings, saveSettings, SETTINGS_PATH } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
 import { decodeDisplayShareString } from "./src/share.js";
-import { upsertDisplayPreset } from "./src/settings/presets.js";
+import { upsertDisplayTheme } from "./src/settings/themes.js";
 import { getFallbackCoreSettings } from "./src/core-settings.js";
 
 type SubCoreRequest =
@@ -143,8 +143,8 @@ export default function createExtension(pi: ExtensionAPI) {
 			version: loaded.version,
 			display: loaded.display,
 			providers: loaded.providers,
-			displayPresets: loaded.displayPresets,
-			displayUserPreset: loaded.displayUserPreset,
+			displayThemes: loaded.displayThemes,
+			displayUserTheme: loaded.displayUserTheme,
 			pinnedProvider: loaded.pinnedProvider,
 		};
 		coreSettings = getFallbackCoreSettings(settings);
@@ -484,7 +484,7 @@ export default function createExtension(pi: ExtensionAPI) {
 						renderCurrent(lastContext);
 					}
 				},
-				onDisplayPresetApplied: (name, options) => {
+				onDisplayThemeApplied: (name, options) => {
 					const content = options?.source === "manual"
 						? `sub-bar Theme ${name} loaded`
 						: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Theme -> Manage themes`;
@@ -544,8 +544,8 @@ export default function createExtension(pi: ExtensionAPI) {
 			};
 
 			if (action === "save-apply") {
-				settings.displayUserPreset = { ...backup };
-				settings = upsertDisplayPreset(settings, decoded.name, decoded.display, "imported");
+				settings.displayUserTheme = { ...backup };
+				settings = upsertDisplayTheme(settings, decoded.name, decoded.display, "imported");
 				settings.display = { ...decoded.display };
 				saveSettings(settings);
 				if (lastContext) {
@@ -561,7 +561,7 @@ export default function createExtension(pi: ExtensionAPI) {
 			}
 
 			if (action === "save") {
-				settings = upsertDisplayPreset(settings, decoded.name, decoded.display, "imported");
+				settings = upsertDisplayTheme(settings, decoded.name, decoded.display, "imported");
 				settings.display = { ...backup };
 				saveSettings(settings);
 				notifyImported();

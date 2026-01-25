@@ -80,21 +80,21 @@ function randomBool(probability = 0.5): boolean {
 	return Math.random() < probability;
 }
 
-const PRESET_ID_LENGTH = 24;
-const PRESET_ID_FALLBACK = "theme";
+const THEME_ID_LENGTH = 24;
+const THEME_ID_FALLBACK = "theme";
 
-function buildPresetId(name: string): string {
-	return name.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, PRESET_ID_LENGTH) || PRESET_ID_FALLBACK;
+function buildThemeId(name: string): string {
+	return name.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, THEME_ID_LENGTH) || THEME_ID_FALLBACK;
 }
 
-export interface DisplayPresetTarget {
+export interface DisplayThemeTarget {
 	id?: string;
 	name: string;
 	display: Settings["display"];
 	deletable: boolean;
 }
 
-export function buildDisplayPresetItems(
+export function buildDisplayThemeItems(
 	settings: Settings,
 ): TooltipSelectItem[] {
 	const items: TooltipSelectItem[] = [];
@@ -120,28 +120,28 @@ export function buildDisplayPresetItems(
 		value: "minimal",
 		label: "Minimal",
 		description: "compact display",
-		tooltip: "Apply a compact display preset.",
+		tooltip: "Apply a compact display theme.",
 	});
-	for (const preset of settings.displayPresets) {
-		const description = preset.source === "imported" ? "manually imported theme" : "manually saved theme";
+	for (const theme of settings.displayThemes) {
+		const description = theme.source === "imported" ? "manually imported theme" : "manually saved theme";
 		items.push({
-			value: `preset:${preset.id}`,
-			label: preset.name,
+			value: `theme:${theme.id}`,
+			label: theme.name,
 			description,
-			tooltip: `Manage ${preset.name}.`,
+			tooltip: `Manage ${theme.name}.`,
 		});
 	}
 	return items;
 }
 
-export function resolveDisplayPresetTarget(
+export function resolveDisplayThemeTarget(
 	value: string,
 	settings: Settings,
 	defaults: Settings,
 	fallbackUser: Settings["display"] | null,
-): DisplayPresetTarget | null {
+): DisplayThemeTarget | null {
 	if (value === "user") {
-		const display = settings.displayUserPreset ?? fallbackUser ?? settings.display;
+		const display = settings.displayUserTheme ?? fallbackUser ?? settings.display;
 		return { name: "Restore backup", display, deletable: false };
 	}
 	if (value === "default") {
@@ -182,11 +182,11 @@ export function resolveDisplayPresetTarget(
 			deletable: false,
 		};
 	}
-	if (value.startsWith("preset:")) {
-		const id = value.replace("preset:", "");
-		const preset = settings.displayPresets.find((entry) => entry.id === id);
-		if (!preset) return null;
-		return { id: preset.id, name: preset.name, display: preset.display, deletable: true };
+	if (value.startsWith("theme:")) {
+		const id = value.replace("theme:", "");
+		const theme = settings.displayThemes.find((entry) => entry.id === id);
+		if (!theme) return null;
+		return { id: theme.id, name: theme.name, display: theme.display, deletable: true };
 	}
 	return null;
 }
@@ -252,7 +252,7 @@ export function buildRandomDisplay(base: DisplaySettings): DisplaySettings {
 	return display;
 }
 
-export function buildPresetActionItems(target: DisplayPresetTarget): TooltipSelectItem[] {
+export function buildThemeActionItems(target: DisplayThemeTarget): TooltipSelectItem[] {
 	const items: TooltipSelectItem[] = [
 		{
 			value: "load",
@@ -278,27 +278,27 @@ export function buildPresetActionItems(target: DisplayPresetTarget): TooltipSele
 	return items;
 }
 
-export function upsertDisplayPreset(
+export function upsertDisplayTheme(
 	settings: Settings,
 	name: string,
 	display: Settings["display"],
 	source?: "saved" | "imported",
 ): Settings {
 	const trimmed = name.trim() || "Theme";
-	const id = buildPresetId(trimmed);
+	const id = buildThemeId(trimmed);
 	const snapshot = { ...display };
-	const existing = settings.displayPresets.find((preset) => preset.id === id);
+	const existing = settings.displayThemes.find((theme) => theme.id === id);
 	const resolvedSource = source ?? existing?.source ?? "saved";
 	if (existing) {
 		existing.name = trimmed;
 		existing.display = snapshot;
 		existing.source = resolvedSource;
 	} else {
-		settings.displayPresets.push({ id, name: trimmed, display: snapshot, source: resolvedSource });
+		settings.displayThemes.push({ id, name: trimmed, display: snapshot, source: resolvedSource });
 	}
 	return settings;
 }
 
-export function saveDisplayPreset(settings: Settings, name: string): Settings {
-	return upsertDisplayPreset(settings, name, settings.display, "saved");
+export function saveDisplayTheme(settings: Settings, name: string): Settings {
+	return upsertDisplayTheme(settings, name, settings.display, "saved");
 }

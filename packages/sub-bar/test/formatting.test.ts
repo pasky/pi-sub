@@ -8,6 +8,7 @@ import type { UsageSnapshot } from "../src/types.js";
 
 const theme = {
 	fg: (_color: string, text: string) => text,
+	bold: (text: string) => text,
 } as unknown as Theme;
 
 function buildUsage(): UsageSnapshot {
@@ -83,6 +84,7 @@ test("status indicator layout includes icon text provider colon", () => {
 	settings.display.statusIconPack = "minimal";
 	settings.display.statusText = true;
 	settings.display.statusDismissOk = false;
+	settings.display.providerLabelColon = true;
 
 	const output = formatUsageStatus(
 		theme,

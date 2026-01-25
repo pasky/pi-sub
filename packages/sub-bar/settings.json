@@ -3,12 +3,19 @@
   "display": {
     "alignment": "split",
     "barStyle": "both",
-    "barType": "shade",
+    "barType": "horizontal-bar",
     "barWidth": "fill",
     "barCharacter": "heavy",
     "containBar": false,
     "brailleFillEmpty": false,
+    "brailleFullBlocks": false,
     "colorScheme": "base-warning-error",
+    "usageColorTargets": {
+      "title": true,
+      "timer": true,
+      "bar": true,
+      "usageLabel": true
+    },
     "resetTimePosition": "front",
     "resetTimeFormat": "relative",
     "resetTimeContainment": "blank",
@@ -59,6 +66,14 @@
     "gemini": {
       "showStatus": true,
       "windows": {
+        "showPro": true,
+        "showFlash": true
+      }
+    },
+    "antigravity": {
+      "showStatus": false,
+      "windows": {
+        "showClaude": true,
         "showPro": true,
         "showFlash": true
       }
@@ -208,9 +223,59 @@
         "widgetWrapping": "truncate",
         "successThreshold": 75
       }
+    },
+    {
+      "id": "newdefault",
+      "name": "NewDefault",
+      "display": {
+        "alignment": "split",
+        "barStyle": "both",
+        "barType": "horizontal-bar",
+        "barWidth": "fill",
+        "barCharacter": "heavy",
+        "containBar": false,
+        "brailleFillEmpty": false,
+        "brailleFullBlocks": false,
+        "colorScheme": "base-warning-error",
+        "usageColorTargets": {
+          "title": true,
+          "timer": true,
+          "bar": true,
+          "usageLabel": true
+        },
+        "resetTimePosition": "front",
+        "resetTimeFormat": "relative",
+        "resetTimeContainment": "blank",
+        "statusIndicatorMode": "icon",
+        "statusIconPack": "emoji",
+        "statusText": false,
+        "statusDismissOk": true,
+        "showProviderName": true,
+        "providerLabel": "none",
+        "providerLabelColon": false,
+        "providerLabelBold": true,
+        "baseTextColor": "muted",
+        "backgroundColor": "text",
+        "boldWindowTitle": true,
+        "showUsageLabels": true,
+        "dividerCharacter": "│",
+        "dividerColor": "dim",
+        "dividerBlanks": 1,
+        "showProviderDivider": true,
+        "dividerFooterJoin": true,
+        "showTopDivider": false,
+        "showBottomDivider": true,
+        "paddingX": 1,
+        "widgetPlacement": "belowEditor",
+        "errorThreshold": 25,
+        "warningThreshold": 50,
+        "widgetWrapping": "truncate",
+        "successThreshold": 75
+      },
+      "source": "saved"
     }
   ],
-  "displayUserPreset": {
+  "displayUserTheme": {
     "alignment": "split",
     "barStyle": "both",
     "barType": "braille",
@@ -246,5 +311,6 @@
     "warningThreshold": 50,
     "widgetWrapping": "truncate",
     "successThreshold": 75
-  }
+  },
+  "pinnedProvider": null
 }

@@ -35,13 +35,13 @@ import {
 	type TooltipSelectItem,
 } from "./menu.js";
 import {
-	buildDisplayPresetItems,
-	buildPresetActionItems,
+	buildDisplayThemeItems,
+	buildThemeActionItems,
 	buildRandomDisplay,
-	resolveDisplayPresetTarget,
-	saveDisplayPreset,
-	upsertDisplayPreset,
-} from "./presets.js";
+	resolveDisplayThemeTarget,
+	saveDisplayTheme,
+	upsertDisplayTheme,
+} from "./themes.js";
 import { buildDisplayShareString, decodeDisplayShareString, type DecodedDisplayShare } from "../share.js";
 
 /**
@@ -79,7 +79,7 @@ export async function showSettingsUI(
 		onSettingsChange?: (settings: Settings) => void | Promise<void>;
 		onCoreSettingsChange?: (patch: Partial<CoreSettings>, next: CoreSettings) => void | Promise<void>;
 		onOpenCoreSettings?: () => void | Promise<void>;
-		onDisplayPresetApplied?: (name: string, options?: { source?: "manual" }) => void | Promise<void>;
+		onDisplayThemeApplied?: (name: string, options?: { source?: "manual" }) => void | Promise<void>;
 		onDisplayThemeShared?: (name: string, shareString: string) => void | Promise<void>;
 	}
 ): Promise<Settings> {
@@ -88,7 +88,7 @@ export async function showSettingsUI(
 	const onOpenCoreSettings = options?.onOpenCoreSettings;
 	let settings = getSettings();
 	let coreSettings = options?.coreSettings ?? getFallbackCoreSettings(settings);
-	const onDisplayPresetApplied = options?.onDisplayPresetApplied;
+	const onDisplayThemeApplied = options?.onDisplayThemeApplied;
 	const onDisplayThemeShared = options?.onDisplayThemeShared;
 	let currentCategory: SettingsCategory = "main";
 
@@ -96,7 +96,7 @@ export async function showSettingsUI(
 		ctx.ui.custom<Settings>((tui, theme, _kb, done) => {
 			let container = new Container();
 			let activeList: SelectList | SettingsList | { handleInput: (data: string) => void } | null = null;
-			let presetActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
+			let themeActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
 			let displayPreviewBackup: Settings["display"] | null = null;
 			let randomThemeBackup: Settings["display"] | null = null;
 			let pinnedProviderBackup: ProviderName | null | undefined;
@@ -299,8 +299,8 @@ export async function showSettingsUI(
 				let title = providerCategory
 					? `${PROVIDER_DISPLAY_NAMES[providerCategory]} Settings`
 					: (titles[currentCategory] ?? "sub-bar Settings");
-				if (currentCategory === "display-theme-action" && presetActionTarget) {
-					title = `Manage ${presetActionTarget.name}`;
+				if (currentCategory === "display-theme-action" && themeActionTarget) {
+					title = `Manage ${themeActionTarget.name}`;
 				}
 				container.addChild(new Text(theme.fg("accent", theme.bold(title)), 1, 0));
 				container.addChild(new Spacer(1));
@@ -531,7 +531,7 @@ export async function showSettingsUI(
 							ctx.ui.notify("Enter a theme name", "warning");
 							return;
 						}
-						settings = saveDisplayPreset(settings, trimmed);
+						settings = saveDisplayTheme(settings, trimmed);
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 						ctx.ui.notify(`Theme ${trimmed} saved`, "info");
@@ -553,8 +553,8 @@ export async function showSettingsUI(
 						displayPreviewBackup = { ...settings.display };
 					}
 					const defaults = getDefaultSettings();
-					const fallbackUser = settings.displayUserPreset ?? displayPreviewBackup;
-					const presetItems = buildDisplayPresetItems(settings);
+					const fallbackUser = settings.displayUserTheme ?? displayPreviewBackup;
+					const themeItems = buildDisplayThemeItems(settings);
 					const manageItems: TooltipSelectItem[] = [
 						{
 							value: "import",
@@ -562,7 +562,7 @@ export async function showSettingsUI(
 							description: "from share string",
 							tooltip: "Import a shared theme string.",
 						},
-						...presetItems,
+						...themeItems,
 					];
 
 					const selectList = new SelectList(manageItems, Math.min(manageItems.length, 10), {
@@ -574,7 +574,7 @@ export async function showSettingsUI(
 					});
 					selectList.onSelectionChange = (item) => {
 						if (!item || item.value === "import" || item.value === "random") return;
-						const target = resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser);
+						const target = resolveDisplayThemeTarget(item.value, settings, defaults, fallbackUser);
 						if (!target) return;
 						settings.display = { ...target.display };
 						if (onSettingsChange) void onSettingsChange(settings);
@@ -596,7 +596,7 @@ export async function showSettingsUI(
 						if (item.value === "random") {
 							if (!randomThemeBackup) {
 								randomThemeBackup = { ...settings.display };
-								settings.displayUserPreset = { ...randomThemeBackup };
+								settings.displayUserTheme = { ...randomThemeBackup };
 							}
 							const randomDisplay = buildRandomDisplay(settings.display);
 							settings.display = { ...randomDisplay };
@@ -606,9 +606,9 @@ export async function showSettingsUI(
 							tui.requestRender();
 							return;
 						}
-						const target = resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser);
+						const target = resolveDisplayThemeTarget(item.value, settings, defaults, fallbackUser);
 						if (!target) return;
-						presetActionTarget = target;
+						themeActionTarget = target;
 						currentCategory = "display-theme-action";
 						rebuild();
 						tui.requestRender();
@@ -716,13 +716,13 @@ export async function showSettingsUI(
 					selectList.onSelect = (item) => {
 						if (item.value === "save-apply") {
 							if (importBackup) {
-								settings.displayUserPreset = { ...importBackup };
+								settings.displayUserTheme = { ...importBackup };
 							}
-							settings = upsertDisplayPreset(settings, candidate.name, candidate.display, "imported");
+							settings = upsertDisplayTheme(settings, candidate.name, candidate.display, "imported");
 							settings.display = { ...candidate.display };
 							saveSettings(settings);
 							if (onSettingsChange) void onSettingsChange(settings);
-							if (onDisplayPresetApplied) void onDisplayPresetApplied(candidate.name, { source: "manual" });
+							if (onDisplayThemeApplied) void onDisplayThemeApplied(candidate.name, { source: "manual" });
 							notifyImported();
 							displayPreviewBackup = null;
 							importCandidate = null;
@@ -733,7 +733,7 @@ export async function showSettingsUI(
 							return;
 						}
 						if (item.value === "save") {
-							settings = upsertDisplayPreset(settings, candidate.name, candidate.display, "imported");
+							settings = upsertDisplayTheme(settings, candidate.name, candidate.display, "imported");
 							restoreBackup();
 							saveSettings(settings);
 							notifyImported();
@@ -762,7 +762,7 @@ export async function showSettingsUI(
 					activeList = selectList;
 					container.addChild(selectList);
 				} else if (currentCategory === "display-theme-action") {
-					const target = presetActionTarget;
+					const target = themeActionTarget;
 					if (!target) {
 						currentCategory = "display-theme-manage";
 						rebuild();
@@ -770,7 +770,7 @@ export async function showSettingsUI(
 						return;
 					}
 
-					const items = buildPresetActionItems(target);
+					const items = buildThemeActionItems(target);
 
 					const selectList = new SelectList(items, items.length, {
 						selectedPrefix: (t: string) => theme.fg("accent", t),
@@ -784,13 +784,13 @@ export async function showSettingsUI(
 					selectList.onSelect = (item) => {
 						if (item.value === "load") {
 							const backup = displayPreviewBackup ?? settings.display;
-							settings.displayUserPreset = { ...backup };
+							settings.displayUserTheme = { ...backup };
 							settings.display = { ...target.display };
 							saveSettings(settings);
 							if (onSettingsChange) void onSettingsChange(settings);
-							if (onDisplayPresetApplied) void onDisplayPresetApplied(target.name, { source: "manual" });
+							if (onDisplayThemeApplied) void onDisplayThemeApplied(target.name, { source: "manual" });
 							displayPreviewBackup = null;
-							presetActionTarget = null;
+							themeActionTarget = null;
 							currentCategory = "display-theme";
 							rebuild();
 							tui.requestRender();
@@ -804,20 +804,20 @@ export async function showSettingsUI(
 							} else {
 								ctx.ui.notify(shareString, "info");
 							}
-							presetActionTarget = null;
+							themeActionTarget = null;
 							currentCategory = "display-theme-manage";
 							rebuild();
 							tui.requestRender();
 							return;
 						}
 						if (item.value === "delete" && target.deletable && target.id) {
-							settings.displayPresets = settings.displayPresets.filter((entry) => entry.id !== target.id);
+							settings.displayThemes = settings.displayThemes.filter((entry) => entry.id !== target.id);
 							saveSettings(settings);
 							if (displayPreviewBackup) {
 								settings.display = { ...displayPreviewBackup };
 								if (onSettingsChange) void onSettingsChange(settings);
 							}
-							presetActionTarget = null;
+							themeActionTarget = null;
 							currentCategory = "display-theme-manage";
 							rebuild();
 							tui.requestRender();

@@ -5,7 +5,7 @@ import { visibleWidth } from "@mariozechner/pi-tui";
 import { formatUsageStatus, formatUsageWindowParts } from "../src/formatting.js";
 import { buildDisplayShareString, decodeDisplayShareString } from "../src/share.js";
 import { applyDisplayChange } from "../src/settings/display.js";
-import { buildDisplayPresetItems, saveDisplayPreset, upsertDisplayPreset } from "../src/settings/presets.js";
+import { buildDisplayThemeItems, saveDisplayTheme, upsertDisplayTheme } from "../src/settings/themes.js";
 import { getDefaultSettings, resolveBaseTextColor } from "../src/settings-types.js";
 import type { UsageSnapshot } from "../src/types.js";
 
@@ -32,6 +32,7 @@ function buildUsage(): UsageSnapshot {
 test("custom provider label is appended", () => {
 	const settings = getDefaultSettings();
 	settings.display.providerLabel = "Team";
+	settings.display.providerLabelColon = true;
 
 	const output = formatUsageStatus(theme, buildUsage(), undefined, settings);
 	assert.ok(output);
@@ -102,12 +103,12 @@ test("share string preserves custom values and tolerates unknown colors", () => 
 	assert.equal(resolveBaseTextColor(decoded?.display.baseTextColor), "dim");
 });
 
-test("preset source labels imported vs saved", () => {
+test("theme source labels imported vs saved", () => {
 	const settings = getDefaultSettings();
-	upsertDisplayPreset(settings, "Imported", settings.display, "imported");
-	saveDisplayPreset(settings, "Saved");
+	upsertDisplayTheme(settings, "Imported", settings.display, "imported");
+	saveDisplayTheme(settings, "Saved");
 
-	const items = buildDisplayPresetItems(settings);
+	const items = buildDisplayThemeItems(settings);
 	const importedItem = items.find((item) => item.label === "Imported");
 	const savedItem = items.find((item) => item.label === "Saved");
 
@@ -117,10 +118,10 @@ test("preset source labels imported vs saved", () => {
 
 test("imported source persists when updated", () => {
 	const settings = getDefaultSettings();
-	upsertDisplayPreset(settings, "Imported", settings.display, "imported");
-	upsertDisplayPreset(settings, "Imported", { ...settings.display, barWidth: 8 });
+	upsertDisplayTheme(settings, "Imported", settings.display, "imported");
+	upsertDisplayTheme(settings, "Imported", { ...settings.display, barWidth: 8 });
 
-	const items = buildDisplayPresetItems(settings);
+	const items = buildDisplayThemeItems(settings);
 	const importedItem = items.find((item) => item.label === "Imported");
 	assert.equal(importedItem?.description, "manually imported theme");
 });

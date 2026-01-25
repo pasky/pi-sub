@@ -31,15 +31,13 @@ function ensureSettingsDir(): void {
  * Parse settings file contents
  */
 function parseSettings(content: string): Settings {
-	const loaded = JSON.parse(content) as Partial<Settings> & {
-		displayThemes?: Settings["displayPresets"];
-	};
+	const loaded = JSON.parse(content) as Partial<Settings>;
 	return mergeSettings({
 		version: loaded.version,
 		display: loaded.display,
 		providers: loaded.providers,
-		displayPresets: loaded.displayThemes ?? loaded.displayPresets,
-		displayUserPreset: loaded.displayUserPreset,
+		displayThemes: loaded.displayThemes,
+		displayUserTheme: loaded.displayUserTheme,
 		pinnedProvider: loaded.pinnedProvider,
 	} as Partial<Settings>);
 }
@@ -95,8 +93,8 @@ export function saveSettings(settings: Settings): boolean {
 			if (diskSettings) {
 				const displayChanged = JSON.stringify(settings.display) !== JSON.stringify(cachedSettings.display);
 				const providersChanged = JSON.stringify(settings.providers) !== JSON.stringify(cachedSettings.providers);
-				const presetsChanged = JSON.stringify(settings.displayPresets) !== JSON.stringify(cachedSettings.displayPresets);
-				const userPresetChanged = JSON.stringify(settings.displayUserPreset) !== JSON.stringify(cachedSettings.displayUserPreset);
+				const themesChanged = JSON.stringify(settings.displayThemes) !== JSON.stringify(cachedSettings.displayThemes);
+				const userThemeChanged = JSON.stringify(settings.displayUserTheme) !== JSON.stringify(cachedSettings.displayUserTheme);
 				const pinnedChanged = settings.pinnedProvider !== cachedSettings.pinnedProvider;
 
 				next = {
@@ -104,8 +102,8 @@ export function saveSettings(settings: Settings): boolean {
 					version: settings.version,
 					display: displayChanged ? settings.display : diskSettings.display,
 					providers: providersChanged ? settings.providers : diskSettings.providers,
-					displayPresets: presetsChanged ? settings.displayPresets : diskSettings.displayPresets,
-					displayUserPreset: userPresetChanged ? settings.displayUserPreset : diskSettings.displayUserPreset,
+					displayThemes: themesChanged ? settings.displayThemes : diskSettings.displayThemes,
+					displayUserTheme: userThemeChanged ? settings.displayUserTheme : diskSettings.displayUserTheme,
 					pinnedProvider: pinnedChanged ? settings.pinnedProvider : diskSettings.pinnedProvider,
 				};
 			}
@@ -114,8 +112,8 @@ export function saveSettings(settings: Settings): boolean {
 			version: next.version,
 			display: next.display,
 			providers: next.providers,
-			displayThemes: next.displayPresets,
-			displayUserPreset: next.displayUserPreset,
+			displayThemes: next.displayThemes,
+			displayUserTheme: next.displayUserTheme,
 			pinnedProvider: next.pinnedProvider,
 		}, null, 2);
 		storage.writeFile(SETTINGS_PATH, content);
@@ -137,8 +135,8 @@ export function resetSettings(): Settings {
 		...current,
 		display: defaults.display,
 		providers: defaults.providers,
-		displayPresets: defaults.displayPresets,
-		displayUserPreset: defaults.displayUserPreset,
+		displayThemes: defaults.displayThemes,
+		displayUserTheme: defaults.displayUserTheme,
 		pinnedProvider: defaults.pinnedProvider,
 		version: defaults.version,
 	};
