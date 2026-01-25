@@ -44,11 +44,9 @@ export function createUsageController(deps: Dependencies) {
 		settings: Settings,
 		state: UsageControllerState
 	): ProviderName | undefined {
-		if (settings.behavior.autoDetectProvider) {
-			const detected = detectProviderFromModel(ctx.model);
-			if (detected && isProviderAvailable(settings, detected)) {
-				return detected;
-			}
+		const detected = detectProviderFromModel(ctx.model);
+		if (detected && isProviderAvailable(settings, detected)) {
+			return detected;
 		}
 		return undefined;
 	}

@@ -490,7 +490,6 @@ export function getDefaultSettings(): Settings {
 			refreshInterval: 60,
 			refreshOnTurnStart: true,
 			refreshOnToolResult: true,
-			autoDetectProvider: true,
 		},
 		providerOrder: [...PROVIDERS],
 		defaultProvider: null,

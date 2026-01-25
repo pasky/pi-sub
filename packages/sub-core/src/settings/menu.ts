@@ -22,7 +22,7 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 		},
 		{
 			value: "behavior",
-			label: "Behavior Settings",
+			label: "Usage Settings",
 			description: `refresh ${settings.behavior.refreshInterval}s`,
 			tooltip: "Control refresh interval and auto-refresh triggers.",
 		},

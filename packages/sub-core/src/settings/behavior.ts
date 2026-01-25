@@ -29,13 +29,6 @@ export function buildBehaviorItems(settings: Settings): SettingItem[] {
 			values: ["on", "off"],
 			description: "Refresh usage after tool executions.",
 		},
-		{
-			id: "autoDetectProvider",
-			label: "Auto-detect Provider",
-			currentValue: settings.behavior.autoDetectProvider ? "on" : "off",
-			values: ["on", "off"],
-			description: "Detect provider from the active model.",
-		},
 	];
 }
 
@@ -49,9 +42,6 @@ export function applyBehaviorChange(settings: Settings, id: string, value: strin
 			break;
 		case "refreshOnToolResult":
 			settings.behavior.refreshOnToolResult = value === "on";
-			break;
-		case "autoDetectProvider":
-			settings.behavior.autoDetectProvider = value === "on";
 			break;
 	}
 	return settings;

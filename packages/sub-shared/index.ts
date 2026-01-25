@@ -78,14 +78,12 @@ export interface BehaviorSettings {
 	refreshInterval: number;
 	refreshOnTurnStart: boolean;
 	refreshOnToolResult: boolean;
-	autoDetectProvider: boolean;
 }
 
 export const DEFAULT_BEHAVIOR_SETTINGS: BehaviorSettings = {
 	refreshInterval: 60,
 	refreshOnTurnStart: true,
 	refreshOnToolResult: true,
-	autoDetectProvider: true,
 };
 
 export function getDefaultCoreProviderSettings(): CoreProviderSettingsMap {

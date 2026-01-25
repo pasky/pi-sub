@@ -133,7 +133,7 @@ export async function showSettingsUI(
 				const titles: Record<string, string> = {
 					main: "sub-core Settings",
 					providers: "Provider Settings",
-					behavior: "Behavior Settings",
+					behavior: "Usage Settings",
 					"provider-order": "Provider Order",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
