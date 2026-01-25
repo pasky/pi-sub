@@ -99,6 +99,7 @@ export async function showSettingsUI(
 			let presetActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
 			let displayPreviewBackup: Settings["display"] | null = null;
 			let randomThemeBackup: Settings["display"] | null = null;
+			let pinnedProviderBackup: ProviderName | null | undefined;
 			let importCandidate: DecodedDisplayShare | null = null;
 			let importBackup: Settings["display"] | null = null;
 			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
@@ -334,6 +335,9 @@ export async function showSettingsUI(
 					activeList = selectList;
 					container.addChild(selectList);
 				} else if (currentCategory === "pin-provider") {
+					if (pinnedProviderBackup === undefined) {
+						pinnedProviderBackup = settings.pinnedProvider ?? null;
+					}
 					const orderedProviders = settings.providerOrder.length > 0 ? settings.providerOrder : (Object.keys(settings.providers) as ProviderName[]);
 					const items: TooltipSelectItem[] = [
 						{
@@ -357,15 +361,28 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					attachTooltip(items, selectList);
+					selectList.onSelectionChange = (item) => {
+						if (!item) return;
+						const nextPinned = item.value === "none" ? null : (item.value as ProviderName);
+						if (settings.pinnedProvider === nextPinned) return;
+						settings.pinnedProvider = nextPinned;
+						if (onSettingsChange) void onSettingsChange(settings);
+					};
 					selectList.onSelect = (item) => {
 						settings.pinnedProvider = item.value === "none" ? null : (item.value as ProviderName);
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
+						pinnedProviderBackup = undefined;
 						currentCategory = "main";
 						rebuild();
 						tui.requestRender();
 					};
 					selectList.onCancel = () => {
+						if (pinnedProviderBackup !== undefined && settings.pinnedProvider !== pinnedProviderBackup) {
+							settings.pinnedProvider = pinnedProviderBackup;
+							if (onSettingsChange) void onSettingsChange(settings);
+						}
+						pinnedProviderBackup = undefined;
 						currentCategory = "main";
 						rebuild();
 						tui.requestRender();

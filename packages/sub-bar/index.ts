@@ -149,6 +149,7 @@ export default function createExtension(pi: ExtensionAPI) {
 		};
 		coreSettings = getFallbackCoreSettings(settings);
 		updateFetchFailureTicker();
+		void ensurePinnedEntries(settings.pinnedProvider ?? null);
 		if (lastContext) {
 			renderCurrent(lastContext);
 		}
@@ -416,6 +417,15 @@ export default function createExtension(pi: ExtensionAPI) {
 		});
 	}
 
+	async function ensurePinnedEntries(pinned: ProviderName | null): Promise<void> {
+		if (!pinned) return;
+		if (usageEntries[pinned]) return;
+		const entries = await requestCoreEntries();
+		updateEntries(entries);
+		if (lastContext) {
+			renderCurrent(lastContext);
+		}
+	}
 
 	pi.events.on("sub-core:update-all", (payload) => {
 		coreAvailable = true;
@@ -457,8 +467,12 @@ export default function createExtension(pi: ExtensionAPI) {
 					ctx.ui.setEditorText("/sub-core:settings");
 				},
 				onSettingsChange: async (updatedSettings) => {
+					const previousPinned = settings.pinnedProvider ?? null;
 					settings = updatedSettings;
 					updateFetchFailureTicker();
+					if (settings.pinnedProvider && settings.pinnedProvider !== previousPinned) {
+						void ensurePinnedEntries(settings.pinnedProvider);
+					}
 					if (lastContext) {
 						renderCurrent(lastContext);
 					}
@@ -489,6 +503,7 @@ export default function createExtension(pi: ExtensionAPI) {
 				},
 			});
 			settings = newSettings;
+			void ensurePinnedEntries(settings.pinnedProvider ?? null);
 			if (lastContext) {
 				renderCurrent(lastContext);
 			}
