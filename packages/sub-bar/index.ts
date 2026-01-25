@@ -460,14 +460,14 @@ export default function createExtension(pi: ExtensionAPI) {
 					settings = updatedSettings;
 					updateFetchFailureTicker();
 					if (lastContext) {
-						renderUsageWidget(lastContext, currentUsage);
+						renderCurrent(lastContext);
 					}
 				},
 				onCoreSettingsChange: async (patch, _next) => {
 					applyCoreSettingsPatch(patch);
 					pi.events.emit("sub-core:settings:patch", { patch });
 					if (lastContext) {
-						renderUsageWidget(lastContext, currentUsage);
+						renderCurrent(lastContext);
 					}
 				},
 				onDisplayPresetApplied: (name, options) => {
@@ -490,7 +490,7 @@ export default function createExtension(pi: ExtensionAPI) {
 			});
 			settings = newSettings;
 			if (lastContext) {
-				renderUsageWidget(lastContext, currentUsage);
+				renderCurrent(lastContext);
 			}
 		},
 	});
