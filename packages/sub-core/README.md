@@ -91,8 +91,8 @@ Sub-core stores a shared cache and lock file:
 | GitHub Copilot | Monthly quota, requests | ✅ | Request multiplier support |
 | Google Gemini | Pro/Flash quotas | ✅ | Aggregated by model family |
 | Antigravity | Claude/Pro/Flash quotas | ✅ | Sandbox Cloud Code Assist quotas |
-| OpenAI Codex | Primary/secondary windows | ✅ | Remaining-style display in UI |
-| AWS Kiro | Credits | - | CLI-based usage query |
+| OpenAI Codex | Primary/secondary windows | ✅ | - |
+| AWS Kiro | Credits | - | Credits not yet supported (PRs welcome!) |
 | z.ai | Tokens/monthly limits | - | API quota limits |
 
 ## Adding a Provider

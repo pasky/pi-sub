@@ -35,8 +35,8 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 | GitHub Copilot | Month | Model multiplier + requests left | ✅ | Requests left uses model multiplier |
 | Google Gemini | Pro, Flash | - | ✅ | Quotas aggregated per model family |
 | Antigravity | Claude, Pro, Flash | - | ✅ | Sandbox Cloud Code Assist quotas |
-| OpenAI Codex | Primary, Secondary | Remaining-style display | ✅ | Primary label derived from window duration |
-| AWS Kiro | Credits | - | - | CLI-based usage query |
+| OpenAI Codex | Primary, Secondary | - | ✅ | Primary label derived from window duration |
+| AWS Kiro | Credits | - | - | Credits not yet supported (PRs welcome!) |
 | z.ai | Tokens, Monthly | - | - | API quota limits |
 
 ## Installation
@@ -119,45 +119,7 @@ Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch st
 
 Use Display Settings → Theme to save, share, import, and manage display themes.
 
-| Setting | Options | Default | Description |
-|---------|---------|---------|-------------|
-| Alignment | left, center, right, split | left | Alignment for the widget (split fills the gap after the provider name) |
-| Bar Type | horizontal-bar, horizontal-single, vertical, braille, shade | horizontal-bar | Bar rendering style |
-| H. Bar Character | light, heavy, double, block | heavy | Character used for horizontal bar (custom supports 1–2 chars; second is empty) |
-| Bar Width | 1, 4, 6, 8, 10, 12, fill | 6 | Width of progress bar in characters |
-| Contain Bar | on/off | off | Wrap bar with ▕ and ▏ |
-| Braille Empty Fill | on/off | off | Fill empty braille segments with dim ⣿ |
-| Braille Full Blocks | on/off | off | Use full 8-dot braille blocks for filled segments |
-| Bar Style | bar, percentage, both | both | How to display usage |
-| Color Scheme | base-warning-error, success-base-warning-error, monochrome | base-warning-error | Color coding for usage levels |
-| Usage Color Targets | title, timer, bar, usage label | all | Select which elements use usage colors |
-| Reset Timer | off, front, back, integrated | front | Show time until quota resets |
-| Reset Timer Format | relative, datetime | relative | Show relative countdown or reset datetime |
-| Reset Timer Containment | none, blank, (), [], <> | () | Wrap reset timer text |
-| Status Mode | icon, color, icon+color | icon | Show status as icons, color tint, or both |
-| Status Icon Pack | minimal, emoji | emoji | Icon set for status indicators |
-| Show Status Text | on/off | off | Show textual status description |
-| Dismiss Operational Status | on/off | on | Hide status when there are no incidents |
-| Show Provider Name | on/off | on | Show provider label in status |
-| Provider Label | none, plan, subscription, sub | none | Suffix after provider name (replaces existing Plan/Subscription suffix if present) |
-| Provider Label Colon | on/off | on | Show colon after provider label |
-| Show in Bold | on/off | off | Bold the provider name and colon |
-| Base Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent, selectedBg, userMessageBg, customMessageBg, toolPendingBg, toolSuccessBg, toolErrorBg | dim | Base color for widget labels/dividers |
-| Background Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent, selectedBg, userMessageBg, customMessageBg, toolPendingBg, toolSuccessBg, toolErrorBg | text | Background color for widget line |
-| Show Usage Labels | on/off | on | Show "used/rem." labels |
-| Bold Title | on/off | off | Bold window titles like 5h, Week |
-| Padding X | 0, 1, 2, 3, 4 | 0 | Left/right padding inside widget |
-| Divider Character | none, blank, \|, │, ┃, ┆, ┇, ║, •, ●, ○, ◇ | • | Character between usage entries |
-| Divider Color | primary, text, muted, dim, success, warning, error, border, borderMuted, borderAccent | borderMuted | Color for divider glyphs and lines |
-| Divider Blanks | 0, 1, 2, 3, fill | 1 | Padding around divider |
-| Show Provider Divider | on/off | off | Show divider after provider label |
-| Show Top Divider | on/off | off | Show horizontal divider line above bar |
-| Show Bottom Divider | on/off | on | Show horizontal divider line below bar |
-| Connect Dividers | on/off | off | Draw reverse-T connectors for top/bottom dividers |
-| Widget Wrapping | truncate, wrap | truncate | Wrap usage line to multiple lines or truncate |
-| Error Threshold (%) | 10-40 | 25 | Percentage remaining below which shows red |
-| Warning Threshold (%) | 30-70 | 50 | Percentage remaining below which shows yellow |
-| Success Threshold (%) | 60-90 | 75 | Percentage remaining above which shows green/success - success-base-warning-error only |
+Display Settings cover layout, bars, labels/text, reset timers, status indicators, dividers, and color tuning. Open `sub-bar:settings` → Display Settings to explore the full list in the UI.
 
 ## Credentials
 

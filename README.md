@@ -14,9 +14,9 @@ Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), 
 
 ## Packages
 
-- `packages/sub-core` — shared fetch/cache core (pi extension)
-- `packages/sub-bar` — UI display client (pi extension)
-- `packages/sub-shared` — shared types + event contract (npm package)
+- [`packages/sub-core`](./packages/sub-core) — shared fetch/cache core (pi extension)
+- [`packages/sub-bar`](./packages/sub-bar) — UI display client (pi extension)
+- [`packages/sub-shared`](./packages/sub-shared) — shared types + event contract (npm package)
 
 ## Quick Start (manual install)
 
@@ -182,9 +182,3 @@ We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in 
 
 - `NPM_TOKEN`: npm publish token with access to `@marckrenn/pi-sub-core`, `@marckrenn/pi-sub-bar`, `@marckrenn/pi-sub-shared`.
 
-## Publishing (planned)
-
-- NPM package names: `@marckrenn/pi-sub-core`, `@marckrenn/pi-sub-bar`, `@marckrenn/pi-sub-shared`.
-- Extension/command names stay `sub-*` (no user-facing breaking change).
-- Start with lockstep versions across packages.
-- Use GitHub Actions + `NPM_TOKEN` for publishing.
