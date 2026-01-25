@@ -10,6 +10,8 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 - Auto-detects provider from current model (via sub-core)
 - Shows rate limit windows with visual progress bars
 - Status indicators from provider status pages
+- Theme save/share/import and `sub-bar:import` preview flow
+- Provider Shown selector to pin the displayed provider
 - **Extensive settings UI** via `sub-bar:settings`
 - Cycle through providers with `Ctrl+Alt+P`
 
@@ -20,6 +22,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 | Anthropic (Claude) | 5h/7d windows, extra usage | ✅ |
 | GitHub Copilot | Monthly quota, requests | ✅ |
 | Google Gemini | Pro/Flash quotas | ✅ |
+| Antigravity | Claude/Pro/Flash quotas | ✅ |
 | OpenAI Codex | Primary/secondary windows | ✅ |
 | AWS Kiro | Credits | - |
 | z.ai | Tokens/monthly limits | - |
@@ -31,6 +34,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 | Anthropic (Claude) | 5h, 7d, Extra | Extra usage label (currency from sub-core) | ✅ | Extra usage can show on/off state |
 | GitHub Copilot | Month | Model multiplier + requests left | ✅ | Requests left uses model multiplier |
 | Google Gemini | Pro, Flash | - | ✅ | Quotas aggregated per model family |
+| Antigravity | Claude, Pro, Flash | - | ✅ | Sandbox Cloud Code Assist quotas |
 | OpenAI Codex | Primary, Secondary | Remaining-style display | ✅ | Primary label derived from window duration |
 | AWS Kiro | Credits | - | - | CLI-based usage query |
 | z.ai | Tokens, Monthly | - | - | API quota limits |
@@ -109,7 +113,7 @@ Use `sub-bar:settings` → Provider Settings to control enabled state (auto/on/o
 
 ### Core Settings
 
-Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch status, refresh behavior, provider order, and pinned provider.
+Use `sub-core:settings` to configure provider enablement (auto/on/off), fetch status, refresh behavior, and provider order.
 
 ### Display Settings
 

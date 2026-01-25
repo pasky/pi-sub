@@ -7,6 +7,7 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 - Fetches usage + status data from providers
 - Deduplicates requests via shared cache/lock
 - Emits updates for display-focused extensions (e.g. `sub-bar`) and non-UI tooling extensions
+- Supports Antigravity usage via auth.json (`google-antigravity`)
 
 ## Tool Access
 
@@ -18,6 +19,8 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 ## Settings
 
 Use `sub-core:settings` to configure shared provider + behavior settings. Provider enablement supports `auto` (default), `on`, and `off` — `auto` enables a provider only when credentials are detected.
+
+Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `google-antigravity` key.
 
 **Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
 
@@ -87,6 +90,7 @@ Sub-core stores a shared cache and lock file:
 | Anthropic (Claude) | 5h/7d windows, extra usage | ✅ | Extra usage on/off state (org currency if configured) |
 | GitHub Copilot | Monthly quota, requests | ✅ | Request multiplier support |
 | Google Gemini | Pro/Flash quotas | ✅ | Aggregated by model family |
+| Antigravity | Claude/Pro/Flash quotas | ✅ | Sandbox Cloud Code Assist quotas |
 | OpenAI Codex | Primary/secondary windows | ✅ | Remaining-style display in UI |
 | AWS Kiro | Credits | - | CLI-based usage query |
 | z.ai | Tokens/monthly limits | - | API quota limits |
