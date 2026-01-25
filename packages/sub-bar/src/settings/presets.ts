@@ -1,6 +1,85 @@
 import type { Settings } from "../settings-types.js";
 import type { TooltipSelectItem } from "./menu.js";
 
+type DisplaySettings = Settings["display"];
+type BarType = DisplaySettings["barType"];
+type BarStyle = DisplaySettings["barStyle"];
+type BarCharacter = DisplaySettings["barCharacter"];
+type BarWidth = DisplaySettings["barWidth"];
+type DividerCharacter = DisplaySettings["dividerCharacter"];
+type DividerBlanks = DisplaySettings["dividerBlanks"];
+type DisplayAlignment = DisplaySettings["alignment"];
+type WidgetWrapping = DisplaySettings["widgetWrapping"];
+type BaseTextColor = DisplaySettings["baseTextColor"];
+type DividerColor = DisplaySettings["dividerColor"];
+type ResetTimeFormat = DisplaySettings["resetTimeFormat"];
+type ResetTimerContainment = DisplaySettings["resetTimeContainment"];
+type StatusIndicatorMode = DisplaySettings["statusIndicatorMode"];
+type StatusIconPack = DisplaySettings["statusIconPack"];
+type ProviderLabel = DisplaySettings["providerLabel"];
+
+const RANDOM_BAR_TYPES: BarType[] = ["horizontal-bar", "horizontal-single", "vertical", "braille", "shade"];
+const RANDOM_BAR_STYLES: BarStyle[] = ["bar", "percentage", "both"];
+const RANDOM_BAR_WIDTHS: BarWidth[] = [1, 4, 6, 8, 10, 12, "fill"];
+const RANDOM_BAR_CHARACTERS: BarCharacter[] = [
+	"light",
+	"heavy",
+	"double",
+	"block",
+	"▮▯",
+	"■□",
+	"●○",
+	"▲△",
+	"◆◇",
+	"🚀_",
+];
+const RANDOM_ALIGNMENTS: DisplayAlignment[] = ["left", "center", "right", "split"];
+const RANDOM_WRAPPINGS: WidgetWrapping[] = ["truncate", "wrap"];
+const RANDOM_RESET_POSITIONS: DisplaySettings["resetTimePosition"][] = ["off", "front", "back", "integrated"];
+const RANDOM_RESET_FORMATS: ResetTimeFormat[] = ["relative", "datetime"];
+const RANDOM_RESET_CONTAINMENTS: ResetTimerContainment[] = ["none", "blank", "()", "[]", "<>"];
+const RANDOM_STATUS_MODES: StatusIndicatorMode[] = ["icon", "color", "icon+color"];
+const RANDOM_STATUS_PACKS: StatusIconPack[] = ["minimal", "emoji"];
+const RANDOM_PROVIDER_LABELS: ProviderLabel[] = ["plan", "subscription", "sub", "none"];
+const RANDOM_DIVIDER_CHARACTERS: DividerCharacter[] = ["none", "blank", "|", "│", "┃", "┆", "┇", "║", "•", "●", "○", "◇"];
+const RANDOM_DIVIDER_BLANKS: DividerBlanks[] = [0, 1, 2, 3];
+const RANDOM_COLOR_SCHEMES: DisplaySettings["colorScheme"][] = [
+	"base-warning-error",
+	"success-base-warning-error",
+	"monochrome",
+];
+const RANDOM_BASE_TEXT_COLORS: BaseTextColor[] = ["dim", "muted", "text", "primary", "success", "warning", "error", "border", "borderMuted"];
+const RANDOM_BACKGROUND_COLORS: BaseTextColor[] = [
+	"text",
+	"selectedBg",
+	"userMessageBg",
+	"customMessageBg",
+	"toolPendingBg",
+	"toolSuccessBg",
+	"toolErrorBg",
+];
+const RANDOM_DIVIDER_COLORS: DividerColor[] = [
+	"primary",
+	"text",
+	"muted",
+	"dim",
+	"success",
+	"warning",
+	"error",
+	"border",
+	"borderMuted",
+	"borderAccent",
+];
+const RANDOM_PADDING: number[] = [0, 1, 2, 3, 4];
+
+function pickRandom<T>(items: readonly T[]): T {
+	return items[Math.floor(Math.random() * items.length)] ?? items[0]!;
+}
+
+function randomBool(probability = 0.5): boolean {
+	return Math.random() < probability;
+}
+
 const PRESET_ID_LENGTH = 24;
 const PRESET_ID_FALLBACK = "theme";
 
@@ -24,6 +103,12 @@ export function buildDisplayPresetItems(
 		label: "Restore backup",
 		description: "restore your last theme",
 		tooltip: "Restore your previous display theme.",
+	});
+	items.push({
+		value: "random",
+		label: "Random theme",
+		description: "generate a random theme",
+		tooltip: "Generate a new random display theme.",
 	});
 	items.push({
 		value: "default",
@@ -104,6 +189,67 @@ export function resolveDisplayPresetTarget(
 		return { id: preset.id, name: preset.name, display: preset.display, deletable: true };
 	}
 	return null;
+}
+
+export function buildRandomDisplay(base: DisplaySettings): DisplaySettings {
+	const display: DisplaySettings = { ...base };
+
+	display.alignment = pickRandom(RANDOM_ALIGNMENTS);
+	display.widgetWrapping = pickRandom(RANDOM_WRAPPINGS);
+	display.paddingX = pickRandom(RANDOM_PADDING);
+	display.barStyle = pickRandom(RANDOM_BAR_STYLES);
+	display.barType = pickRandom(RANDOM_BAR_TYPES);
+	display.barWidth = pickRandom(RANDOM_BAR_WIDTHS);
+	display.barCharacter = pickRandom(RANDOM_BAR_CHARACTERS);
+	display.containBar = randomBool();
+	display.brailleFillEmpty = randomBool();
+	display.brailleFullBlocks = randomBool();
+	display.colorScheme = pickRandom(RANDOM_COLOR_SCHEMES);
+
+	const usageColorTargets = {
+		title: randomBool(),
+		timer: randomBool(),
+		bar: randomBool(),
+		usageLabel: randomBool(),
+	};
+	if (!usageColorTargets.title && !usageColorTargets.timer && !usageColorTargets.bar && !usageColorTargets.usageLabel) {
+		usageColorTargets.bar = true;
+	}
+	display.usageColorTargets = usageColorTargets;
+	display.resetTimePosition = pickRandom(RANDOM_RESET_POSITIONS);
+	display.resetTimeFormat = pickRandom(RANDOM_RESET_FORMATS);
+	display.resetTimeContainment = pickRandom(RANDOM_RESET_CONTAINMENTS);
+	display.statusIndicatorMode = pickRandom(RANDOM_STATUS_MODES);
+	display.statusIconPack = pickRandom(RANDOM_STATUS_PACKS);
+	display.statusText = randomBool();
+	display.statusDismissOk = randomBool();
+	display.showProviderName = randomBool();
+	display.providerLabel = pickRandom(RANDOM_PROVIDER_LABELS);
+	display.providerLabelColon = display.providerLabel !== "none" && randomBool();
+	display.providerLabelBold = randomBool();
+	display.baseTextColor = pickRandom(RANDOM_BASE_TEXT_COLORS);
+	display.backgroundColor = pickRandom(RANDOM_BACKGROUND_COLORS);
+	display.boldWindowTitle = randomBool();
+	display.showUsageLabels = randomBool();
+	display.dividerCharacter = pickRandom(RANDOM_DIVIDER_CHARACTERS);
+	display.dividerColor = pickRandom(RANDOM_DIVIDER_COLORS);
+	display.dividerBlanks = pickRandom(RANDOM_DIVIDER_BLANKS);
+	display.showProviderDivider = randomBool();
+	display.dividerFooterJoin = randomBool();
+	display.showTopDivider = randomBool();
+	display.showBottomDivider = randomBool();
+
+	if (display.dividerCharacter === "none") {
+		display.showProviderDivider = false;
+		display.dividerFooterJoin = false;
+		display.showTopDivider = false;
+		display.showBottomDivider = false;
+	}
+	if (display.providerLabel === "none") {
+		display.providerLabelColon = false;
+	}
+
+	return display;
 }
 
 export function buildPresetActionItems(target: DisplayPresetTarget): TooltipSelectItem[] {

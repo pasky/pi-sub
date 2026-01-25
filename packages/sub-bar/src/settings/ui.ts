@@ -37,6 +37,7 @@ import {
 import {
 	buildDisplayPresetItems,
 	buildPresetActionItems,
+	buildRandomDisplay,
 	resolveDisplayPresetTarget,
 	saveDisplayPreset,
 	upsertDisplayPreset,
@@ -97,6 +98,7 @@ export async function showSettingsUI(
 			let activeList: SelectList | SettingsList | { handleInput: (data: string) => void } | null = null;
 			let presetActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
 			let displayPreviewBackup: Settings["display"] | null = null;
+			let randomThemeBackup: Settings["display"] | null = null;
 			let importCandidate: DecodedDisplayShare | null = null;
 			let importBackup: Settings["display"] | null = null;
 			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
@@ -554,7 +556,7 @@ export async function showSettingsUI(
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
 					selectList.onSelectionChange = (item) => {
-						if (!item || item.value === "import") return;
+						if (!item || item.value === "import" || item.value === "random") return;
 						const target = resolveDisplayPresetTarget(item.value, settings, defaults, fallbackUser);
 						if (!target) return;
 						settings.display = { ...target.display };
@@ -571,6 +573,19 @@ export async function showSettingsUI(
 							}
 							currentCategory = "display-theme-import";
 							rebuild();
+							tui.requestRender();
+							return;
+						}
+						if (item.value === "random") {
+							if (!randomThemeBackup) {
+								randomThemeBackup = { ...settings.display };
+								settings.displayUserPreset = { ...randomThemeBackup };
+							}
+							const randomDisplay = buildRandomDisplay(settings.display);
+							settings.display = { ...randomDisplay };
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+							displayPreviewBackup = { ...settings.display };
 							tui.requestRender();
 							return;
 						}
