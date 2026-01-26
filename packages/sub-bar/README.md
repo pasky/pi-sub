@@ -2,7 +2,7 @@
 
 Usage widget extension for [pi-coding-agent](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent).
 
-Displays current provider usage in a widget above the editor. Fetching and caching are handled by `sub-core`.
+Displays current provider usage in a widget below the editor. Fetching and caching are handled by `sub-core`.
 
 ![sub-bar default](../../docs/screenshots/sub-bar-default.png)
 ![sub-bar minimal](../../docs/screenshots/sub-bar-minimal.png)
