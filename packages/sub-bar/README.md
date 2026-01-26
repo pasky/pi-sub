@@ -41,7 +41,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 
 ## Installation
 
-Install **both** `sub-core` and `sub-bar` extensions from the monorepo. `sub-core` is shared across the wider `sub-*` ecosystem (some extensions are UI-only, others run headless and just consume events).
+Install **both** `sub-core` and `sub-bar` extensions from the monorepo. `sub-bar` depends on `sub-core` for data (it will not render without it), and `sub-core` is shared across the wider `sub-*` ecosystem (some extensions are UI-only, others run headless and just consume events).
 
 ```bash
 git clone https://github.com/marckrenn/pi-sub.git
@@ -70,14 +70,14 @@ npm install
 
 ## Packaging notes (pi install compatibility)
 
-The draft in pi-mono issue #645 expects npm packages with a `pi` field in `package.json` plus the `pi-package` keyword for discoverability. This repo already declares `pi.extensions`, so once `pi install` lands you should be able to do:
+Pi packages use a `pi` field in `package.json` plus the `pi-package` keyword for discoverability. This repo already declares `pi.extensions`, so you can install via:
 
 ```bash
 pi install npm:@marckrenn/pi-sub-core
 pi install npm:@marckrenn/pi-sub-bar
 ```
 
-Until then, manual paths/symlinks work as documented above.
+Manual paths/symlinks still work for local development as documented above.
 
 ## Usage
 
