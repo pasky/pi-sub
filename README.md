@@ -113,7 +113,9 @@ You must update **both** sub-core (fetch layer) and sub-bar (display/UI).
 4. Add extras (if needed) in `packages/sub-bar/src/providers/extras.ts`.
 5. Add settings UI + defaults in `packages/sub-bar/src/providers/settings.ts` and `packages/sub-bar/src/settings-types.ts`.
 
-## Developer guide (common workflows)
+## Development
+
+### Developer guide (common workflows)
 
 ### Add a new provider (core + UI)
 
@@ -146,7 +148,7 @@ Use this rule of thumb when deciding where a feature lives:
 - **New bar style or status icon pack** → sub-bar only.
 - **New provider enablement behavior** → sub-core (and sub-bar UI can forward settings).
 
-## Dev setup
+### Dev setup
 
 ```bash
 npm install
@@ -179,11 +181,11 @@ npm run test -w @marckrenn/pi-sub-core
 npm run test -w @marckrenn/pi-sub-bar
 ```
 
-## Release process (manual)
+### Release process (manual)
 
 We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in lockstep. Releases are manual and run via the GitHub Actions workflow `Release (manual)` on `main`. See [RELEASE.md](./RELEASE.md) for the detailed checklist.
 
-### Steps
+#### Steps
 
 1. Create a changeset locally:
    ```bash
@@ -196,7 +198,7 @@ We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in 
 
 > The workflow runs tests first but will continue with release even if tests fail, so check the test job results before publishing.
 
-### Required secrets
+#### Required secrets
 
 - `NPM_TOKEN`: npm publish token with access to `@marckrenn/pi-sub-core`, `@marckrenn/pi-sub-bar`, `@marckrenn/pi-sub-shared`.
 

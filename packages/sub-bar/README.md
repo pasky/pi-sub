@@ -4,7 +4,9 @@ Usage widget extension for [pi-coding-agent](https://github.com/badlogic/pi-mono
 
 Displays current provider usage in a widget above the editor. Fetching and caching are handled by `sub-core`, which can also power other `sub-*` extensions (UI or non-UI).
 
-## Features
+## Overview
+
+### Features
 
 - Displays usage quotas for multiple AI providers
 - Auto-detects provider from current model (via sub-core)
@@ -15,7 +17,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 - **Extensive settings UI** via `sub-bar:settings`
 - Cycle through providers with `Ctrl+Alt+P`
 
-## Supported Providers
+### Supported Providers
 
 | Provider | Usage Data | Status Page |
 |----------|-----------|-------------|
@@ -27,7 +29,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 | AWS Kiro | Credits | - |
 | z.ai | Tokens/monthly limits | - |
 
-## Provider Feature Matrix
+### Provider Feature Matrix
 
 | Provider | Usage Windows | Extra Info | Status Indicator | Notes |
 |----------|--------------|------------|------------------|-------|
@@ -35,7 +37,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 | GitHub Copilot | Month | Model multiplier + requests left | ✅ | Requests left uses model multiplier |
 | Google Gemini | Pro, Flash | - | ✅ | Quotas aggregated per model family |
 | Antigravity | Claude, Pro, Flash | - | ✅ | Sandbox Cloud Code Assist quotas |
-| OpenAI Codex | Primary, Secondary | - | ✅ | Primary label derived from window duration |
+| OpenAI Codex | Primary, Secondary | - | ✅ | Credits not yet supported (PRs welcome!) |
 | AWS Kiro | Credits | - | - | Credits not yet supported (PRs welcome!) |
 | z.ai | Tokens, Monthly | - | - | API quota limits |
 
@@ -60,24 +62,6 @@ Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
   ]
 }
 ```
-
-To install dependencies (for type checking):
-
-```bash
-cd /path/to/pi-sub
-npm install
-```
-
-## Packaging notes (pi install compatibility)
-
-Pi packages use a `pi` field in `package.json` plus the `pi-package` keyword for discoverability. This repo already declares `pi.extensions`, so you can install via:
-
-```bash
-pi install npm:@marckrenn/pi-sub-core
-pi install npm:@marckrenn/pi-sub-bar
-```
-
-Manual paths/symlinks still work for local development as documented above.
 
 ## Usage
 
@@ -129,7 +113,20 @@ Credentials are loaded by sub-core from:
 - macOS Keychain for Claude Code credentials
 - Environment variables (e.g., `Z_AI_API_KEY`)
 
-## Architecture
+## Development
+
+### Packaging notes (pi install compatibility)
+
+Pi packages use a `pi` field in `package.json` plus the `pi-package` keyword for discoverability. This repo already declares `pi.extensions`, so you can install via:
+
+```bash
+pi install npm:@marckrenn/pi-sub-core
+pi install npm:@marckrenn/pi-sub-bar
+```
+
+Manual paths/symlinks still work for local development as documented above.
+
+### Architecture
 
 ```
 sub-bar/
@@ -147,11 +144,11 @@ sub-bar/
 └── tsconfig.json
 ```
 
-## Adding a New Provider
+### Adding a New Provider
 
 Update both sub-core (fetch) and sub-bar (display). See `sub-core/README.md` for the full checklist.
 
-## Feature placement (UI vs core)
+### Feature placement (UI vs core)
 
 - **sub-bar** owns presentation (formatting, layout, status indicators, UI settings).
 - **sub-core** owns data fetching, caching, provider selection, and shared settings/events.
@@ -159,17 +156,16 @@ Update both sub-core (fetch) and sub-bar (display). See `sub-core/README.md` for
 
 See the root README “Developer guide” for the full decision checklist and examples.
 
+### Commands
+
+```bash
+npm run check
+```
+
 ## Credits
 
 - Hannes Januschka ([barts](https://github.com/hjanuschka/shitty-extensions?tab=readme-ov-file#usage-barts), [@hjanuschka](https://x.com/hjanuschka))
 - Peter Steinberger ([CodexBar](https://github.com/steipete/CodexBar), [@steipete](https://x.com/steipete))
-
-## Development
-
-```bash
-# Type check
-npm run check
-```
 
 ## License
 

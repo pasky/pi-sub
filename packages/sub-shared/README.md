@@ -4,13 +4,15 @@ Shared types, metadata, and event contracts for the `sub-*` ecosystem.
 
 This package is consumed by `sub-core` and `sub-bar` to keep provider metadata, usage types, and model multipliers consistent. For repo setup and extension installation, see the root [pi-sub README](../../README.md).
 
-## Installation
+## Overview
+
+### Installation
 
 ```bash
 npm install @marckrenn/pi-sub-shared
 ```
 
-## Usage
+### Usage
 
 ```ts
 import {
@@ -31,7 +33,7 @@ const snapshot: UsageSnapshot = {
 console.log(PROVIDERS, defaults, snapshot);
 ```
 
-## Exports
+### Exports
 
 - `PROVIDERS`, `ProviderName`
 - `RateWindow`, `UsageSnapshot`, `ProviderUsageEntry`
@@ -44,6 +46,12 @@ console.log(PROVIDERS, defaults, snapshot);
 - `ProviderMetadata`, `ProviderDetectionConfig`, `ProviderStatusConfig`
 - `PROVIDER_METADATA`, `PROVIDER_DISPLAY_NAMES`
 - `MODEL_MULTIPLIERS`
+
+## Development
+
+```bash
+npm run check
+```
 
 ## Related docs
 

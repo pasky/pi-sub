@@ -82,17 +82,6 @@ Sub-core stores a shared cache and lock file:
 - Keep `~/.pi/agent/auth.json` readable only by your user (e.g. `chmod 600 ~/.pi/agent/auth.json`).
 - Avoid logging token-bearing headers or auth config when troubleshooting provider calls.
 
-## Development
-
-### Packaging notes (pi install compatibility)
-
-The package manager expects packages to declare extension entry points via the `pi` field in `package.json`. To stay compatible:
-
-- Keep `pi.extensions` pointing at `./index.ts`
-- Include the `pi-package` keyword in `package.json` for discoverability
-- Publish the package to npm (e.g. `@marckrenn/pi-sub-core`) so future `pi install npm:@marckrenn/pi-sub-core` can work
-- Avoid repo-specific assumptions in docs (manual paths still work)
-
 ### Provider comparison
 
 | Provider | Usage Data | Status Page | Notes |
@@ -101,9 +90,21 @@ The package manager expects packages to declare extension entry points via the `
 | GitHub Copilot | Monthly quota, requests | ✅ | Request multiplier support |
 | Google Gemini | Pro/Flash quotas | ✅ | Aggregated by model family |
 | Antigravity | Claude/Pro/Flash quotas | ✅ | Sandbox Cloud Code Assist quotas |
-| OpenAI Codex | Primary/secondary windows | ✅ | - |
+| OpenAI Codex | Primary/secondary windows | ✅ | Credits not yet supported (PRs welcome!) |
 | AWS Kiro | Credits | - | Credits not yet supported (PRs welcome!) |
 | z.ai | Tokens/monthly limits | - | API quota limits |
+
+## Development
+
+### Packaging notes (pi install compatibility)
+
+Pi packages use a `pi` field in `package.json` plus the `pi-package` keyword for discoverability. This repo already declares `pi.extensions`, so you can install via:
+
+```bash
+pi install npm:@marckrenn/pi-sub-core
+```
+
+Manual paths/symlinks still work for local development as documented above.
 
 ### Adding a Provider
 
@@ -158,6 +159,7 @@ After an action, sub-core emits `sub-core:update-current` with the new state.
 
 ## Credits
 
+- Hannes Januschka ([barts](https://github.com/hjanuschka/shitty-extensions?tab=readme-ov-file#usage-barts), [@hjanuschka](https://x.com/hjanuschka))
 - Peter Steinberger ([CodexBar](https://github.com/steipete/CodexBar), [@steipete](https://x.com/steipete))
 
 ## Status
