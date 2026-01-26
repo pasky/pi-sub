@@ -301,7 +301,6 @@ export async function showSettingsUI(
 								"Extra Usage Currency Symbol",
 								parseCurrencySymbol,
 								undefined,
-								"Enter a symbol prefix or type 'none' to clear.",
 							);
 						}
 						for (const item of items) {
