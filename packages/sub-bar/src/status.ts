@@ -24,27 +24,30 @@ const STATUS_ICON_PACKS: Record<Exclude<StatusIconPack, "custom">, Record<Provid
 	},
 };
 
-const DEFAULT_CUSTOM_ICONS = ["✓", "⚠", "×"];
+const DEFAULT_CUSTOM_ICONS = ["✓", "⚠", "×", "?"];
 const CUSTOM_SEGMENTER = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
-function parseCustomIcons(value?: string): [string, string, string] {
-	if (!value) return DEFAULT_CUSTOM_ICONS as [string, string, string];
+function parseCustomIcons(value?: string): [string, string, string, string] {
+	if (!value) return DEFAULT_CUSTOM_ICONS as [string, string, string, string];
 	const segments = Array.from(CUSTOM_SEGMENTER.segment(value), (entry) => entry.segment)
 		.map((segment) => segment.trim())
 		.filter(Boolean);
-	if (segments.length < 3) return DEFAULT_CUSTOM_ICONS as [string, string, string];
-	return [segments[0], segments[1], segments[2]] as [string, string, string];
+	if (segments.length < 3) return DEFAULT_CUSTOM_ICONS as [string, string, string, string];
+	if (segments.length === 3) {
+		return [segments[0], segments[1], segments[2], DEFAULT_CUSTOM_ICONS[3]] as [string, string, string, string];
+	}
+	return [segments[0], segments[1], segments[2], segments[3]] as [string, string, string, string];
 }
 
 function buildCustomPack(custom?: string): Record<ProviderStatus["indicator"], string> {
-	const [ok, warn, error] = parseCustomIcons(custom);
+	const [ok, warn, error, unknown] = parseCustomIcons(custom);
 	return {
 		none: ok,
 		minor: warn,
 		major: error,
 		critical: error,
 		maintenance: warn,
-		unknown: warn,
+		unknown,
 	};
 }
 

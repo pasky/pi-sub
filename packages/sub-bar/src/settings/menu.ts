@@ -107,7 +107,7 @@ export function buildDisplayMenuItems(): TooltipSelectItem[] {
 			value: "display-status",
 			label: "Status",
 			description: "mode, icons, text",
-			tooltip: "Configure status icons, colors, and optional text.",
+			tooltip: "Configure status mode and icon packs.",
 		},
 		{
 			value: "display-divider",

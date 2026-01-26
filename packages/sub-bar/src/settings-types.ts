@@ -77,7 +77,7 @@ export type ResetTimerContainment = "none" | "blank" | "()" | "[]" | "<>";
 /**
  * Status indicator display mode
  */
-export type StatusIndicatorMode = "icon" | "color" | "icon+color";
+export type StatusIndicatorMode = "icon" | "text" | "icon+text";
 
 /**
  * Status icon pack selection
@@ -299,8 +299,6 @@ export interface DisplaySettings {
 	statusIconPack: StatusIconPack;
 	/** Custom status icon pack (three characters) */
 	statusIconCustom: string;
-	/** Show textual status */
-	statusText: boolean;
 	/** Dismiss status when operational */
 	statusDismissOk: boolean;
 	/** Show provider display name */
@@ -463,8 +461,7 @@ export function getDefaultSettings(): Settings {
 			resetTimeContainment: "blank",
 			statusIndicatorMode: "icon",
 			statusIconPack: "emoji",
-			statusIconCustom: "✓⚠×",
-			statusText: false,
+			statusIconCustom: "✓⚠×?",
 			statusDismissOk: true,
 			showProviderName: true,
 			providerLabel: "none",

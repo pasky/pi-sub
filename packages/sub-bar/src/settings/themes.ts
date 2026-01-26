@@ -38,7 +38,7 @@ const RANDOM_WRAPPINGS: WidgetWrapping[] = ["truncate", "wrap"];
 const RANDOM_RESET_POSITIONS: DisplaySettings["resetTimePosition"][] = ["off", "front", "back", "integrated"];
 const RANDOM_RESET_FORMATS: ResetTimeFormat[] = ["relative", "datetime"];
 const RANDOM_RESET_CONTAINMENTS: ResetTimerContainment[] = ["none", "blank", "()", "[]", "<>"];
-const RANDOM_STATUS_MODES: StatusIndicatorMode[] = ["icon", "color", "icon+color"];
+const RANDOM_STATUS_MODES: StatusIndicatorMode[] = ["icon", "text", "icon+text"];
 const RANDOM_STATUS_PACKS: StatusIconPack[] = ["minimal", "emoji"];
 const RANDOM_PROVIDER_LABELS: ProviderLabel[] = ["plan", "subscription", "sub", "none"];
 const RANDOM_DIVIDER_CHARACTERS: DividerCharacter[] = ["none", "blank", "|", "│", "┃", "┆", "┇", "║", "•", "●", "○", "◇"];
@@ -167,7 +167,6 @@ export function resolveDisplayThemeTarget(
 				resetTimeContainment: "blank",
 				statusIndicatorMode: "icon",
 				statusIconPack: "minimal",
-				statusText: false,
 				statusDismissOk: true,
 				showProviderName: false,
 				providerLabel: "none",
@@ -235,7 +234,6 @@ export function buildRandomDisplay(base: DisplaySettings): DisplaySettings {
 	display.resetTimeContainment = pickRandom(RANDOM_RESET_CONTAINMENTS);
 	display.statusIndicatorMode = pickRandom(RANDOM_STATUS_MODES);
 	display.statusIconPack = pickRandom(RANDOM_STATUS_PACKS);
-	display.statusText = randomBool();
 	display.statusDismissOk = randomBool();
 	display.showProviderName = randomBool();
 	display.providerLabel = pickRandom(RANDOM_PROVIDER_LABELS);

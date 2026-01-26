@@ -335,23 +335,26 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 }
 
 const STATUS_ICON_PACK_PREVIEW = {
-	minimal: "minimal (✓ ⚠ ×)",
-	emoji: "emoji (✅ ⚠️ 🔴)",
-	faces: "faces (😎 😳 😵)",
+	minimal: "minimal (✓ ⚠ × ?)",
+	emoji: "emoji (✅ ⚠️ 🔴 ❓)",
+	faces: "faces (😎 😳 😵 🤔)",
 } as const;
 
-const STATUS_ICON_FACES_PRESET = "😎😳😵";
+const STATUS_ICON_FACES_PRESET = "😎😳😵🤔";
 
-const STATUS_ICON_CUSTOM_FALLBACK = ["✓", "⚠", "×"];
+const STATUS_ICON_CUSTOM_FALLBACK = ["✓", "⚠", "×", "?"];
 const STATUS_ICON_CUSTOM_SEGMENTER = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
-function resolveCustomStatusIcons(value?: string): [string, string, string] {
-	if (!value) return STATUS_ICON_CUSTOM_FALLBACK as [string, string, string];
+function resolveCustomStatusIcons(value?: string): [string, string, string, string] {
+	if (!value) return STATUS_ICON_CUSTOM_FALLBACK as [string, string, string, string];
 	const segments = Array.from(STATUS_ICON_CUSTOM_SEGMENTER.segment(value), (entry) => entry.segment)
 		.map((segment) => segment.trim())
 		.filter(Boolean);
-	if (segments.length < 3) return STATUS_ICON_CUSTOM_FALLBACK as [string, string, string];
-	return [segments[0], segments[1], segments[2]] as [string, string, string];
+	if (segments.length < 3) return STATUS_ICON_CUSTOM_FALLBACK as [string, string, string, string];
+	if (segments.length === 3) {
+		return [segments[0], segments[1], segments[2], STATUS_ICON_CUSTOM_FALLBACK[3]] as [string, string, string, string];
+	}
+	return [segments[0], segments[1], segments[2], segments[3]] as [string, string, string, string];
 }
 
 function formatCustomStatusIcons(value?: string): string {
@@ -369,18 +372,21 @@ function parseStatusIconPack(value: string): StatusIconPack {
 }
 
 export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
-	const mode = settings.display.statusIndicatorMode ?? "icon";
+	const rawMode = settings.display.statusIndicatorMode ?? "icon";
+	const mode: StatusIndicatorMode = rawMode === "text" || rawMode === "icon+text" || rawMode === "icon"
+		? rawMode
+		: "icon";
 	const items: SettingItem[] = [
 		{
 			id: "statusIndicatorMode",
 			label: "Status Mode",
 			currentValue: mode,
-			values: ["icon", "color", "icon+color"] as StatusIndicatorMode[],
-			description: "Use icons, color tint, or both for status indicators.",
+			values: ["icon", "text", "icon+text"] as StatusIndicatorMode[],
+			description: "Use icons, text, or both for status indicators.",
 		},
 	];
 
-	if (mode === "icon" || mode === "icon+color") {
+	if (mode === "icon" || mode === "icon+text") {
 		const pack = settings.display.statusIconPack ?? "emoji";
 		const customIcons = settings.display.statusIconCustom;
 		items.push({
@@ -393,24 +399,17 @@ export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
 				STATUS_ICON_PACK_PREVIEW.faces,
 				CUSTOM_OPTION,
 			],
-			description: "Pick the icon set used for status indicators. Choose custom to edit icons.",
+			description: "Pick the icon set used for status indicators. Choose custom to edit icons (OK/warn/error/unknown).",
 		});
 	}
 
 	items.push(
 		{
-			id: "statusText",
-			label: "Show Status Text",
-			currentValue: settings.display.statusText ? "on" : "off",
-			values: ["on", "off"],
-			description: "Show the textual status description next to the icon.",
-		},
-		{
 			id: "statusDismissOk",
 			label: "Dismiss Operational Status",
 			currentValue: settings.display.statusDismissOk ? "on" : "off",
 			values: ["on", "off"],
-			description: "Hide status text/icons when there are no incidents.",
+			description: "Hide status indicators when there are no incidents.",
 		}
 	);
 
@@ -584,9 +583,6 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "statusIconCustom":
 			settings.display.statusIconCustom = value;
 			settings.display.statusIconPack = "custom";
-			break;
-		case "statusText":
-			settings.display.statusText = value === "on";
 			break;
 		case "statusDismissOk":
 			settings.display.statusDismissOk = value === "on";

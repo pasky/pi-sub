@@ -210,17 +210,17 @@ export async function showSettingsUI(
 			const parseStatusIconCustom = (raw: string): string | null => {
 				const trimmed = raw.trim();
 				if (!trimmed) {
-					ctx.ui.notify("Enter three characters", "warning");
+					ctx.ui.notify("Enter four characters", "warning");
 					return null;
 				}
 				const segments = Array.from(segmenter.segment(trimmed), (entry) => entry.segment)
 					.map((segment) => segment.trim())
 					.filter(Boolean);
-				if (segments.length < 3) {
-					ctx.ui.notify("Enter three characters", "warning");
+				if (segments.length < 4) {
+					ctx.ui.notify("Enter four characters", "warning");
 					return null;
 				}
-				return segments.slice(0, 3).join("");
+				return segments.slice(0, 4).join("");
 			};
 
 			const parseProviderLabel = (raw: string): string | null => {
@@ -912,7 +912,7 @@ export async function showSettingsUI(
 							"Custom Status Icons",
 							parseStatusIconCustom,
 							undefined,
-							"Enter three characters in order: OK, warning, error (e.g. ✓⚠×). Applied to none, minor/maintenance/unknown, and major/critical statuses.",
+							"Enter four characters in order: OK, warning, error, unknown (e.g. ✓⚠×?). Applied to none, minor/maintenance, major/critical, and unknown statuses.",
 						);
 					}
 					if (currentCategory === "display-divider") {

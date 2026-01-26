@@ -263,10 +263,12 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 		: undefined;
 	const status = showStatus ? (fetchStatus ?? baseStatus) : undefined;
 	const statusDismissOk = settings?.display.statusDismissOk ?? true;
-	const statusMode = settings?.display.statusIndicatorMode ?? "icon";
+	const statusModeRaw = settings?.display.statusIndicatorMode ?? "icon";
+	const statusMode = statusModeRaw === "icon" || statusModeRaw === "text" || statusModeRaw === "icon+text"
+		? statusModeRaw
+		: "icon";
 	const statusIconPack = settings?.display.statusIconPack ?? "emoji";
 	const statusIconCustom = settings?.display.statusIconCustom;
-	const showStatusText = settings?.display.statusText ?? false;
 	const providerLabelSetting = settings?.display.providerLabel ?? "none";
 	const showColon = settings?.display.providerLabelColon ?? true;
 	const boldProviderLabel = settings?.display.providerLabelBold ?? false;
@@ -274,9 +276,8 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const usageTargets = resolveUsageColorTargets(settings);
 
 	const statusActive = Boolean(status && (!statusDismissOk || status.indicator !== "none"));
-	const showIcon = statusActive && (statusMode === "icon" || statusMode === "icon+color");
-	const showColor = statusActive && (statusMode === "color" || statusMode === "icon+color");
-	const showText = statusActive && (showStatusText || status?.indicator === "unknown");
+	const showIcon = statusActive && (statusMode === "icon" || statusMode === "icon+text");
+	const showText = statusActive && (statusMode === "text" || statusMode === "icon+text");
 
 	const labelSuffix = providerLabelSetting === "plan"
 		? "Plan"
@@ -304,16 +305,13 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const statusTint = usageTargets.status
 		? resolveStatusTintColor(rawStatusColor, baseTextColor)
 		: baseTextColor;
-	const labelColor = showColor && usageTargets.status ? statusTint : baseTextColor;
-	const iconColor = showIcon
-		? (statusMode === "icon" ? statusTint : labelColor)
-		: baseTextColor;
+	const statusColor = statusTint;
 
 	const parts: string[] = [];
-	if (icon) parts.push(applyBaseTextColor(theme, iconColor, icon));
-	if (statusText) parts.push(applyBaseTextColor(theme, labelColor, statusText));
+	if (icon) parts.push(applyBaseTextColor(theme, statusColor, icon));
+	if (statusText) parts.push(applyBaseTextColor(theme, statusColor, statusText));
 	if (providerLabelWithColon) {
-		const colored = applyBaseTextColor(theme, labelColor, providerLabelWithColon);
+		const colored = applyBaseTextColor(theme, baseTextColor, providerLabelWithColon);
 		parts.push(boldProviderLabel ? theme.bold(colored) : colored);
 	}
 	if (parts.length === 0) return "";

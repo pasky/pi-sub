@@ -80,9 +80,8 @@ test("bar width 1 contained vertical bars stay compact", () => {
 
 test("status indicator layout includes icon text provider colon", () => {
 	const settings = getDefaultSettings();
-	settings.display.statusIndicatorMode = "icon";
+	settings.display.statusIndicatorMode = "icon+text";
 	settings.display.statusIconPack = "minimal";
-	settings.display.statusText = true;
 	settings.display.statusDismissOk = false;
 	settings.display.providerLabelColon = true;
 
@@ -100,8 +99,7 @@ test("custom status icon pack uses provided characters", () => {
 	const settings = getDefaultSettings();
 	settings.display.statusIndicatorMode = "icon";
 	settings.display.statusIconPack = "custom";
-	settings.display.statusIconCustom = "o!x";
-	settings.display.statusText = false;
+	settings.display.statusIconCustom = "o!x?";
 	settings.display.statusDismissOk = false;
 
 	const output = formatUsageStatus(
@@ -115,9 +113,8 @@ test("custom status icon pack uses provided characters", () => {
 
 test("status dismiss ok hides operational text", () => {
 	const settings = getDefaultSettings();
-	settings.display.statusIndicatorMode = "icon+color";
+	settings.display.statusIndicatorMode = "icon+text";
 	settings.display.statusIconPack = "emoji";
-	settings.display.statusText = true;
 	settings.display.statusDismissOk = true;
 
 	const output = formatUsageStatus(
@@ -131,11 +128,10 @@ test("status dismiss ok hides operational text", () => {
 	assert.ok(!output.includes("✅"));
 });
 
-test("unknown status shows label even when status text off", () => {
+test("unknown status shows label in text mode", () => {
 	const settings = getDefaultSettings();
-	settings.display.statusIndicatorMode = "icon";
+	settings.display.statusIndicatorMode = "text";
 	settings.display.statusIconPack = "emoji";
-	settings.display.statusText = false;
 	settings.display.statusDismissOk = false;
 
 	const output = formatUsageStatus(
@@ -144,13 +140,13 @@ test("unknown status shows label even when status text off", () => {
 		undefined,
 		settings,
 	);
-	assert.ok(output.includes("❓"));
+	assert.ok(!output.includes("❓"));
 	assert.ok(output.includes("Status Unknown"));
 });
 
 test("fetch errors rely on status text instead of appended warning", () => {
 	const settings = getDefaultSettings();
-	settings.display.statusText = true;
+	settings.display.statusIndicatorMode = "text";
 
 	const usage = buildUsage();
 	usage.error = { code: "FETCH_FAILED", message: "Fetch failed" };

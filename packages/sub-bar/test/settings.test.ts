@@ -166,15 +166,15 @@ test("applyDisplayChange supports fill and numeric values", () => {
 test("status icon pack parsing handles preview labels", () => {
 	const settings = getDefaultSettings();
 
-	applyDisplayChange(settings, "statusIconPack", "minimal (✓ ⚠ ×)");
+	applyDisplayChange(settings, "statusIconPack", "minimal (✓ ⚠ × ?)");
 	assert.equal(settings.display.statusIconPack, "minimal");
 
-	applyDisplayChange(settings, "statusIconPack", "emoji (✅ ⚠️ 🔴)");
+	applyDisplayChange(settings, "statusIconPack", "emoji (✅ ⚠️ 🔴 ❓)");
 	assert.equal(settings.display.statusIconPack, "emoji");
 
-	applyDisplayChange(settings, "statusIconPack", "faces (😎 😳 😵)");
+	applyDisplayChange(settings, "statusIconPack", "faces (😎 😳 😵 🤔)");
 	assert.equal(settings.display.statusIconPack, "custom");
-	assert.equal(settings.display.statusIconCustom, "😎😳😵");
+	assert.equal(settings.display.statusIconCustom, "😎😳😵🤔");
 
 	applyDisplayChange(settings, "statusIconPack", "__custom__");
 	assert.equal(settings.display.statusIconPack, "custom");
@@ -182,9 +182,9 @@ test("status icon pack parsing handles preview labels", () => {
 
 test("applyDisplayChange stores custom status icons", () => {
 	const settings = getDefaultSettings();
-	applyDisplayChange(settings, "statusIconCustom", "✓⚠×");
+	applyDisplayChange(settings, "statusIconCustom", "✓⚠×?");
 	assert.equal(settings.display.statusIconPack, "custom");
-	assert.equal(settings.display.statusIconCustom, "✓⚠×");
+	assert.equal(settings.display.statusIconCustom, "✓⚠×?");
 });
 
 test("decodeDisplayShareString rejects invalid payloads", () => {
