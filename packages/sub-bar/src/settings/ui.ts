@@ -207,6 +207,22 @@ export async function showSettingsUI(
 				return second ? `${first}${second}` : first;
 			};
 
+			const parseStatusIconCustom = (raw: string): string | null => {
+				const trimmed = raw.trim();
+				if (!trimmed) {
+					ctx.ui.notify("Enter three characters", "warning");
+					return null;
+				}
+				const segments = Array.from(segmenter.segment(trimmed), (entry) => entry.segment)
+					.map((segment) => segment.trim())
+					.filter(Boolean);
+				if (segments.length < 3) {
+					ctx.ui.notify("Enter three characters", "warning");
+					return null;
+				}
+				return segments.slice(0, 3).join("");
+			};
+
 			const parseProviderLabel = (raw: string): string | null => {
 				const trimmed = raw.trim();
 				if (!trimmed) {
@@ -891,6 +907,14 @@ export async function showSettingsUI(
 					if (currentCategory === "display-provider") {
 						customHandlers.providerLabel = buildInputSubmenu("Provider Label", parseProviderLabel);
 					}
+					if (currentCategory === "display-status") {
+						customHandlers.statusIconPack = buildInputSubmenu(
+							"Custom Status Icons",
+							parseStatusIconCustom,
+							undefined,
+							"Enter three characters in order: OK, warning, error (e.g. ✓⚠×). Applied to none, minor/maintenance/unknown, and major/critical statuses.",
+						);
+					}
 					if (currentCategory === "display-divider") {
 						customHandlers.dividerCharacter = buildInputSubmenu("Divider Character", parseDividerCharacter);
 						customHandlers.dividerBlanks = buildInputSubmenu("Divider Blanks", parseDividerBlanks);
@@ -898,6 +922,7 @@ export async function showSettingsUI(
 					attachCustomInputs(items, customHandlers);
 
 					handleChange = (id, value) => {
+						const previousStatusPack = settings.display.statusIconPack;
 						settings = applyDisplayChange(settings, id, value);
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
@@ -906,9 +931,12 @@ export async function showSettingsUI(
 							tui.requestRender();
 							return;
 						}
-						if (currentCategory === "display-status" && id === "statusIndicatorMode") {
-							rebuild();
-							tui.requestRender();
+						if (currentCategory === "display-status") {
+							if (id === "statusIndicatorMode") {
+								rebuild();
+								tui.requestRender();
+								return;
+							}
 						}
 					};
 

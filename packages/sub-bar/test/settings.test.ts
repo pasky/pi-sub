@@ -172,8 +172,19 @@ test("status icon pack parsing handles preview labels", () => {
 	applyDisplayChange(settings, "statusIconPack", "emoji (✅ ⚠️ 🔴)");
 	assert.equal(settings.display.statusIconPack, "emoji");
 
-	applyDisplayChange(settings, "statusIconPack", "random");
-	assert.equal(settings.display.statusIconPack, "emoji");
+	applyDisplayChange(settings, "statusIconPack", "faces (😎 😳 😵)");
+	assert.equal(settings.display.statusIconPack, "custom");
+	assert.equal(settings.display.statusIconCustom, "😎😳😵");
+
+	applyDisplayChange(settings, "statusIconPack", "__custom__");
+	assert.equal(settings.display.statusIconPack, "custom");
+});
+
+test("applyDisplayChange stores custom status icons", () => {
+	const settings = getDefaultSettings();
+	applyDisplayChange(settings, "statusIconCustom", "✓⚠×");
+	assert.equal(settings.display.statusIconPack, "custom");
+	assert.equal(settings.display.statusIconCustom, "✓⚠×");
 });
 
 test("decodeDisplayShareString rejects invalid payloads", () => {

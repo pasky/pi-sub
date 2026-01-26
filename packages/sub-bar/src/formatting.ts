@@ -265,6 +265,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const statusDismissOk = settings?.display.statusDismissOk ?? true;
 	const statusMode = settings?.display.statusIndicatorMode ?? "icon";
 	const statusIconPack = settings?.display.statusIconPack ?? "emoji";
+	const statusIconCustom = settings?.display.statusIconCustom;
 	const showStatusText = settings?.display.statusText ?? false;
 	const providerLabelSetting = settings?.display.providerLabel ?? "none";
 	const showColon = settings?.display.providerLabelColon ?? true;
@@ -295,7 +296,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 		: "";
 	const providerLabelWithColon = providerLabel && showColon ? `${providerLabel}:` : providerLabel;
 
-	const icon = showIcon && status ? getStatusIcon(status, statusIconPack) : "";
+	const icon = showIcon && status ? getStatusIcon(status, statusIconPack, statusIconCustom) : "";
 	const statusText = showText && status ? getStatusLabel(status) : "";
 	const rawStatusColor = status
 		? getStatusColor(status.indicator, settings?.display.colorScheme ?? "base-warning-error")

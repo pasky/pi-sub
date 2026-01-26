@@ -334,17 +334,37 @@ export function buildDisplayProviderItems(settings: Settings): SettingItem[] {
 	];
 }
 
-const STATUS_ICON_PACK_PREVIEW: Record<Exclude<StatusIconPack, "shapes">, string> = {
+const STATUS_ICON_PACK_PREVIEW = {
 	minimal: "minimal (✓ ⚠ ×)",
 	emoji: "emoji (✅ ⚠️ 🔴)",
-};
+	faces: "faces (😎 😳 😵)",
+} as const;
 
-function formatStatusIconPack(pack: Exclude<StatusIconPack, "shapes">): string {
+const STATUS_ICON_FACES_PRESET = "😎😳😵";
+
+const STATUS_ICON_CUSTOM_FALLBACK = ["✓", "⚠", "×"];
+const STATUS_ICON_CUSTOM_SEGMENTER = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+function resolveCustomStatusIcons(value?: string): [string, string, string] {
+	if (!value) return STATUS_ICON_CUSTOM_FALLBACK as [string, string, string];
+	const segments = Array.from(STATUS_ICON_CUSTOM_SEGMENTER.segment(value), (entry) => entry.segment)
+		.map((segment) => segment.trim())
+		.filter(Boolean);
+	if (segments.length < 3) return STATUS_ICON_CUSTOM_FALLBACK as [string, string, string];
+	return [segments[0], segments[1], segments[2]] as [string, string, string];
+}
+
+function formatCustomStatusIcons(value?: string): string {
+	return resolveCustomStatusIcons(value).join(" ");
+}
+
+function formatStatusIconPack(pack: Exclude<StatusIconPack, "custom">): string {
 	return STATUS_ICON_PACK_PREVIEW[pack] ?? pack;
 }
 
-function parseStatusIconPack(value: string): Exclude<StatusIconPack, "shapes"> {
+function parseStatusIconPack(value: string): StatusIconPack {
 	if (value.startsWith("minimal")) return "minimal";
+	if (value.startsWith("emoji")) return "emoji";
 	return "emoji";
 }
 
@@ -361,15 +381,19 @@ export function buildDisplayStatusItems(settings: Settings): SettingItem[] {
 	];
 
 	if (mode === "icon" || mode === "icon+color") {
+		const pack = settings.display.statusIconPack ?? "emoji";
+		const customIcons = settings.display.statusIconCustom;
 		items.push({
 			id: "statusIconPack",
 			label: "Status Icon Pack",
-			currentValue: formatStatusIconPack((settings.display.statusIconPack === "minimal" ? "minimal" : "emoji")),
+			currentValue: pack === "custom" ? formatCustomStatusIcons(customIcons) : formatStatusIconPack(pack),
 			values: [
 				formatStatusIconPack("minimal"),
 				formatStatusIconPack("emoji"),
+				STATUS_ICON_PACK_PREVIEW.faces,
+				CUSTOM_OPTION,
 			],
-			description: "Pick the icon set used for status indicators.",
+			description: "Pick the icon set used for status indicators. Choose custom to edit icons.",
 		});
 	}
 
@@ -541,7 +565,25 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.statusIndicatorMode = value as StatusIndicatorMode;
 			break;
 		case "statusIconPack":
-			settings.display.statusIconPack = parseStatusIconPack(value);
+			if (value === CUSTOM_OPTION) {
+				settings.display.statusIconPack = "custom";
+				break;
+			}
+			if (value.startsWith("minimal") || value.startsWith("emoji")) {
+				settings.display.statusIconPack = parseStatusIconPack(value);
+				break;
+			}
+			if (value.startsWith("faces")) {
+				settings.display.statusIconCustom = STATUS_ICON_FACES_PRESET;
+				settings.display.statusIconPack = "custom";
+				break;
+			}
+			settings.display.statusIconCustom = value;
+			settings.display.statusIconPack = "custom";
+			break;
+		case "statusIconCustom":
+			settings.display.statusIconCustom = value;
+			settings.display.statusIconPack = "custom";
 			break;
 		case "statusText":
 			settings.display.statusText = value === "on";

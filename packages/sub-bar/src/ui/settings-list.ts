@@ -59,6 +59,20 @@ export class SettingsList implements Component {
 		}
 	}
 
+	getSelectedId(): string | null {
+		const displayItems = this.searchEnabled ? this.filteredItems : this.items;
+		const item = displayItems[this.selectedIndex];
+		return item?.id ?? null;
+	}
+
+	setSelectedId(id: string): void {
+		const displayItems = this.searchEnabled ? this.filteredItems : this.items;
+		const index = displayItems.findIndex((item) => item.id === id);
+		if (index >= 0) {
+			this.selectedIndex = index;
+		}
+	}
+
 	invalidate(): void {
 		this.submenuComponent?.invalidate?.();
 	}

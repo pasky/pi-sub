@@ -96,6 +96,23 @@ test("status indicator layout includes icon text provider colon", () => {
 	assert.ok(output.startsWith("⚠ Outage Codex:"));
 });
 
+test("custom status icon pack uses provided characters", () => {
+	const settings = getDefaultSettings();
+	settings.display.statusIndicatorMode = "icon";
+	settings.display.statusIconPack = "custom";
+	settings.display.statusIconCustom = "o!x";
+	settings.display.statusText = false;
+	settings.display.statusDismissOk = false;
+
+	const output = formatUsageStatus(
+		theme,
+		buildUsageWithStatus("major"),
+		undefined,
+		settings,
+	);
+	assert.ok(output.includes("x"));
+});
+
 test("status dismiss ok hides operational text", () => {
 	const settings = getDefaultSettings();
 	settings.display.statusIndicatorMode = "icon+color";

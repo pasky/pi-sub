@@ -82,7 +82,7 @@ export type StatusIndicatorMode = "icon" | "color" | "icon+color";
 /**
  * Status icon pack selection
  */
-export type StatusIconPack = "minimal" | "emoji";
+export type StatusIconPack = "minimal" | "emoji" | "custom";
 
 export interface UsageColorTargets {
 	title: boolean;
@@ -297,6 +297,8 @@ export interface DisplaySettings {
 	statusIndicatorMode: StatusIndicatorMode;
 	/** Status icon pack */
 	statusIconPack: StatusIconPack;
+	/** Custom status icon pack (three characters) */
+	statusIconCustom: string;
 	/** Show textual status */
 	statusText: boolean;
 	/** Dismiss status when operational */
@@ -461,6 +463,7 @@ export function getDefaultSettings(): Settings {
 			resetTimeContainment: "blank",
 			statusIndicatorMode: "icon",
 			statusIconPack: "emoji",
+			statusIconCustom: "✓⚠×",
 			statusText: false,
 			statusDismissOk: true,
 			showProviderName: true,
