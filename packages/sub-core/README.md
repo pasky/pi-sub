@@ -11,7 +11,21 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 
 ### Installation
 
-Clone the monorepo and register the extension with pi. `sub-core` can power multiple `sub-*` extensions (some with UI, some without), so you typically install it alongside whichever clients you want:
+Install via the pi package manager (recommended):
+
+```bash
+pi install npm:@marckrenn/pi-sub-core
+```
+
+Use `-l` to install into project settings instead of global:
+
+```bash
+pi install -l npm:@marckrenn/pi-sub-core
+```
+
+For a UI, also install a display extension like `sub-bar` from the same repo (see the root README for the full setup).
+
+Manual install (local development):
 
 ```bash
 git clone https://github.com/marckrenn/pi-sub.git
@@ -25,8 +39,6 @@ Alternative (no symlink): add it to `~/.pi/agent/settings.json`:
   "extensions": ["/path/to/pi-sub/packages/sub-core/index.ts"]
 }
 ```
-
-For a UI, also install a display extension like `sub-bar` from the same repo (see the root README for the full setup).
 
 ### Tool Access
 

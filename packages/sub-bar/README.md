@@ -47,7 +47,21 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 
 ## Installation
 
-Install **both** `sub-core` and `sub-bar` extensions from the monorepo. `sub-bar` depends on `sub-core` for data (it will not render without it), and `sub-core` is shared across the wider `sub-*` ecosystem (some extensions are UI-only, others run headless and just consume events).
+Install via the pi package manager (recommended). `sub-bar` depends on `sub-core` for data (it will not render without it):
+
+```bash
+pi install npm:@marckrenn/pi-sub-core
+pi install npm:@marckrenn/pi-sub-bar
+```
+
+Use `-l` to install into project settings instead of global:
+
+```bash
+pi install -l npm:@marckrenn/pi-sub-core
+pi install -l npm:@marckrenn/pi-sub-bar
+```
+
+Manual install (local development):
 
 ```bash
 git clone https://github.com/marckrenn/pi-sub.git
