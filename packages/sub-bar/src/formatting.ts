@@ -143,13 +143,20 @@ function applyBaseTextColor(theme: Theme, color: BaseTextColor, text: string): s
 	return theme.fg(resolveDividerColor(color), text);
 }
 
-function resolveUsageColorTargets(settings?: Settings): { title: boolean; timer: boolean; bar: boolean; usageLabel: boolean } {
+function resolveUsageColorTargets(settings?: Settings): {
+	title: boolean;
+	timer: boolean;
+	bar: boolean;
+	usageLabel: boolean;
+	status: boolean;
+} {
 	const targets = settings?.display.usageColorTargets;
 	return {
 		title: targets?.title ?? true,
 		timer: targets?.timer ?? true,
 		bar: targets?.bar ?? true,
 		usageLabel: targets?.usageLabel ?? true,
+		status: targets?.status ?? true,
 	};
 }
 
@@ -263,6 +270,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const showColon = settings?.display.providerLabelColon ?? true;
 	const boldProviderLabel = settings?.display.providerLabelBold ?? false;
 	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
+	const usageTargets = resolveUsageColorTargets(settings);
 
 	const statusActive = Boolean(status && (!statusDismissOk || status.indicator !== "none"));
 	const showIcon = statusActive && (statusMode === "icon" || statusMode === "icon+color");
@@ -289,11 +297,19 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 
 	const icon = showIcon && status ? getStatusIcon(status, statusIconPack) : "";
 	const statusText = showText && status ? getStatusLabel(status) : "";
-	const statusColor = showColor && status ? getStatusColor(status.indicator, settings?.display.colorScheme ?? "base-warning-error") : "base";
-	const labelColor = showColor ? resolveStatusTintColor(statusColor, baseTextColor) : baseTextColor;
+	const rawStatusColor = status
+		? getStatusColor(status.indicator, settings?.display.colorScheme ?? "base-warning-error")
+		: "base";
+	const statusTint = usageTargets.status
+		? resolveStatusTintColor(rawStatusColor, baseTextColor)
+		: baseTextColor;
+	const labelColor = showColor && usageTargets.status ? statusTint : baseTextColor;
+	const iconColor = showIcon
+		? (statusMode === "icon" ? statusTint : labelColor)
+		: baseTextColor;
 
 	const parts: string[] = [];
-	if (icon) parts.push(applyBaseTextColor(theme, labelColor, icon));
+	if (icon) parts.push(applyBaseTextColor(theme, iconColor, icon));
 	if (statusText) parts.push(applyBaseTextColor(theme, labelColor, statusText));
 	if (providerLabelWithColon) {
 		const colored = applyBaseTextColor(theme, labelColor, providerLabelWithColon);

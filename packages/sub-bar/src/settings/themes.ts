@@ -160,6 +160,7 @@ export function resolveDisplayThemeTarget(
 					timer: true,
 					bar: true,
 					usageLabel: true,
+					status: true,
 				},
 				resetTimePosition: "off",
 				resetTimeFormat: "relative",
@@ -223,8 +224,9 @@ export function buildRandomDisplay(base: DisplaySettings): DisplaySettings {
 		timer: randomBool(),
 		bar: randomBool(),
 		usageLabel: randomBool(),
+		status: randomBool(),
 	};
-	if (!usageColorTargets.title && !usageColorTargets.timer && !usageColorTargets.bar && !usageColorTargets.usageLabel) {
+	if (!usageColorTargets.title && !usageColorTargets.timer && !usageColorTargets.bar && !usageColorTargets.usageLabel && !usageColorTargets.status) {
 		usageColorTargets.bar = true;
 	}
 	display.usageColorTargets = usageColorTargets;

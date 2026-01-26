@@ -90,6 +90,7 @@ export function resolveUsageColorTargets(targets?: UsageColorTargets): UsageColo
 		timer: targets?.timer ?? true,
 		bar: targets?.bar ?? true,
 		usageLabel: targets?.usageLabel ?? true,
+		status: targets?.status ?? true,
 	};
 }
 
@@ -100,9 +101,10 @@ export function formatUsageColorTargetsSummary(targets?: UsageColorTargets): str
 		resolved.timer ? "Timer" : null,
 		resolved.bar ? "Bar" : null,
 		resolved.usageLabel ? "Usage label" : null,
+		resolved.status ? "Status" : null,
 	].filter(Boolean) as string[];
 	if (enabled.length === 0) return "off";
-	if (enabled.length === 4) return "all";
+	if (enabled.length === 5) return "all";
 	return enabled.join(", ");
 }
 
@@ -137,6 +139,13 @@ export function buildUsageColorTargetItems(settings: Settings): SettingItem[] {
 			values: ["on", "off"],
 			description: "Color the percentage text by usage.",
 		},
+		{
+			id: "usageColorStatus",
+			label: "Status",
+			currentValue: targets.status ? "on" : "off",
+			values: ["on", "off"],
+			description: "Color the status indicator by status.",
+		},
 	];
 }
 
@@ -158,20 +167,20 @@ export function buildDisplayColorItems(settings: Settings): SettingItem[] {
 		},
 		{
 			id: "colorScheme",
-			label: "Color Scheme",
+			label: "Color Indicator Scheme",
 			currentValue: settings.display.colorScheme,
 			values: [
 				"base-warning-error",
 				"success-base-warning-error",
 				"monochrome",
 			] as ColorScheme[],
-			description: "Choose how usage levels are color-coded.",
+			description: "Choose how usage/status indicators are color-coded.",
 		},
 		{
 			id: "usageColorTargets",
-			label: "Usage Color Targets",
+			label: "Color Indicator Targets",
 			currentValue: formatUsageColorTargetsSummary(settings.display.usageColorTargets),
-			description: "Pick which elements use the usage color scheme.",
+			description: "Pick which elements use the indicator colors.",
 		},
 		{
 			id: "errorThreshold",
@@ -508,6 +517,12 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.usageColorTargets = {
 				...resolveUsageColorTargets(settings.display.usageColorTargets),
 				usageLabel: value === "on",
+			};
+			break;
+		case "usageColorStatus":
+			settings.display.usageColorTargets = {
+				...resolveUsageColorTargets(settings.display.usageColorTargets),
+				status: value === "on",
 			};
 			break;
 		case "usageColorTargets":

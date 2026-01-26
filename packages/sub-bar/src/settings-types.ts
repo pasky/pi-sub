@@ -89,6 +89,7 @@ export interface UsageColorTargets {
 	timer: boolean;
 	bar: boolean;
 	usageLabel: boolean;
+	status: boolean;
 }
 
 /**
@@ -453,6 +454,7 @@ export function getDefaultSettings(): Settings {
 				timer: true,
 				bar: true,
 				usageLabel: true,
+				status: true,
 			},
 			resetTimePosition: "front",
 			resetTimeFormat: "relative",

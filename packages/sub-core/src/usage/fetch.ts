@@ -183,11 +183,13 @@ export async function fetchUsageEntries(
 	const concurrency = Math.max(1, Math.min(PROVIDER_FETCH_CONCURRENCY, providers.length));
 	const results = await mapWithConcurrency(providers, concurrency, async (provider) => {
 		const result = await fetchUsageForProvider(deps, settings, provider, options);
-		const usage = result.usage ? { ...result.usage, status: result.status } : undefined;
+		const usage = result.usage
+			? ({ ...result.usage, status: result.status } as UsageSnapshot)
+			: undefined;
 		if (!usage || (usage.error && isExpectedMissingData(usage.error))) {
 			return undefined;
 		}
-		return { provider, usage };
+		return { provider, usage } as ProviderUsageEntry;
 	});
-	return results.filter((entry): entry is ProviderUsageEntry => Boolean(entry));
+	return results.filter(Boolean) as ProviderUsageEntry[];
 }

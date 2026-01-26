@@ -70,6 +70,8 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 	let usageRefreshInterval: ReturnType<typeof setInterval> | undefined;
 	let statusRefreshInterval: ReturnType<typeof setInterval> | undefined;
 	let lastContext: ExtensionContext | undefined;
+	let lastUsageRefreshAt = 0;
+	let lastStatusRefreshAt = 0;
 	let settings: Settings = loadSettings();
 	let lastState: SubCoreState = {};
 
@@ -126,12 +128,20 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 
 	async function refresh(ctx: ExtensionContext, options?: { force?: boolean; allowStaleCache?: boolean }) {
 		lastContext = ctx;
-		await controller.refresh(ctx, settings, controllerState, emitUpdate, options);
+		try {
+			await controller.refresh(ctx, settings, controllerState, emitUpdate, options);
+		} finally {
+			lastUsageRefreshAt = Date.now();
+		}
 	}
 
 	async function refreshStatus(ctx: ExtensionContext, options?: { force?: boolean; allowStaleCache?: boolean }) {
 		lastContext = ctx;
-		await controller.refreshStatus(ctx, settings, controllerState, emitUpdate, options);
+		try {
+			await controller.refreshStatus(ctx, settings, controllerState, emitUpdate, options);
+		} finally {
+			lastStatusRefreshAt = Date.now();
+		}
 	}
 
 	async function cycleProvider(ctx: ExtensionContext): Promise<void> {
@@ -150,20 +160,26 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 
 		const usageIntervalMs = settings.behavior.refreshInterval * 1000;
 		if (usageIntervalMs > 0) {
+			const usageTickMs = Math.min(usageIntervalMs, 10000);
 			usageRefreshInterval = setInterval(() => {
-				if (lastContext) {
+				if (!lastContext) return;
+				const elapsed = lastUsageRefreshAt ? Date.now() - lastUsageRefreshAt : usageIntervalMs + 1;
+				if (elapsed >= usageIntervalMs) {
 					void refresh(lastContext);
 				}
-			}, usageIntervalMs);
+			}, usageTickMs);
 		}
 
 		const statusIntervalMs = settings.statusRefresh.refreshInterval * 1000;
 		if (statusIntervalMs > 0) {
+			const statusTickMs = Math.min(statusIntervalMs, 10000);
 			statusRefreshInterval = setInterval(() => {
-				if (lastContext) {
+				if (!lastContext) return;
+				const elapsed = lastStatusRefreshAt ? Date.now() - lastStatusRefreshAt : statusIntervalMs + 1;
+				if (elapsed >= statusIntervalMs) {
 					void refreshStatus(lastContext);
 				}
-			}, statusIntervalMs);
+			}, statusTickMs);
 		}
 	}
 
