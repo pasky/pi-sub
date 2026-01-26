@@ -323,7 +323,7 @@ export default function createExtension(pi: ExtensionAPI) {
 
 	function renderCurrent(ctx: ExtensionContext): void {
 		if (!coreAvailable) {
-			renderUsageWidget(ctx, undefined, "sub-core not installed");
+			renderUsageWidget(ctx, undefined, "pi-sub-core required. install with: pi install npm:@marckrenn/pi-sub-core");
 			return;
 		}
 		const usage = resolveDisplayedUsage();
