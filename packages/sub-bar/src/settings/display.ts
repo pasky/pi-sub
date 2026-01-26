@@ -433,6 +433,13 @@ export function buildDisplayDividerItems(settings: Settings): SettingItem[] {
 			description: "Color used for divider glyphs and lines.",
 		},
 		{
+			id: "statusProviderDivider",
+			label: "Status/Provider Divider",
+			currentValue: settings.display.statusProviderDivider ? "on" : "off",
+			values: ["on", "off"],
+			description: "Add a divider between status and provider label.",
+		},
+		{
 			id: "dividerBlanks",
 			label: "Blanks Before/After Divider",
 			currentValue: String(settings.display.dividerBlanks),
@@ -583,6 +590,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "statusIconCustom":
 			settings.display.statusIconCustom = value;
 			settings.display.statusIconPack = "custom";
+			break;
+		case "statusProviderDivider":
+			settings.display.statusProviderDivider = value === "on";
 			break;
 		case "statusDismissOk":
 			settings.display.statusDismissOk = value === "on";

@@ -187,6 +187,14 @@ test("applyDisplayChange stores custom status icons", () => {
 	assert.equal(settings.display.statusIconCustom, "✓⚠×?");
 });
 
+test("applyDisplayChange toggles status/provider divider", () => {
+	const settings = getDefaultSettings();
+	applyDisplayChange(settings, "statusProviderDivider", "on");
+	assert.equal(settings.display.statusProviderDivider, true);
+	applyDisplayChange(settings, "statusProviderDivider", "off");
+	assert.equal(settings.display.statusProviderDivider, false);
+});
+
 test("decodeDisplayShareString rejects invalid payloads", () => {
 	assert.equal(decodeDisplayShareString("NoSeparator"), null);
 	assert.equal(decodeDisplayShareString("Name:"), null);

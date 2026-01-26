@@ -306,11 +306,27 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 		? resolveStatusTintColor(rawStatusColor, baseTextColor)
 		: baseTextColor;
 	const statusColor = statusTint;
+	const dividerEnabled = settings?.display.statusProviderDivider ?? false;
+	const dividerChar = settings?.display.dividerCharacter ?? "│";
+	const dividerColor = resolveDividerColor(settings?.display.dividerColor);
+	const dividerGlyph = dividerChar === "none"
+		? ""
+		: dividerChar === "blank"
+			? " "
+			: dividerChar;
+
+	const statusParts: string[] = [];
+	if (icon) statusParts.push(applyBaseTextColor(theme, statusColor, icon));
+	if (statusText) statusParts.push(applyBaseTextColor(theme, statusColor, statusText));
 
 	const parts: string[] = [];
-	if (icon) parts.push(applyBaseTextColor(theme, statusColor, icon));
-	if (statusText) parts.push(applyBaseTextColor(theme, statusColor, statusText));
+	if (statusParts.length > 0) {
+		parts.push(statusParts.join(" "));
+	}
 	if (providerLabelWithColon) {
+		if (statusParts.length > 0 && dividerEnabled && dividerGlyph) {
+			parts.push(theme.fg(dividerColor, dividerGlyph));
+		}
 		const colored = applyBaseTextColor(theme, baseTextColor, providerLabelWithColon);
 		parts.push(boldProviderLabel ? theme.bold(colored) : colored);
 	}

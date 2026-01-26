@@ -297,8 +297,10 @@ export interface DisplaySettings {
 	statusIndicatorMode: StatusIndicatorMode;
 	/** Status icon pack */
 	statusIconPack: StatusIconPack;
-	/** Custom status icon pack (three characters) */
+	/** Custom status icon pack (four characters) */
 	statusIconCustom: string;
+	/** Show divider between status and provider */
+	statusProviderDivider: boolean;
 	/** Dismiss status when operational */
 	statusDismissOk: boolean;
 	/** Show provider display name */
@@ -462,6 +464,7 @@ export function getDefaultSettings(): Settings {
 			statusIndicatorMode: "icon",
 			statusIconPack: "emoji",
 			statusIconCustom: "✓⚠×?",
+			statusProviderDivider: false,
 			statusDismissOk: true,
 			showProviderName: true,
 			providerLabel: "none",

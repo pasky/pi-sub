@@ -167,6 +167,7 @@ export function resolveDisplayThemeTarget(
 				resetTimeContainment: "blank",
 				statusIndicatorMode: "icon",
 				statusIconPack: "minimal",
+				statusProviderDivider: false,
 				statusDismissOk: true,
 				showProviderName: false,
 				providerLabel: "none",
@@ -234,6 +235,7 @@ export function buildRandomDisplay(base: DisplaySettings): DisplaySettings {
 	display.resetTimeContainment = pickRandom(RANDOM_RESET_CONTAINMENTS);
 	display.statusIndicatorMode = pickRandom(RANDOM_STATUS_MODES);
 	display.statusIconPack = pickRandom(RANDOM_STATUS_PACKS);
+	display.statusProviderDivider = randomBool();
 	display.statusDismissOk = randomBool();
 	display.showProviderName = randomBool();
 	display.providerLabel = pickRandom(RANDOM_PROVIDER_LABELS);

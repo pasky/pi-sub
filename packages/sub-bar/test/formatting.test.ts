@@ -95,6 +95,23 @@ test("status indicator layout includes icon text provider colon", () => {
 	assert.ok(output.startsWith("⚠ Outage Codex:"));
 });
 
+test("status/provider divider renders only when status is present", () => {
+	const settings = getDefaultSettings();
+	settings.display.statusIndicatorMode = "icon+text";
+	settings.display.statusIconPack = "minimal";
+	settings.display.statusDismissOk = false;
+	settings.display.statusProviderDivider = true;
+	settings.display.dividerCharacter = "│";
+
+	const output = formatUsageStatus(
+		theme,
+		buildUsageWithStatus("major", "Outage"),
+		undefined,
+		settings,
+	);
+	assert.ok(output.includes("│"));
+});
+
 test("custom status icon pack uses provided characters", () => {
 	const settings = getDefaultSettings();
 	settings.display.statusIndicatorMode = "icon";
