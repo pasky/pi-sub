@@ -22,9 +22,9 @@ Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), 
 
 | Package | Description |
 | --- | --- |
-| `sub-compare` | Usage comparison chart across multiple providers. |
-| `sub-model-switcher` | Auto model/provider switching when reaching a usage threshold. |
-| `sub-account-switcher` | Cycle between multiple subscriptions at usage thresholds. |
+| `pi-sub-compare` | Usage comparison chart across multiple providers. |
+| `pi-sub-model-switcher` | Auto model/provider switching when reaching a usage threshold. |
+| `pi-sub-account-switcher` | Cycle between multiple subscriptions at usage thresholds. |
 
 If you’d like to work on these, PRs or standalone packages are welcome.
 
