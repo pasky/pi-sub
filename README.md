@@ -33,6 +33,15 @@ If you’d like to work on these, PRs or standalone packages are welcome.
 - Node.js >= 20 (see `.nvmrc`)
 - npm (bundled with Node)
 
+## Pi package manager
+
+You can install the packages via `pi install`:
+
+```bash
+pi install npm:@marckrenn/pi-sub-core
+pi install npm:@marckrenn/pi-sub-bar
+```
+
 ## Quick Start (manual install)
 
 ```bash
@@ -55,15 +64,6 @@ Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
 ```
 
 > You only install `sub-core` + `sub-bar`. `sub-shared` is an npm dependency and is pulled automatically.
-
-## Pi package manager
-
-You can install the packages via `pi install`:
-
-```bash
-pi install npm:@marckrenn/pi-sub-core
-pi install npm:@marckrenn/pi-sub-bar
-```
 
 ## Communication model (core ↔ clients)
 
