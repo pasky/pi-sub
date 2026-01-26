@@ -4,7 +4,8 @@
 
 import * as fs from "node:fs";
 import * as os from "node:os";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import type { ExecFileSyncOptionsWithStringEncoding } from "node:child_process";
 import type { Dependencies } from "./types.js";
 
 /**
@@ -27,8 +28,8 @@ export function createDefaultDependencies(): Dependencies {
 				return false;
 			}
 		},
-		execSync: (command: string, options?: { encoding: string; timeout?: number; env?: NodeJS.ProcessEnv; stdio?: any[] }) => {
-			return execSync(command, options as Parameters<typeof execSync>[1]) as string;
+		execFileSync: (file: string, args: string[], options?: ExecFileSyncOptionsWithStringEncoding) => {
+			return execFileSync(file, args, options) as string;
 		},
 		homedir: () => os.homedir(),
 		env: process.env,

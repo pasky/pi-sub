@@ -36,8 +36,12 @@ export function decodeDisplayShareString(input: string): DecodedDisplayShare | n
 	if (!payload) return null;
 	try {
 		const decoded = Buffer.from(payload, "base64url").toString("utf-8");
-		const parsed = JSON.parse(decoded) as Partial<DisplaySharePayload> | Settings["display"];
+		const parsed = JSON.parse(decoded) as unknown;
+		if (!parsed || typeof parsed !== "object") return null;
 		const displayCandidate = (parsed as DisplaySharePayload).display ?? parsed;
+		if (!displayCandidate || typeof displayCandidate !== "object" || Array.isArray(displayCandidate)) {
+			return null;
+		}
 		const merged = mergeSettings({ display: displayCandidate } as Partial<Settings>).display;
 		const version = typeof (parsed as DisplaySharePayload).v === "number" ? (parsed as DisplaySharePayload).v : 0;
 		return {

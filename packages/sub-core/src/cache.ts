@@ -34,6 +34,22 @@ export type CacheSnapshotListener = (cache: Cache) => void;
 const cacheUpdateListeners = new Set<CacheUpdateListener>();
 const cacheSnapshotListeners = new Set<CacheSnapshotListener>();
 
+let lastCacheSnapshot: Cache | null = null;
+let lastCacheContent = "";
+let lastCacheMtimeMs = 0;
+
+function updateCacheSnapshot(cache: Cache, content: string, mtimeMs: number): void {
+	lastCacheSnapshot = cache;
+	lastCacheContent = content;
+	lastCacheMtimeMs = mtimeMs;
+}
+
+function resetCacheSnapshot(): void {
+	lastCacheSnapshot = {};
+	lastCacheContent = "";
+	lastCacheMtimeMs = 0;
+}
+
 export function onCacheUpdate(listener: CacheUpdateListener): () => void {
 	cacheUpdateListeners.add(listener);
 	return () => {
@@ -98,26 +114,49 @@ function ensureCacheDir(): void {
 export function readCache(): Cache {
 	const storage = getStorage();
 	try {
-		if (storage.exists(CACHE_PATH)) {
-			const content = storage.readFile(CACHE_PATH);
-			if (content) {
+		const cacheExists = storage.exists(CACHE_PATH);
+		if (!cacheExists) {
+			if (lastCacheMtimeMs !== 0 || lastCacheContent) {
+				resetCacheSnapshot();
+			}
+			return lastCacheSnapshot ?? {};
+		}
+
+		const stat = fs.statSync(CACHE_PATH, { throwIfNoEntry: false });
+		if (stat && stat.mtimeMs === lastCacheMtimeMs && lastCacheSnapshot) {
+			return lastCacheSnapshot;
+		}
+
+		const content = storage.readFile(CACHE_PATH);
+		if (!content) {
+			updateCacheSnapshot({}, "", stat?.mtimeMs ?? 0);
+			return {};
+		}
+		if (!stat && content === lastCacheContent && lastCacheSnapshot) {
+			return lastCacheSnapshot;
+		}
+
+		try {
+			const parsed = JSON.parse(content) as Cache;
+			updateCacheSnapshot(parsed, content, stat?.mtimeMs ?? Date.now());
+			return parsed;
+		} catch (error) {
+			const lastBrace = content.lastIndexOf("}");
+			if (lastBrace > 0) {
+				const trimmed = content.slice(0, lastBrace + 1);
 				try {
-					return JSON.parse(content) as Cache;
-				} catch (error) {
-					const lastBrace = content.lastIndexOf("}");
-					if (lastBrace > 0) {
-						const trimmed = content.slice(0, lastBrace + 1);
-						try {
-							const parsed = JSON.parse(trimmed) as Cache;
-							writeCache(parsed);
-							return parsed;
-						} catch {
-							// fall through to log below
-						}
+					const parsed = JSON.parse(trimmed) as Cache;
+					if (stat) {
+						writeCache(parsed);
+					} else {
+						updateCacheSnapshot(parsed, trimmed, Date.now());
 					}
-					console.error("Failed to read cache:", error);
+					return parsed;
+				} catch {
+					// fall through to log below
 				}
 			}
+			console.error("Failed to read cache:", error);
 		}
 	} catch (error) {
 		console.error("Failed to read cache:", error);
@@ -133,9 +172,17 @@ function writeCache(cache: Cache): void {
 	try {
 		ensureCacheDir();
 		const content = JSON.stringify(cache, null, 2);
+		const cacheExists = storage.exists(CACHE_PATH);
+		if (cacheExists && content === lastCacheContent) {
+			const stat = fs.statSync(CACHE_PATH, { throwIfNoEntry: false });
+			updateCacheSnapshot(cache, content, stat?.mtimeMs ?? lastCacheMtimeMs);
+			return;
+		}
 		const tempPath = `${CACHE_PATH}.${process.pid}.tmp`;
 		fs.writeFileSync(tempPath, content, "utf-8");
 		fs.renameSync(tempPath, CACHE_PATH);
+		const stat = fs.statSync(CACHE_PATH, { throwIfNoEntry: false });
+		updateCacheSnapshot(cache, content, stat?.mtimeMs ?? Date.now());
 	} catch (error) {
 		console.error("Failed to write cache:", error);
 	}
@@ -183,6 +230,7 @@ export function watchCacheUpdates(options?: CacheWatchOptions): () => void {
 			if (content === lastSnapshot) return;
 			lastSnapshot = content;
 			const cache = JSON.parse(content) as Cache;
+			updateCacheSnapshot(cache, content, stat.mtimeMs);
 			emitCacheSnapshot(cache);
 			for (const [provider, entry] of Object.entries(cache)) {
 				emitCacheUpdate(provider as ProviderName, entry);
@@ -245,9 +293,10 @@ async function waitForLockAndRecheck(
  */
 export async function getCachedData(
 	provider: ProviderName,
-	ttlMs: number
+	ttlMs: number,
+	cacheSnapshot?: Cache
 ): Promise<CacheEntry | null> {
-	const cache = readCache();
+	const cache = cacheSnapshot ?? readCache();
 	const entry = cache[provider];
 
 	if (!entry) {
@@ -384,6 +433,7 @@ export function clearCache(provider?: ProviderName): void {
 			if (storage.exists(CACHE_PATH)) {
 				storage.removeFile(CACHE_PATH);
 			}
+			resetCacheSnapshot();
 		} catch (error) {
 			console.error("Failed to clear cache:", error);
 		}

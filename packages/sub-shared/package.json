@@ -11,7 +11,8 @@
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "check:watch": "tsc --noEmit --watch"
   },
   "devDependencies": {
     "typescript": "^5.8.0"

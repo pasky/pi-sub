@@ -12,10 +12,13 @@
     "extensions": ["./index.ts"]
   },
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "check:watch": "tsc --noEmit --watch",
+    "test": "tsx test/all.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.8.0"
   },
   "dependencies": {

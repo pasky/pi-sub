@@ -6,7 +6,7 @@ import type { Dependencies, ProviderName, ProviderStatus, UsageSnapshot } from "
 import type { Settings } from "../settings-types.js";
 import type { ProviderUsageEntry } from "./types.js";
 import { createProvider } from "../providers/registry.js";
-import { fetchWithCache, getCachedData, readCache, updateCacheStatus } from "../cache.js";
+import { fetchWithCache, getCachedData, readCache, updateCacheStatus, type Cache } from "../cache.js";
 import { fetchProviderStatusWithFallback, providerHasStatus } from "../providers/status.js";
 import { hasProviderCredentials } from "../providers/registry.js";
 import { isExpectedMissingData } from "../errors.js";
@@ -17,6 +17,30 @@ export function getCacheTtlMs(settings: Settings): number {
 
 export function getStatusCacheTtlMs(settings: Settings): number {
 	return settings.statusRefresh.refreshInterval * 1000;
+}
+
+const PROVIDER_FETCH_CONCURRENCY = 3;
+
+async function mapWithConcurrency<T, R>(
+	items: T[],
+	limit: number,
+	mapper: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+	if (items.length === 0) return [];
+	const results = new Array<R>(items.length);
+	let nextIndex = 0;
+	const workerCount = Math.min(limit, items.length);
+	const workers = Array.from({ length: workerCount }, async () => {
+		while (true) {
+			const currentIndex = nextIndex++;
+			if (currentIndex >= items.length) {
+				return;
+			}
+			results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+		}
+	});
+	await Promise.all(workers);
+	return results;
 }
 
 function resolveStatusFetchedAt(entry?: { fetchedAt: number; statusFetchedAt?: number } | null): number | undefined {
@@ -90,7 +114,7 @@ export async function fetchUsageForProvider(
 		&& providerHasStatus(provider, providerInstance);
 
 	if (!options?.force) {
-		const cachedUsage = await getCachedData(provider, ttlMs);
+		const cachedUsage = await getCachedData(provider, ttlMs, cache);
 		if (cachedUsage) {
 			let status = cachedUsage.status;
 			if (shouldFetchStatus) {
@@ -123,10 +147,11 @@ export async function fetchUsageForProvider(
 
 export async function getCachedUsageEntry(
 	provider: ProviderName,
-	settings: Settings
+	settings: Settings,
+	cacheSnapshot?: Cache
 ): Promise<ProviderUsageEntry | undefined> {
 	const ttlMs = getCacheTtlMs(settings);
-	const cachedEntry = await getCachedData(provider, ttlMs);
+	const cachedEntry = await getCachedData(provider, ttlMs, cacheSnapshot);
 	const usage = cachedEntry?.usage ? { ...cachedEntry.usage, status: cachedEntry.status } : undefined;
 	if (!usage || (usage.error && isExpectedMissingData(usage.error))) {
 		return undefined;
@@ -138,9 +163,10 @@ export async function getCachedUsageEntries(
 	providers: ProviderName[],
 	settings: Settings
 ): Promise<ProviderUsageEntry[]> {
+	const cache = readCache();
 	const entries: ProviderUsageEntry[] = [];
 	for (const provider of providers) {
-		const entry = await getCachedUsageEntry(provider, settings);
+		const entry = await getCachedUsageEntry(provider, settings, cache);
 		if (entry) {
 			entries.push(entry);
 		}
@@ -154,14 +180,14 @@ export async function fetchUsageEntries(
 	providers: ProviderName[],
 	options?: { force?: boolean }
 ): Promise<ProviderUsageEntry[]> {
-	const entries: ProviderUsageEntry[] = [];
-	for (const provider of providers) {
+	const concurrency = Math.max(1, Math.min(PROVIDER_FETCH_CONCURRENCY, providers.length));
+	const results = await mapWithConcurrency(providers, concurrency, async (provider) => {
 		const result = await fetchUsageForProvider(deps, settings, provider, options);
 		const usage = result.usage ? { ...result.usage, status: result.status } : undefined;
 		if (!usage || (usage.error && isExpectedMissingData(usage.error))) {
-			continue;
+			return undefined;
 		}
-		entries.push({ provider, usage });
-	}
-	return entries;
+		return { provider, usage };
+	});
+	return results.filter((entry): entry is ProviderUsageEntry => Boolean(entry));
 }

@@ -33,9 +33,10 @@ function loadClaudeToken(deps: Dependencies): string | undefined {
 
 	// Try macOS Keychain (Claude Code credentials)
 	try {
-		const keychainData = deps.execSync(
-			'security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null',
-			{ encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+		const keychainData = deps.execFileSync(
+			"security",
+			["find-generic-password", "-s", "Claude Code-credentials", "-w"],
+			{ encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] }
 		).trim();
 		if (keychainData) {
 			const parsed = JSON.parse(keychainData);

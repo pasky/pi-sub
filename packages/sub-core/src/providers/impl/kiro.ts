@@ -25,16 +25,21 @@ export class KiroProvider extends BaseProvider {
 		try {
 			// Check if logged in
 			try {
-				deps.execSync("kiro-cli whoami", { encoding: "utf-8", timeout: API_TIMEOUT_MS });
+				deps.execFileSync(kiroBinary, ["whoami"], {
+					encoding: "utf-8",
+					timeout: API_TIMEOUT_MS,
+					stdio: ["ignore", "pipe", "pipe"],
+				});
 			} catch {
 				return this.emptySnapshot(notLoggedIn());
 			}
 
 			// Get usage
-			const output = deps.execSync("kiro-cli chat --no-interactive /usage", {
+			const output = deps.execFileSync(kiroBinary, ["chat", "--no-interactive", "/usage"], {
 				encoding: "utf-8",
 				timeout: CLI_TIMEOUT_MS,
 				env: { ...deps.env, TERM: "xterm-256color" },
+				stdio: ["ignore", "pipe", "pipe"],
 			});
 
 			const stripped = stripAnsi(output);

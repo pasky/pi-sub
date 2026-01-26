@@ -18,6 +18,11 @@ Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), 
 - [`packages/sub-bar`](./packages/sub-bar) — UI display client (pi extension)
 - [`packages/sub-shared`](./packages/sub-shared) — shared types + event contract (npm package)
 
+## Requirements
+
+- Node.js >= 20 (see `.nvmrc`)
+- npm (bundled with Node)
+
 ## Quick Start (manual install)
 
 ```bash
@@ -139,26 +144,37 @@ Use this rule of thumb when deciding where a feature lives:
 - **New bar style or status icon pack** → sub-bar only.
 - **New provider enablement behavior** → sub-core (and sub-bar UI can forward settings).
 
-## Development
+## Dev setup
 
 ```bash
 npm install
-npm run check
 ```
 
-Per-package checks:
+Common commands:
+
+- `npm run check` — typecheck all workspaces
+- `npm run test` — run workspace tests (sub-bar + sub-core)
+- `npm run lint` / `npm run lint:fix` — lint TypeScript
+- `npm run format` — format with Prettier
+- `npm run verify` — run check + test + lint
+
+Watch mode:
+
+```bash
+npm run check:watch -w @marckrenn/pi-sub-core
+npm run check:watch -w @marckrenn/pi-sub-bar
+npm run check:watch -w @marckrenn/pi-sub-shared
+npm run test:watch -w @marckrenn/pi-sub-bar
+```
+
+Workspace-specific commands:
 
 ```bash
 npm run check -w @marckrenn/pi-sub-core
 npm run check -w @marckrenn/pi-sub-bar
 npm run check -w @marckrenn/pi-sub-shared
-```
-
-Sub-bar tests:
-
-```bash
-cd packages/sub-bar
-npm run test
+npm run test -w @marckrenn/pi-sub-core
+npm run test -w @marckrenn/pi-sub-bar
 ```
 
 ## Release process (manual)

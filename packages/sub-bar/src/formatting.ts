@@ -3,7 +3,7 @@
  */
 
 import type { Theme } from "@mariozechner/pi-coding-agent";
-import { visibleWidth } from "@mariozechner/pi-tui";
+import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import type { RateWindow, UsageSnapshot, ProviderStatus } from "./types.js";
 import type {
 	BaseTextColor,
@@ -99,6 +99,10 @@ function getUsageColor(
 	if (effectivePercent < errorThreshold) return "error";
 	if (effectivePercent < warningThreshold) return "warning";
 	return "base";
+}
+
+function clampPercent(value: number): number {
+	return Math.max(0, Math.min(100, value));
 }
 
 function getStatusColor(
@@ -373,11 +377,12 @@ export function formatUsageWindowParts(
 	const warningThreshold = settings?.display.warningThreshold ?? 50;
 	const successThreshold = settings?.display.successThreshold ?? 75;
 
-	const usedPct = Math.round(window.usedPercent);
-	const displayPct = isCodex ? Math.max(0, Math.min(100, 100 - usedPct)) : usedPct;
+	const rawUsedPct = Math.round(window.usedPercent);
+	const usedPct = clampPercent(rawUsedPct);
+	const displayPct = isCodex ? clampPercent(100 - usedPct) : usedPct;
 	const isRemaining = isCodex;
 
-	const barPercent = Math.max(0, Math.min(100, displayPct));
+	const barPercent = clampPercent(displayPct);
 	const filled = Math.round((barPercent / 100) * barWidth);
 	const empty = Math.max(0, barWidth - filled);
 
@@ -764,6 +769,10 @@ export function formatUsageStatusWithWidth(
 		}
 	}
 	output += rest;
+
+	if (width > 0 && visibleWidth(output) > width) {
+		return truncateToWidth(output, width, "");
+	}
 
 	return output;
 }

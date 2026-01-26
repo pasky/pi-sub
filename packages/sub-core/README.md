@@ -51,24 +51,29 @@ Environment variables:
 
 If the request fails or no currency is available, extra usage amounts render without a currency symbol.
 
+## Security notes
+
+- Keep `~/.pi/agent/auth.json` readable only by your user (e.g. `chmod 600 ~/.pi/agent/auth.json`).
+- Avoid logging token-bearing headers or auth config when troubleshooting provider calls.
+
 ## Installation
 
-Clone the repo and register the extension with pi. `sub-core` can power multiple `sub-*` extensions (some with UI, some without), so you typically install it alongside whichever clients you want:
+Clone the monorepo and register the extension with pi. `sub-core` can power multiple `sub-*` extensions (some with UI, some without), so you typically install it alongside whichever clients you want:
 
 ```bash
-git clone https://github.com/marckrenn/sub-core.git
-ln -s /path/to/sub-core ~/.pi/agent/extensions/sub-core
+git clone https://github.com/marckrenn/pi-sub.git
+ln -s /path/to/pi-sub/packages/sub-core ~/.pi/agent/extensions/sub-core
 ```
 
 Alternative (no symlink): add it to `~/.pi/agent/settings.json`:
 
 ```json
 {
-  "extensions": ["/path/to/sub-core/index.ts"]
+  "extensions": ["/path/to/pi-sub/packages/sub-core/index.ts"]
 }
 ```
 
-For a UI, also install a display extension like `sub-bar`. Other `sub-*` extensions may consume the same data without UI.
+For a UI, also install a display extension like `sub-bar` from the same repo (see the root README for the full setup).
 
 ## Packaging notes (pi install compatibility)
 

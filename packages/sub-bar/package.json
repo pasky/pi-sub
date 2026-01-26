@@ -13,7 +13,9 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "tsx test/all.test.ts"
+    "check:watch": "tsc --noEmit --watch",
+    "test": "tsx test/all.test.ts",
+    "test:watch": "tsx watch test/all.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

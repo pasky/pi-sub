@@ -79,9 +79,9 @@ export function createUsageController(deps: Dependencies) {
 			state.cachedUsage = undefined;
 		}
 
-		let cachedEntry = await getCachedData(provider, settings.behavior.refreshInterval * 1000);
+		const cache = readCache();
+		let cachedEntry = await getCachedData(provider, settings.behavior.refreshInterval * 1000, cache);
 		if (!cachedEntry && options?.allowStaleCache) {
-			const cache = readCache();
 			cachedEntry = cache[provider] ?? null;
 		}
 		if (cachedEntry?.usage) {
@@ -103,7 +103,6 @@ export function createUsageController(deps: Dependencies) {
 			let fallback = state.cachedUsage;
 			let fallbackFetchedAt = state.lastSuccessAt;
 			if (!fallback || fallback.windows.length === 0) {
-				const cache = readCache();
 				const cachedEntry = cache[provider];
 				const cachedUsage = cachedEntry?.usage ? { ...cachedEntry.usage, status: cachedEntry.status } : undefined;
 				fallback = cachedUsage && cachedUsage.windows.length > 0 ? cachedUsage : undefined;
@@ -155,9 +154,9 @@ export function createUsageController(deps: Dependencies) {
 			state.cachedUsage = undefined;
 		}
 
-		let cachedEntry = await getCachedData(provider, settings.behavior.refreshInterval * 1000);
+		const cache = readCache();
+		let cachedEntry = await getCachedData(provider, settings.behavior.refreshInterval * 1000, cache);
 		if (!cachedEntry && options?.allowStaleCache) {
-			const cache = readCache();
 			cachedEntry = cache[provider] ?? null;
 		}
 		if (cachedEntry?.usage) {

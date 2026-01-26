@@ -41,14 +41,13 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 
 ## Installation
 
-Install **both** `sub-core` and `sub-bar` extensions. `sub-core` is shared across the wider `sub-*` ecosystem (some extensions are UI-only, others run headless and just consume events).
+Install **both** `sub-core` and `sub-bar` extensions from the monorepo. `sub-core` is shared across the wider `sub-*` ecosystem (some extensions are UI-only, others run headless and just consume events).
 
 ```bash
-git clone https://github.com/marckrenn/sub-core.git
-git clone https://github.com/marckrenn/sub-bar.git
+git clone https://github.com/marckrenn/pi-sub.git
 
-ln -s /path/to/sub-core ~/.pi/agent/extensions/sub-core
-ln -s /path/to/sub-bar ~/.pi/agent/extensions/sub-bar
+ln -s /path/to/pi-sub/packages/sub-core ~/.pi/agent/extensions/sub-core
+ln -s /path/to/pi-sub/packages/sub-bar ~/.pi/agent/extensions/sub-bar
 ```
 
 Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
@@ -56,8 +55,8 @@ Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
 ```json
 {
   "extensions": [
-    "/path/to/sub-core/index.ts",
-    "/path/to/sub-bar/index.ts"
+    "/path/to/pi-sub/packages/sub-core/index.ts",
+    "/path/to/pi-sub/packages/sub-bar/index.ts"
   ]
 }
 ```
@@ -65,7 +64,7 @@ Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
 To install dependencies (for type checking):
 
 ```bash
-cd /path/to/sub-bar
+cd /path/to/pi-sub
 npm install
 ```
 

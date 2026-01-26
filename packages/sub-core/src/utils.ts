@@ -5,6 +5,9 @@
 import type { Dependencies } from "./types.js";
 import { MODEL_MULTIPLIERS } from "./config.js";
 
+// Only allow simple CLI names (no spaces/paths) to avoid unsafe command execution.
+const SAFE_CLI_NAME = /^[a-zA-Z0-9._-]+$/;
+
 /**
  * Format a reset date as a relative time string
  */
@@ -106,8 +109,12 @@ export function getModelMultiplier(modelId: string | undefined): number | undefi
  * Check if a command exists in PATH
  */
 export function whichSync(cmd: string, deps: Dependencies): string | null {
+	if (!SAFE_CLI_NAME.test(cmd)) {
+		return null;
+	}
+
 	try {
-		return deps.execSync(`which ${cmd}`, { encoding: "utf-8" }).trim();
+		return deps.execFileSync("which", [cmd], { encoding: "utf-8" }).trim();
 	} catch {
 		return null;
 	}

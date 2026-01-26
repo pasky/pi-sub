@@ -132,3 +132,55 @@ test("decode marks newer share versions", () => {
 	const decoded = decodeDisplayShareString(`Future:${encoded}`);
 	assert.ok(decoded?.isNewerVersion);
 });
+
+test("applyDisplayChange ignores invalid numeric values", () => {
+	const settings = getDefaultSettings();
+	const initialBarWidth = settings.display.barWidth;
+	const initialDividerBlanks = settings.display.dividerBlanks;
+	const initialPaddingX = settings.display.paddingX;
+
+	applyDisplayChange(settings, "barWidth", "abc");
+	assert.equal(settings.display.barWidth, initialBarWidth);
+
+	applyDisplayChange(settings, "dividerBlanks", "nope");
+	assert.equal(settings.display.dividerBlanks, initialDividerBlanks);
+
+	applyDisplayChange(settings, "paddingX", "NaN");
+	assert.equal(settings.display.paddingX, initialPaddingX);
+});
+
+test("applyDisplayChange supports fill and numeric values", () => {
+	const settings = getDefaultSettings();
+
+	applyDisplayChange(settings, "barWidth", "fill");
+	assert.equal(settings.display.barWidth, "fill");
+	applyDisplayChange(settings, "barWidth", "12");
+	assert.equal(settings.display.barWidth, 12);
+
+	applyDisplayChange(settings, "dividerBlanks", "fill");
+	assert.equal(settings.display.dividerBlanks, "fill");
+	applyDisplayChange(settings, "dividerBlanks", "3");
+	assert.equal(settings.display.dividerBlanks, 3);
+});
+
+test("status icon pack parsing handles preview labels", () => {
+	const settings = getDefaultSettings();
+
+	applyDisplayChange(settings, "statusIconPack", "minimal (✓ ⚠ ×)");
+	assert.equal(settings.display.statusIconPack, "minimal");
+
+	applyDisplayChange(settings, "statusIconPack", "emoji (✅ ⚠️ 🔴)");
+	assert.equal(settings.display.statusIconPack, "emoji");
+
+	applyDisplayChange(settings, "statusIconPack", "random");
+	assert.equal(settings.display.statusIconPack, "emoji");
+});
+
+test("decodeDisplayShareString rejects invalid payloads", () => {
+	assert.equal(decodeDisplayShareString("NoSeparator"), null);
+	assert.equal(decodeDisplayShareString("Name:"), null);
+	assert.equal(decodeDisplayShareString("Name:!!!"), null);
+
+	const nonObjectPayload = Buffer.from(JSON.stringify(42)).toString("base64url");
+	assert.equal(decodeDisplayShareString(`Name:${nonObjectPayload}`), null);
+});

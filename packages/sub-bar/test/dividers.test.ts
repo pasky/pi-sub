@@ -12,3 +12,23 @@ test("divider join aligns after wide emoji", () => {
 	const line = buildDividerLine(4, baseLine, "|", true, "bottom", "text", theme);
 	assert.equal(line[2], "┴");
 });
+
+test("divider join disabled keeps base line intact", () => {
+	const baseLine = "| | |";
+	const line = buildDividerLine(5, baseLine, "|", false, "top", "text", theme);
+	assert.equal(line, "─────");
+	assert.ok(!line.includes("┬"));
+});
+
+test("divider join ignores unsupported characters", () => {
+	const baseLine = "• • •";
+	const line = buildDividerLine(5, baseLine, "•", true, "bottom", "text", theme);
+	assert.equal(line, "─────");
+	assert.ok(!line.includes("┴"));
+});
+
+test("divider join handles ansi codes and wide characters", () => {
+	const baseLine = "\x1b[31m🙂│\x1b[0m";
+	const line = buildDividerLine(4, baseLine, "│", true, "top", "text", theme);
+	assert.equal(line[2], "┬");
+});

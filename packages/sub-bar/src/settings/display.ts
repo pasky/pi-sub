@@ -443,6 +443,12 @@ function clampNumber(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
 }
 
+function parseClampedNumber(value: string, min: number, max: number): number | null {
+	const parsed = Number.parseInt(value, 10);
+	if (Number.isNaN(parsed)) return null;
+	return clampNumber(parsed, min, max);
+}
+
 export function applyDisplayChange(settings: Settings, id: string, value: string): Settings {
 	switch (id) {
 		case "alignment":
@@ -455,9 +461,14 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.barStyle = value as BarStyle;
 			break;
 		case "barWidth": {
-			settings.display.barWidth = value === "fill"
-				? "fill" as BarWidth
-				: clampNumber(parseInt(value, 10), 0, 100);
+			if (value === "fill") {
+				settings.display.barWidth = "fill" as BarWidth;
+				break;
+			}
+			const parsed = parseClampedNumber(value, 0, 100);
+			if (parsed !== null) {
+				settings.display.barWidth = parsed;
+			}
 			break;
 		}
 		case "containBar":
@@ -553,9 +564,13 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "widgetPlacement":
 			settings.display.widgetPlacement = value as WidgetPlacement;
 			break;
-		case "paddingX":
-			settings.display.paddingX = clampNumber(parseInt(value, 10), 0, 100);
+		case "paddingX": {
+			const parsed = parseClampedNumber(value, 0, 100);
+			if (parsed !== null) {
+				settings.display.paddingX = parsed;
+			}
 			break;
+		}
 		case "dividerCharacter":
 			settings.display.dividerCharacter = value as DividerCharacter;
 			break;
@@ -563,9 +578,14 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.dividerColor = normalizeDividerColor(value);
 			break;
 		case "dividerBlanks": {
-			settings.display.dividerBlanks = value === "fill"
-				? "fill" as DividerBlanks
-				: clampNumber(parseInt(value, 10), 0, 100);
+			if (value === "fill") {
+				settings.display.dividerBlanks = "fill" as DividerBlanks;
+				break;
+			}
+			const parsed = parseClampedNumber(value, 0, 100);
+			if (parsed !== null) {
+				settings.display.dividerBlanks = parsed;
+			}
 			break;
 		}
 		case "showProviderDivider":
@@ -583,15 +603,27 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "widgetWrapping":
 			settings.display.widgetWrapping = value as WidgetWrapping;
 			break;
-		case "errorThreshold":
-			settings.display.errorThreshold = clampNumber(parseInt(value, 10), 0, 100);
+		case "errorThreshold": {
+			const parsed = parseClampedNumber(value, 0, 100);
+			if (parsed !== null) {
+				settings.display.errorThreshold = parsed;
+			}
 			break;
-		case "warningThreshold":
-			settings.display.warningThreshold = clampNumber(parseInt(value, 10), 0, 100);
+		}
+		case "warningThreshold": {
+			const parsed = parseClampedNumber(value, 0, 100);
+			if (parsed !== null) {
+				settings.display.warningThreshold = parsed;
+			}
 			break;
-		case "successThreshold":
-			settings.display.successThreshold = clampNumber(parseInt(value, 10), 0, 100);
+		}
+		case "successThreshold": {
+			const parsed = parseClampedNumber(value, 0, 100);
+			if (parsed !== null) {
+				settings.display.successThreshold = parsed;
+			}
 			break;
+		}
 	}
 	return settings;
 }

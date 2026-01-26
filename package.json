@@ -7,8 +7,13 @@
   "scripts": {
     "clean": "npm run clean --workspaces --if-present",
     "check": "npm run check --workspaces --if-present",
+    "check:watch": "npm run check:watch --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "npm run lint -- --fix",
+    "format": "prettier --write .",
+    "verify": "npm run check && npm run test && npm run lint",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"
@@ -17,6 +22,11 @@
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.9",
     "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.5.3",
     "typescript": "^5.8.0"
   },
   "engines": {

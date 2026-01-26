@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { visibleWidth } from "@mariozechner/pi-tui";
 import type { Theme } from "@mariozechner/pi-coding-agent";
-import { formatUsageStatus, formatUsageStatusWithWidth } from "../src/formatting.js";
+import { formatUsageStatus, formatUsageStatusWithWidth, formatUsageWindowParts } from "../src/formatting.js";
 import { getDefaultSettings } from "../src/settings-types.js";
 import type { UsageSnapshot } from "../src/types.js";
 
@@ -145,4 +145,155 @@ test("fetch errors rely on status text instead of appended warning", () => {
 	assert.ok(output.includes("5m ago"));
 	assert.ok(!output.includes("(Fetch failed)"));
 	assert.ok(output.includes("5h"));
+});
+
+test("background base text color uses theme background ansi", () => {
+	const settings = getDefaultSettings();
+	settings.display.baseTextColor = "selectedBg";
+
+	const bgTheme = {
+		fg: (_color: string, text: string) => text,
+		bold: (text: string) => text,
+		getBgAnsi: (_color: string) => "\x1b[48;5;120m",
+	} as unknown as Theme;
+
+	const output = formatUsageStatus(bgTheme, buildUsage(), undefined, settings);
+	assert.ok(output);
+	assert.ok(output.includes("\x1b[38;5;120m"));
+	assert.ok(output.includes("\x1b[39m"));
+});
+
+test("reset timer placement works without titles or usage labels", () => {
+	const settings = getDefaultSettings();
+	settings.display.showWindowTitle = false;
+	settings.display.showUsageLabels = false;
+	settings.display.barStyle = "percentage";
+
+	const usage = buildUsage();
+	const window = usage.windows[0];
+
+	const cases: Array<{ position: "off" | "front" | "back" | "integrated"; label: boolean; reset: boolean }> = [
+		{ position: "front", label: true, reset: false },
+		{ position: "back", label: false, reset: true },
+		{ position: "integrated", label: true, reset: false },
+		{ position: "off", label: false, reset: false },
+	];
+
+	for (const entry of cases) {
+		settings.display.resetTimePosition = entry.position;
+		const parts = formatUsageWindowParts(theme, window, false, settings, usage);
+		assert.equal(parts.label.includes("5h"), false);
+		assert.equal(parts.pct.includes("used"), false);
+		if (entry.label) {
+			assert.ok(parts.label.includes("4h"));
+		} else {
+			assert.equal(parts.label, "");
+		}
+		if (entry.reset) {
+			assert.ok(parts.reset.includes("4h"));
+		} else {
+			assert.equal(parts.reset, "");
+		}
+	}
+});
+
+test("extras render even when usage windows are hidden", () => {
+	const settings = getDefaultSettings();
+	settings.providers.anthropic.windows.show5h = false;
+	settings.providers.anthropic.windows.show7d = false;
+	settings.providers.anthropic.windows.showExtra = true;
+
+	const usage: UsageSnapshot = {
+		provider: "anthropic",
+		displayName: "Anthropic (Claude)",
+		windows: [
+			{ label: "5h", usedPercent: 10 },
+			{ label: "7d", usedPercent: 20 },
+		],
+		extraUsageEnabled: false,
+	};
+
+	const output = formatUsageStatus(theme, usage, undefined, settings);
+	assert.ok(output);
+	assert.ok(output.includes("Extra [off]"));
+	assert.ok(!output.includes("5h"));
+	assert.ok(!output.includes("7d"));
+});
+
+test("percentage labels clamp to bounds", () => {
+	const settings = getDefaultSettings();
+	settings.display.barStyle = "percentage";
+	settings.display.showUsageLabels = false;
+
+	const usage = buildUsage();
+	const highWindow = { ...usage.windows[0], usedPercent: 150 };
+	const highParts = formatUsageWindowParts(theme, highWindow, false, settings, usage);
+	assert.ok(highParts.pct.includes("100%"));
+
+	const lowWindow = { ...usage.windows[0], usedPercent: -20 };
+	const lowParts = formatUsageWindowParts(theme, lowWindow, false, settings, usage);
+	assert.ok(lowParts.pct.includes("0%"));
+});
+
+test("emoji bar characters respect narrow widths", () => {
+	const settings = getDefaultSettings();
+	settings.display.barType = "horizontal-bar";
+	settings.display.barStyle = "bar";
+	settings.display.barWidth = 1;
+	settings.display.barCharacter = "🚀";
+
+	const usage = buildUsage();
+	const parts = formatUsageWindowParts(theme, usage.windows[0], false, settings, usage);
+	assert.equal(visibleWidth(parts.bar), 1);
+});
+
+test("percentage style ignores containBar caps", () => {
+	const settings = getDefaultSettings();
+	settings.display.barStyle = "percentage";
+	settings.display.containBar = true;
+
+	const usage = buildUsage();
+	const parts = formatUsageWindowParts(theme, usage.windows[0], false, settings, usage);
+	assert.equal(parts.bar, "");
+});
+
+test("divider fill and label gap fill stay within width", () => {
+	const settings = getDefaultSettings();
+	settings.display.dividerBlanks = "fill";
+	settings.display.barWidth = 6;
+
+	const output = formatUsageStatusWithWidth(theme, buildUsage(), 60, undefined, settings, { labelGapFill: true });
+	assert.ok(output);
+	assert.ok(visibleWidth(output) <= 60);
+});
+
+test("narrow widths truncate without errors", () => {
+	const settings = getDefaultSettings();
+	settings.display.barWidth = 6;
+
+	const output = formatUsageStatusWithWidth(theme, buildUsage(), 10, undefined, settings, { labelGapFill: true });
+	assert.ok(output);
+	assert.ok(visibleWidth(output) <= 10);
+});
+
+test("fill bars with extras stay within width", () => {
+	const settings = getDefaultSettings();
+	settings.display.barWidth = "fill";
+	settings.display.containBar = true;
+	settings.display.dividerBlanks = "fill";
+	settings.providers.copilot.showMultiplier = true;
+	settings.providers.copilot.showRequestsLeft = true;
+
+	const usage: UsageSnapshot = {
+		provider: "copilot",
+		displayName: "GitHub Copilot",
+		windows: [{ label: "Month", usedPercent: 12 }],
+		requestsRemaining: 120,
+		requestsEntitlement: 200,
+	};
+
+	const output = formatUsageStatusWithWidth(theme, usage, 140, "GPT-4o", settings, { labelGapFill: true });
+	assert.ok(output);
+	assert.ok(output.includes("Model multiplier"));
+	assert.ok(visibleWidth(output) <= 140);
 });
