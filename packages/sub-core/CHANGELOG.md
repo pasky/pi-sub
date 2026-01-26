@@ -1,5 +1,13 @@
 # @marckrenn/pi-sub-core
 
+## 1.0.1
+
+### Patch Changes
+
+- Align repo version with npm publish.
+- Updated dependencies:
+  - @marckrenn/pi-sub-shared@1.0.1
+
 ## 1.0.0
 
 ### Major Changes

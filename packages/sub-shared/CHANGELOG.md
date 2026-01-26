@@ -1,5 +1,11 @@
 # @marckrenn/pi-sub-shared
 
+## 1.0.1
+
+### Patch Changes
+
+- Align repo version with npm publish.
+
 ## 1.0.0
 
 ### Major Changes
