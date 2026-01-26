@@ -36,12 +36,15 @@ type SubCoreAction = {
 	force?: boolean;
 };
 
-function applyBackground(lines: string[], theme: Theme, color: BaseTextColor): string[] {
+function applyBackground(lines: string[], theme: Theme, color: BaseTextColor, width: number): string[] {
 	const bgAnsi = isBackgroundColor(color)
 		? theme.getBgAnsi(color as Parameters<Theme["getBgAnsi"]>[0])
 		: theme.getFgAnsi(resolveDividerColor(color)).replace(/\x1b\[38;/g, "\x1b[48;").replace(/\x1b\[39m/g, "\x1b[49m");
 	if (!bgAnsi || bgAnsi === "\x1b[49m") return lines;
-	return lines.map((line) => `${bgAnsi}${line}\x1b[49m`);
+	return lines.map((line) => {
+		const padding = Math.max(0, width - visibleWidth(line));
+		return `${bgAnsi}${line}${" ".repeat(padding)}\x1b[49m`;
+	});
 }
 
 function applyBaseTextColor(theme: Theme, color: BaseTextColor, text: string): string {
@@ -275,7 +278,7 @@ export default function createExtension(pi: ExtensionAPI) {
 						lines = [...lines, footerLine];
 					}
 					const backgroundColor = resolveBaseTextColor(settings.display.backgroundColor);
-					return applyBackground(lines, theme, backgroundColor);
+					return applyBackground(lines, theme, backgroundColor, safeWidth);
 				},
 				invalidate() {},
 			}),
