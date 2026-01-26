@@ -1,8 +1,10 @@
 {
   "name": "@marckrenn/pi-sub-bar",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Usage widget extension for pi-coding-agent - shows current provider usage above the editor",
-  "keywords": ["pi-package"],
+  "keywords": [
+    "pi-package"
+  ],
   "type": "module",
   "license": "MIT",
   "publishConfig": {
@@ -10,7 +12,9 @@
     "registry": "https://registry.npmjs.org"
   },
   "pi": {
-    "extensions": ["./index.ts"]
+    "extensions": [
+      "./index.ts"
+    ]
   },
   "scripts": {
     "check": "tsc --noEmit",
@@ -24,7 +28,7 @@
     "typescript": "^5.8.0"
   },
   "dependencies": {
-    "@marckrenn/pi-sub-shared": "^0.1.0"
+    "@marckrenn/pi-sub-shared": "^1.0.0"
   },
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*"
