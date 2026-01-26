@@ -94,6 +94,14 @@ Sub-core stores a shared cache and lock file:
 | AWS Kiro | Credits | - | Credits not yet supported (PRs welcome!) |
 | z.ai | Tokens/monthly limits | - | API quota limits |
 
+### Ideas (planned sub-* extensions)
+
+- **sub-compare** — usage comparison chart across multiple providers.
+- **sub-model-switcher** — auto model/provider switching when reaching a usage threshold.
+- **sub-account-switcher** — cycle between multiple subscriptions at usage thresholds.
+
+If you’d like to work on these, PRs or standalone packages are welcome.
+
 ## Development
 
 ### Packaging notes (pi install compatibility)
