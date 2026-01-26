@@ -41,6 +41,8 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 | AWS Kiro | Credits | - | - | Credits not yet supported (PRs welcome!) |
 | z.ai | Tokens, Monthly | - | - | API quota limits |
 
+Tested so far: Anthropic (Claude), OpenAI Codex, GitHub Copilot. Other providers are implemented but not yet verified in production.
+
 ## Installation
 
 Install **both** `sub-core` and `sub-bar` extensions from the monorepo. `sub-bar` depends on `sub-core` for data (it will not render without it), and `sub-core` is shared across the wider `sub-*` ecosystem (some extensions are UI-only, others run headless and just consume events).

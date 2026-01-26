@@ -106,6 +106,10 @@ pi install npm:@marckrenn/pi-sub-core
 
 Manual paths/symlinks still work for local development as documented above.
 
+### Tested providers
+
+Tested so far: Anthropic (Claude), OpenAI Codex, GitHub Copilot. Other providers are implemented but not yet verified in production.
+
 ### Adding a Provider
 
 You need to update both **sub-core** (fetch layer) and **sub-bar** (display layer).
