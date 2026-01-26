@@ -1,7 +1,5 @@
 # pi-sub
 
-[![Release (manual)](https://github.com/marckrenn/pi-sub/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/marckrenn/pi-sub/actions/workflows/release.yml)
-
 Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), UI clients (like `sub-bar`), and headless consumers that subscribe to usage updates.
 
 ## Overview
@@ -181,24 +179,4 @@ npm run test -w @marckrenn/pi-sub-core
 npm run test -w @marckrenn/pi-sub-bar
 ```
 
-### Release process (manual)
-
-We use **Changesets** with a fixed version group to keep `pi-sub-*` versions in lockstep. Releases are manual and run via the GitHub Actions workflow `Release (manual)` on `main`. See [RELEASE.md](./RELEASE.md) for the detailed checklist.
-
-#### Steps
-
-1. Create a changeset locally:
-   ```bash
-   npm run changeset
-   ```
-2. Commit the generated `.changeset/*.md` file(s) and push to `main`.
-3. Run the **Release (manual)** workflow. It will open a version bump PR (with changelogs).
-4. Merge the version PR.
-5. Run the **Release (manual)** workflow again to publish to npm and create GitHub Releases.
-
-> The workflow runs tests first but will continue with release even if tests fail, so check the test job results before publishing.
-
-#### Required secrets
-
-- `NPM_TOKEN`: npm publish token with access to `@marckrenn/pi-sub-core`, `@marckrenn/pi-sub-bar`, `@marckrenn/pi-sub-shared`.
 

@@ -35,17 +35,15 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 
 ### Provider Feature Matrix
 
-| Provider | Usage Windows | Extra Info | Status Indicator | Notes |
-|----------|--------------|------------|------------------|-------|
-| Anthropic (Claude) | 5h, 7d, Extra | Extra usage label (currency from sub-core) | ✅ | Extra usage can show on/off state |
-| GitHub Copilot | Month | Model multiplier + requests left | ✅ | Requests left uses model multiplier |
-| Google Gemini | Pro, Flash | - | ✅ | Quotas aggregated per model family |
-| Antigravity | Claude, Pro, Flash | - | ✅ | Sandbox Cloud Code Assist quotas |
-| OpenAI Codex | Primary, Secondary | - | ✅ | Credits not yet supported (PRs welcome!) |
-| AWS Kiro | Credits | - | - | Credits not yet supported (PRs welcome!) |
-| z.ai | Tokens, Monthly | - | - | API quota limits |
-
-Tested so far: Anthropic (Claude), OpenAI Codex, GitHub Copilot. Other providers are implemented but not yet verified in production.
+| Provider | Usage Windows | Extra Info | Status Indicator | Tested | Notes |
+|----------|--------------|------------|------------------|--------|-------|
+| Anthropic (Claude) | 5h, 7d, Extra | Extra usage label (currency from sub-core) | ✅ | ✅ | Extra usage can show on/off state |
+| GitHub Copilot | Month | Model multiplier + requests left | ✅ | ✅ | Requests left uses model multiplier |
+| Google Gemini | Pro, Flash | - | ✅ | - | Quotas aggregated per model family |
+| Antigravity | Claude, Pro, Flash | - | ✅ | - | Sandbox Cloud Code Assist quotas |
+| OpenAI Codex | Primary, Secondary | - | ✅ | ✅ | Credits not yet supported (PRs welcome!) |
+| AWS Kiro | Credits | - | - | - | - |
+| z.ai | Tokens, Monthly | - | - | - | API quota limits |
 
 ## Installation
 
