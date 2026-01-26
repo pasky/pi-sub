@@ -78,8 +78,8 @@ export function buildDisplayResetItems(settings: Settings): SettingItem[] {
 			id: "resetTimeContainment",
 			label: "Reset Timer Containment",
 			currentValue: settings.display.resetTimeContainment ?? "()",
-			values: ["none", "blank", "()", "[]", "<>"] as ResetTimerContainment[],
-			description: "Wrapping characters for the reset timer.",
+			values: ["none", "blank", "()", "[]", "<>", CUSTOM_OPTION] as ResetTimerContainment[],
+			description: "Wrapping characters for the reset timer (custom supported).",
 		},
 	];
 }
@@ -565,6 +565,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			settings.display.resetTimeFormat = value as ResetTimeFormat;
 			break;
 		case "resetTimeContainment":
+			if (value === CUSTOM_OPTION) {
+				break;
+			}
 			settings.display.resetTimeContainment = value as ResetTimerContainment;
 			break;
 		case "statusIndicatorMode":

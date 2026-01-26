@@ -176,6 +176,8 @@ function formatElapsedSince(timestamp: number): string {
 	return remHours > 0 ? `${days}d${remHours}h` : `${days}d`;
 }
 
+const RESET_CONTAINMENT_SEGMENTER = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
 function wrapResetContainment(text: string, containment: ResetTimerContainment): { wrapped: string; attachWithSpace: boolean } {
 	switch (containment) {
 		case "none":
@@ -187,8 +189,18 @@ function wrapResetContainment(text: string, containment: ResetTimerContainment):
 		case "<>":
 			return { wrapped: `<${text}>`, attachWithSpace: true };
 		case "()":
-		default:
 			return { wrapped: `(${text})`, attachWithSpace: true };
+		default: {
+			const trimmed = String(containment).trim();
+			if (!trimmed) return { wrapped: `(${text})`, attachWithSpace: true };
+			const segments = Array.from(RESET_CONTAINMENT_SEGMENTER.segment(trimmed), (entry) => entry.segment)
+				.map((segment) => segment.trim())
+				.filter(Boolean);
+			if (segments.length === 0) return { wrapped: `(${text})`, attachWithSpace: true };
+			const left = segments[0];
+			const right = segments[1] ?? left;
+			return { wrapped: `${left}${text}${right}`, attachWithSpace: true };
+		}
 	}
 }
 

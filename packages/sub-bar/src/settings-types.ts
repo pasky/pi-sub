@@ -72,7 +72,7 @@ export type ResetTimeFormat = "relative" | "datetime";
 /**
  * Reset timer containment style
  */
-export type ResetTimerContainment = "none" | "blank" | "()" | "[]" | "<>";
+export type ResetTimerContainment = "none" | "blank" | "()" | "[]" | "<>" | (string & {});
 
 /**
  * Status indicator display mode

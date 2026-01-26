@@ -195,6 +195,12 @@ test("applyDisplayChange toggles status/provider divider", () => {
 	assert.equal(settings.display.statusProviderDivider, false);
 });
 
+test("applyDisplayChange accepts custom reset containment", () => {
+	const settings = getDefaultSettings();
+	applyDisplayChange(settings, "resetTimeContainment", "{}");
+	assert.equal(settings.display.resetTimeContainment, "{}");
+});
+
 test("decodeDisplayShareString rejects invalid payloads", () => {
 	assert.equal(decodeDisplayShareString("NoSeparator"), null);
 	assert.equal(decodeDisplayShareString("Name:"), null);

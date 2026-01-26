@@ -176,6 +176,28 @@ export async function showSettingsUI(
 				return parseInteger(trimmed, 0, 100);
 			};
 
+			const parseResetContainment = (raw: string): string | null => {
+				const trimmed = raw.trim();
+				if (!trimmed) {
+					ctx.ui.notify("Enter 1-2 characters", "warning");
+					return null;
+				}
+				const normalized = trimmed.toLowerCase();
+				if (["none", "blank", "()", "[]", "<>"].includes(normalized)) {
+					return normalized;
+				}
+				const segments = Array.from(segmenter.segment(trimmed), (entry) => entry.segment)
+					.map((segment) => segment.trim())
+					.filter(Boolean);
+				if (segments.length === 0) {
+					ctx.ui.notify("Enter 1-2 characters", "warning");
+					return null;
+				}
+				const first = segments[0];
+				const second = segments[1] ?? first;
+				return `${first}${second}`;
+			};
+
 			const parseDividerCharacter = (raw: string): string | null => {
 				const trimmed = raw.trim();
 				if (!trimmed) {
@@ -906,6 +928,14 @@ export async function showSettingsUI(
 					}
 					if (currentCategory === "display-provider") {
 						customHandlers.providerLabel = buildInputSubmenu("Provider Label", parseProviderLabel);
+					}
+					if (currentCategory === "display-reset") {
+						customHandlers.resetTimeContainment = buildInputSubmenu(
+							"Reset Timer Containment",
+							parseResetContainment,
+							undefined,
+							"Enter 1-2 characters for left/right wrap (e.g. <>).",
+						);
 					}
 					if (currentCategory === "display-status") {
 						customHandlers.statusIconPack = buildInputSubmenu(
