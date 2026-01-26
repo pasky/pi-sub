@@ -8,6 +8,7 @@ import { BaseProvider } from "../../provider.js";
 import { noCredentials, fetchFailed, httpError } from "../../errors.js";
 import { formatReset, createTimeoutController } from "../../utils.js";
 import { API_TIMEOUT_MS } from "../../config.js";
+import { getSettings } from "../../settings.js";
 
 /**
  * Load Claude API token from various sources
@@ -45,9 +46,26 @@ function loadClaudeToken(deps: Dependencies): string | undefined {
 	return undefined;
 }
 
-function formatCredits(credits: number): string {
-	return (credits / 100).toFixed(2);
+type ExtraUsageFormat = {
+	symbol: string;
+	decimalSeparator: "." | ",";
+};
+
+function getExtraUsageFormat(): ExtraUsageFormat {
+	const settings = getSettings();
+	const providerSettings = settings.providers.anthropic;
+	return {
+		symbol: providerSettings.extraUsageCurrencySymbol?.trim() ?? "",
+		decimalSeparator: providerSettings.extraUsageDecimalSeparator === "," ? "," : ".",
+	};
 }
+
+function formatExtraUsageCredits(credits: number, format: ExtraUsageFormat): string {
+	const amount = (credits / 100).toFixed(2);
+	const formatted = format.decimalSeparator === "," ? amount.replace(".", ",") : amount;
+	return format.symbol ? `${format.symbol}${formatted}` : formatted;
+}
+
 
 export class AnthropicProvider extends BaseProvider {
 	readonly name = "anthropic" as const;
@@ -121,13 +139,14 @@ export class AnthropicProvider extends BaseProvider {
 				const usedCredits = extra.used_credits || 0;
 				const monthlyLimit = extra.monthly_limit;
 				const utilization = extra.utilization || 0;
+				const format = getExtraUsageFormat();
 				// "active" when 5h >= 99%, otherwise "on"
 				const extraStatus = fiveHourUsage >= 99 ? "active" : "on";
 				let label: string;
 				if (monthlyLimit && monthlyLimit > 0) {
-					label = `Extra [${extraStatus}] ${formatCredits(usedCredits)}/${formatCredits(monthlyLimit)}`;
+					label = `Extra [${extraStatus}] ${formatExtraUsageCredits(usedCredits, format)}/${formatExtraUsageCredits(monthlyLimit, format)}`;
 				} else {
-					label = `Extra [${extraStatus}] ${formatCredits(usedCredits)}`;
+					label = `Extra [${extraStatus}] ${formatExtraUsageCredits(usedCredits, format)}`;
 				}
 
 				windows.push({

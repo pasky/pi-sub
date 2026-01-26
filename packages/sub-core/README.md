@@ -55,6 +55,8 @@ Usage refresh controls cache/usage updates, while status refresh controls incide
 
 Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `google-antigravity` key.
 
+Anthropic extra usage formatting is controlled in Provider Settings (currency symbol + decimal separator).
+
 **Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
 
 ## Cache

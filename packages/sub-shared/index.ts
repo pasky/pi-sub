@@ -61,6 +61,8 @@ export interface CoreProviderSettings {
 	enabled: ProviderEnabledSetting;
 	displayName?: string;
 	fetchStatus: boolean;
+	extraUsageCurrencySymbol?: string;
+	extraUsageDecimalSeparator?: "." | ",";
 }
 
 export interface CoreProviderSettingsMap {

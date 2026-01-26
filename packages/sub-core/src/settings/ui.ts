@@ -106,6 +106,16 @@ export async function showSettingsUI(
 				return clamped === 0 ? "off" : `${clamped}s`;
 			};
 
+			const parseCurrencySymbol = (raw: string): string | null => {
+				const trimmed = raw.trim();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a symbol or 'none'", "warning");
+					return null;
+				}
+				if (trimmed.toLowerCase() === "none") return "none";
+				return trimmed;
+			};
+
 			function rebuild(): void {
 				container = new Container();
 				let tooltipText: Text | null = null;
@@ -285,6 +295,20 @@ export async function showSettingsUI(
 					const provider = getProviderFromCategory(currentCategory);
 					if (provider) {
 						items = buildProviderSettingsItems(settings, provider);
+						const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {};
+						if (provider === "anthropic") {
+							customHandlers.extraUsageCurrencySymbol = buildInputSubmenu(
+								"Extra Usage Currency Symbol",
+								parseCurrencySymbol,
+								undefined,
+								"Enter a symbol prefix or type 'none' to clear.",
+							);
+						}
+						for (const item of items) {
+							if (item.values?.includes(CUSTOM_OPTION) && customHandlers[item.id]) {
+								item.submenu = customHandlers[item.id];
+							}
+						}
 						handleChange = (id, value) => {
 							settings = applyProviderSettingsChange(settings, provider, id, value);
 							saveSettings(settings);
