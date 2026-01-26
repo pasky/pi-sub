@@ -48,9 +48,9 @@ Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
 
 > You only install `sub-core` + `sub-bar`. `sub-shared` is an npm dependency and is pulled automatically.
 
-## Future (pi package manager)
+## Pi package manager
 
-Once the package manager from pi-mono issue #645 ships, users should be able to install via:
+You can install the packages via `pi install`:
 
 ```bash
 pi install npm:@marckrenn/pi-sub-core
