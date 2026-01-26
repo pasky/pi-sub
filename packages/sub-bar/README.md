@@ -70,7 +70,7 @@ npm install
 
 ## Packaging notes (pi install compatibility)
 
-The draft in pi-mono issue #645 expects npm packages with a `pi` field in `package.json`. This repo already declares `pi.extensions`, so once `pi install` lands you should be able to do:
+The draft in pi-mono issue #645 expects npm packages with a `pi` field in `package.json` plus the `pi-package` keyword for discoverability. This repo already declares `pi.extensions`, so once `pi install` lands you should be able to do:
 
 ```bash
 pi install npm:@marckrenn/pi-sub-core

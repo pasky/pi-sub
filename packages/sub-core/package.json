@@ -2,6 +2,7 @@
   "name": "@marckrenn/pi-sub-core",
   "version": "0.1.0",
   "description": "Shared usage data core for pi extensions",
+  "keywords": ["pi-package"],
   "type": "module",
   "license": "MIT",
   "publishConfig": {
