@@ -12,7 +12,7 @@ Displays current provider usage in a widget above the editor. Fetching and cachi
 
 ### Features
 
-- Displays usage quotas for multiple AI providers
+- Displays realtime usage quotas for multiple AI providers
 - Auto-detects provider from current model (via sub-core)
 - Shows rate limit windows with visual progress bars
 - Status indicators from provider status pages
