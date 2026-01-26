@@ -9,7 +9,7 @@ Shared usage data core for pi extensions. Sub-core owns fetching, caching, provi
 - Emits updates for display-focused extensions (e.g. `sub-bar`) and non-UI tooling extensions
 - Supports Antigravity usage via auth.json (`google-antigravity`)
 
-### Installation
+## Installation
 
 Install via the pi package manager (recommended):
 
@@ -40,14 +40,14 @@ Alternative (no symlink): add it to `~/.pi/agent/settings.json`:
 }
 ```
 
-### Tool Access
+## Tool Access
 
 `sub-core` registers tools to expose usage snapshots to Pi:
 
 - `sub_get_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
 - `sub_get_all_usage` – refreshes and returns all enabled provider entries (auto-enabled providers require credentials).
 
-### Settings
+## Settings
 
 Use `sub-core:settings` to configure shared provider settings plus **Usage Refresh Settings** and **Status Refresh Settings**. Provider enablement supports `auto` (default), `on`, and `off` — `auto` enables a provider only when credentials are detected.
 
@@ -57,7 +57,7 @@ Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `
 
 **Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
 
-#### Anthropic overage currency (optional)
+### Anthropic overage currency (optional)
 
 To include the org currency symbol in Anthropic “Extra” usage lines, sub-core can query the Claude web endpoint once on startup. Provide the org ID + cookie (or sessionKey) via `~/.pi/agent/auth.json` or environment variables.
 
@@ -82,19 +82,19 @@ Environment variables:
 
 If the request fails or no currency is available, extra usage amounts render without a currency symbol.
 
-### Cache
+## Cache
 
 Sub-core stores a shared cache and lock file:
 
 - `cache.json` (next to the extension entry)
 - `cache.lock` (next to the extension entry)
 
-### Security notes
+## Security notes
 
 - Keep `~/.pi/agent/auth.json` readable only by your user (e.g. `chmod 600 ~/.pi/agent/auth.json`).
 - Avoid logging token-bearing headers or auth config when troubleshooting provider calls.
 
-### Provider comparison
+## Provider comparison
 
 | Provider | Usage Data | Status Page | Notes |
 |----------|-----------|-------------|-------|
@@ -106,7 +106,7 @@ Sub-core stores a shared cache and lock file:
 | AWS Kiro | Credits | - | Credits not yet supported (PRs welcome!) |
 | z.ai | Tokens/monthly limits | - | API quota limits |
 
-### Ideas (planned sub-* extensions)
+## Ideas (planned sub-* extensions)
 
 - **sub-compare** — usage comparison chart across multiple providers.
 - **sub-model-switcher** — auto model/provider switching when reaching a usage threshold.
