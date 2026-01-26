@@ -162,7 +162,10 @@ function resolveUsageColorTargets(settings?: Settings): {
 
 function formatElapsedSince(timestamp: number): string {
 	const diffMs = Date.now() - timestamp;
-	if (diffMs < 60000) return "just now";
+	if (diffMs < 60000) {
+		const seconds = Math.max(1, Math.floor(diffMs / 1000));
+		return `${seconds}s`;
+	}
 
 	const diffMins = Math.floor(diffMs / 60000);
 	if (diffMins < 60) return `${diffMins}m`;
@@ -269,7 +272,7 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const baseStatus = showStatus ? usage.status : undefined;
 	const lastSuccessAt = usage.lastSuccessAt;
 	const elapsed = lastSuccessAt ? formatElapsedSince(lastSuccessAt) : undefined;
-	const fetchDescription = elapsed ? (elapsed === "just now" ? "just now" : `${elapsed} ago`) : "Fetch failed";
+	const fetchDescription = elapsed ? `Updated: ${elapsed}` : "Fetch failed";
 	const fetchStatus: ProviderStatus | undefined = fetchError
 		? { indicator: "minor", description: fetchDescription }
 		: undefined;
