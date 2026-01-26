@@ -14,9 +14,11 @@ Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), 
 
 ## Packages
 
-- [`packages/sub-core`](./packages/sub-core) — shared fetch/cache core (pi extension)
-- [`packages/sub-bar`](./packages/sub-bar) — UI display client (pi extension)
-- [`packages/sub-shared`](./packages/sub-shared) — shared types + event contract (npm package)
+| Package | Description |
+| --- | --- |
+| [`@marckrenn/pi-sub-core`](./packages/sub-core) | Shared fetch/cache core (pi extension). |
+| [`@marckrenn/pi-sub-bar`](./packages/sub-bar) | UI display client (pi extension). |
+| [`@marckrenn/pi-sub-shared`](./packages/sub-shared) | Shared types + event contract (npm package). |
 
 ## Requirements
 
