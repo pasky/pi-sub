@@ -18,11 +18,13 @@ Monorepo for the `sub-*` extension ecosystem: a shared usage core (`sub-core`), 
 | [`@marckrenn/pi-sub-bar`](./packages/sub-bar) | UI display client (pi extension). |
 | [`@marckrenn/pi-sub-shared`](./packages/sub-shared) | Shared types + event contract (npm package). |
 
-## Ideas (planned sub-* extensions)
+## Ideas / planned sub-* extensions
 
-- **sub-compare** — usage comparison chart across multiple providers.
-- **sub-model-switcher** — auto model/provider switching when reaching a usage threshold.
-- **sub-account-switcher** — cycle between multiple subscriptions at usage thresholds.
+| Package | Description |
+| --- | --- |
+| `sub-compare` | Usage comparison chart across multiple providers. |
+| `sub-model-switcher` | Auto model/provider switching when reaching a usage threshold. |
+| `sub-account-switcher` | Cycle between multiple subscriptions at usage thresholds. |
 
 If you’d like to work on these, PRs or standalone packages are welcome.
 
