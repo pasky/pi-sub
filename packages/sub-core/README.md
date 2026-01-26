@@ -57,31 +57,6 @@ Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `
 
 **Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
 
-### Anthropic overage currency (optional)
-
-To include the org currency symbol in Anthropic “Extra” usage lines, sub-core can query the Claude web endpoint once on startup. Provide the org ID + cookie (or sessionKey) via `~/.pi/agent/auth.json` or environment variables.
-
-`auth.json` example:
-
-```json
-{
-  "anthropic": {
-    "overage": {
-      "orgId": "<org-id>",
-      "cookie": "sessionKey=..."
-    }
-  }
-}
-```
-
-Environment variables:
-
-- `CLAUDE_AI_OVERAGE_ORG_ID`
-- `CLAUDE_AI_COOKIE` **or** `CLAUDE_AI_SESSION_KEY`
-- optional: `CLAUDE_AI_DEVICE_ID`, `CLAUDE_AI_ANON_ID`, `CLAUDE_AI_CLIENT_SHA`, `CLAUDE_AI_CLIENT_VERSION`, `CLAUDE_AI_USER_AGENT`, `CLAUDE_AI_ACCEPT_LANGUAGE`, `CLAUDE_AI_REFERER`
-
-If the request fails or no currency is available, extra usage amounts render without a currency symbol.
-
 ## Cache
 
 Sub-core stores a shared cache and lock file:
@@ -98,7 +73,7 @@ Sub-core stores a shared cache and lock file:
 
 | Provider | Usage Data | Status Page | Notes |
 |----------|-----------|-------------|-------|
-| Anthropic (Claude) | 5h/7d windows, extra usage | ✅ | Extra usage on/off state (org currency if configured) |
+| Anthropic (Claude) | 5h/7d windows, extra usage | ✅ | Extra usage on/off state |
 | GitHub Copilot | Monthly quota, requests | ✅ | Request multiplier support |
 | Google Gemini | Pro/Flash quotas | ✅ | Aggregated by model family |
 | Antigravity | Claude/Pro/Flash quotas | ✅ | Sandbox Cloud Code Assist quotas |

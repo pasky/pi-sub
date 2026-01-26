@@ -54,17 +54,6 @@ export function stripAnsi(text: string): string {
 }
 
 /**
- * Format a currency amount in cents
- */
-export function formatCurrency(cents: number, currency?: string): string {
-	const amount = cents / 100;
-	if (!currency) return amount.toFixed(2);
-	if (currency === "EUR") return `€${amount.toFixed(2)}`;
-	if (currency === "USD") return `$${amount.toFixed(2)}`;
-	return `${amount.toFixed(2)} ${currency}`;
-}
-
-/**
  * Normalize a string into tokens for fuzzy matching
  */
 export function normalizeTokens(value: string): string[] {

@@ -15,8 +15,6 @@ import { isExpectedMissingData } from "./src/errors.js";
 import { getStorage } from "./src/storage.js";
 import { loadSettings, saveSettings } from "./src/settings.js";
 import { showSettingsUI } from "./src/settings-ui.js";
-import { fetchAnthropicOverageCurrency } from "./src/providers/impl/anthropic.js";
-
 
 type SubCoreRequest =
 	| {
@@ -190,22 +188,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		pi.events.emit("sub-core:settings:updated", { settings });
 	}
 
-	async function refreshAnthropicOverageCurrency(): Promise<void> {
-		try {
-			const currency = await fetchAnthropicOverageCurrency(deps);
-			if (!currency) return;
-			const current = settings.providers.anthropic.overageCurrency;
-			if (currency === current) return;
-			applySettingsPatch({
-				providers: {
-					anthropic: { overageCurrency: currency },
-				},
-			} as unknown as Partial<Settings>);
-		} catch {
-			// Ignore failures
-		}
-	}
-
 	async function getEntries(force?: boolean): Promise<ProviderUsageEntry[]> {
 		const enabledProviders = controller.getEnabledProviders(settings);
 		if (enabledProviders.length === 0) return [];
@@ -315,7 +297,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		lastContext = ctx;
 		settings = loadSettings();
 		setupRefreshInterval();
-		void refreshAnthropicOverageCurrency();
 		void refresh(ctx, { force: true, allowStaleCache: true });
 		void refreshStatus(ctx, { force: true, allowStaleCache: true });
 		pi.events.emit("sub-core:ready", { state: lastState, settings });

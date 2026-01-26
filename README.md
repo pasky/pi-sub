@@ -101,7 +101,6 @@ UI extensions like `sub-bar` listen for updates and render the current provider 
 - **sub-bar settings**: `settings.json` next to the sub-bar extension entry
 - **cache**: `cache.json` next to the sub-core extension entry
 - **lock**: `cache.lock` next to the sub-core extension entry
-- **Anthropic overage currency (optional)**: configure orgId + cookie/sessionKey in `~/.pi/agent/auth.json` or env vars so “Extra” usage shows a currency symbol (otherwise amounts render without one)
 
 ## Adding a Provider (summary)
 
