@@ -17,3 +17,8 @@ export type {
 } from "@marckrenn/pi-sub-shared";
 
 export { PROVIDERS } from "@marckrenn/pi-sub-shared";
+
+export type ModelInfo = {
+	provider?: string;
+	id?: string;
+};

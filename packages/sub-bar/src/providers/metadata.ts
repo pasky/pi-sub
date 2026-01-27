@@ -2,9 +2,9 @@
  * Provider metadata shared across the extension.
  */
 
-import type { RateWindow, UsageSnapshot, ProviderName } from "../types.js";
+import type { RateWindow, UsageSnapshot, ProviderName, ModelInfo } from "../types.js";
 import type { Settings } from "../settings-types.js";
-import { getModelMultiplier } from "../utils.js";
+import { getModelMultiplier, normalizeTokens } from "../utils.js";
 import { PROVIDER_METADATA as BASE_METADATA, type ProviderMetadata as BaseProviderMetadata } from "@marckrenn/pi-sub-shared";
 
 export { PROVIDERS, PROVIDER_DISPLAY_NAMES } from "@marckrenn/pi-sub-shared";
@@ -15,11 +15,11 @@ export interface UsageExtra {
 }
 
 export interface ProviderMetadata extends BaseProviderMetadata {
-	isWindowVisible?: (usage: UsageSnapshot, window: RateWindow, settings?: Settings) => boolean;
+	isWindowVisible?: (usage: UsageSnapshot, window: RateWindow, settings?: Settings, model?: ModelInfo) => boolean;
 	getExtras?: (usage: UsageSnapshot, settings?: Settings, modelId?: string) => UsageExtra[];
 }
 
-const anthropicWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+const anthropicWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, _model) => {
 	if (!settings) return true;
 	const ps = settings.providers.anthropic;
 	if (window.label === "5h") return ps.windows.show5h;
@@ -28,14 +28,14 @@ const anthropicWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, win
 	return true;
 };
 
-const copilotWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+const copilotWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, _model) => {
 	if (!settings) return true;
 	const ps = settings.providers.copilot;
 	if (window.label === "Month") return ps.windows.showMonth;
 	return true;
 };
 
-const geminiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+const geminiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, _model) => {
 	if (!settings) return true;
 	const ps = settings.providers.gemini;
 	if (window.label === "Pro") return ps.windows.showPro;
@@ -43,18 +43,29 @@ const geminiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window
 	return true;
 };
 
-const antigravityWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+const antigravityWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, model) => {
 	if (!settings) return true;
 	const ps = settings.providers.antigravity;
-	if (!ps.windows.showModels) return false;
 	const label = window.label.trim();
 	const normalized = label.toLowerCase().replace(/\s+/g, "_");
 	if (normalized === "tab_flash_lite_preview") return false;
+
+	const modelProvider = model?.provider?.toLowerCase() ?? "";
+	const modelId = model?.id;
+	const providerMatches = modelProvider.includes("antigravity");
+	if (ps.showCurrentModel && providerMatches && modelId) {
+		const modelTokens = normalizeTokens(modelId);
+		const labelTokens = normalizeTokens(label);
+		const match = modelTokens.length > 0 && modelTokens.every((token) => labelTokens.includes(token));
+		if (match) return true;
+	}
+
+	if (!ps.windows.showModels) return false;
 	const visibility = ps.modelVisibility?.[label];
 	return visibility !== false;
 };
 
-const codexWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+const codexWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, _model) => {
 	if (!settings) return true;
 	const ps = settings.providers.codex;
 	if (window.label.match(/^\d+h$/)) return ps.windows.showPrimary;
@@ -62,14 +73,14 @@ const codexWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window,
 	return true;
 };
 
-const kiroWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+const kiroWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, _model) => {
 	if (!settings) return true;
 	const ps = settings.providers.kiro;
 	if (window.label === "Credits") return ps.windows.showCredits;
 	return true;
 };
 
-const zaiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
+const zaiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, _model) => {
 	if (!settings) return true;
 	const ps = settings.providers.zai;
 	if (window.label === "Tokens") return ps.windows.showTokens;

@@ -128,13 +128,22 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 
 	if (provider === "antigravity") {
 		const antigravitySettings = ps as AntigravityProviderSettings;
-		items.push({
-			id: "showModels",
-			label: "Show Model Windows",
-			currentValue: antigravitySettings.windows.showModels ? "on" : "off",
-			values: ["on", "off"],
-			description: "Show quota windows for each Antigravity model.",
-		});
+		items.push(
+			{
+				id: "showModels",
+				label: "Show Model Windows",
+				currentValue: antigravitySettings.windows.showModels ? "on" : "off",
+				values: ["on", "off"],
+				description: "Show quota windows for each Antigravity model.",
+			},
+			{
+				id: "showCurrentModel",
+				label: "Always Show Current Model",
+				currentValue: antigravitySettings.showCurrentModel ? "on" : "off",
+				values: ["on", "off"],
+				description: "Show the active Antigravity model even if hidden.",
+			},
+		);
 
 		const modelVisibility = antigravitySettings.modelVisibility ?? {};
 		const modelOrder = antigravitySettings.modelOrder?.length
@@ -281,6 +290,9 @@ export function applyProviderSettingsChange(
 		switch (id) {
 			case "showModels":
 				antigravitySettings.windows.showModels = value === "on";
+				break;
+			case "showCurrentModel":
+				antigravitySettings.showCurrentModel = value === "on";
 				break;
 			default:
 				if (id.startsWith("model:")) {

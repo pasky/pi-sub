@@ -4,7 +4,7 @@
 
 import type { Theme } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
-import type { RateWindow, UsageSnapshot, ProviderStatus } from "./types.js";
+import type { RateWindow, UsageSnapshot, ProviderStatus, ModelInfo } from "./types.js";
 import type {
 	BaseTextColor,
 	BarStyle,
@@ -27,6 +27,13 @@ export interface UsageWindowParts {
 	bar: string;
 	pct: string;
 	reset: string;
+}
+
+type ModelInput = ModelInfo | string | undefined;
+
+function resolveModelInfo(model?: ModelInput): ModelInfo | undefined {
+	if (!model) return undefined;
+	return typeof model === "string" ? { id: model } : model;
 }
 
 /**
@@ -572,7 +579,7 @@ export function formatUsageWindowParts(
 export function formatUsageStatus(
 	theme: Theme,
 	usage: UsageSnapshot,
-	modelId?: string,
+	model?: ModelInput,
 	settings?: Settings
 ): string | undefined {
 	const baseTextColor = resolveBaseTextColor(settings?.display.baseTextColor);
@@ -593,10 +600,12 @@ export function formatUsageStatus(
 	const parts: string[] = [];
 	const isCodex = usage.provider === "codex";
 	const invertUsage = isCodex && (settings?.providers.codex.invertUsage ?? false);
+	const modelInfo = resolveModelInfo(model);
+	const modelId = modelInfo?.id;
 
 	for (const w of usage.windows) {
 		// Skip windows that are disabled in settings
-		if (!shouldShowWindow(usage, w, settings)) {
+		if (!shouldShowWindow(usage, w, settings, modelInfo)) {
 			continue;
 		}
 		parts.push(formatUsageWindow(theme, w, invertUsage, settings, usage));
@@ -630,7 +639,7 @@ export function formatUsageStatusWithWidth(
 	theme: Theme,
 	usage: UsageSnapshot,
 	width: number,
-	modelId?: string,
+	model?: ModelInput,
 	settings?: Settings,
 	options?: { labelGapFill?: boolean }
 ): string | undefined {
@@ -671,9 +680,11 @@ export function formatUsageStatusWithWidth(
 	const windows: RateWindow[] = [];
 	const isCodex = usage.provider === "codex";
 	const invertUsage = isCodex && (settings?.providers.codex.invertUsage ?? false);
+	const modelInfo = resolveModelInfo(model);
+	const modelId = modelInfo?.id;
 
 	for (const w of usage.windows) {
-		if (!shouldShowWindow(usage, w, settings)) {
+		if (!shouldShowWindow(usage, w, settings, modelInfo)) {
 			continue;
 		}
 		windows.push(w);

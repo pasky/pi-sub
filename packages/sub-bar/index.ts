@@ -237,8 +237,8 @@ export default function createExtension(pi: ExtensionAPI) {
 					const formatted = message
 						? applyBaseTextColor(theme, baseTextColor, message)
 						: (hasFill || wantsSplit)
-							? formatUsageStatusWithWidth(theme, usage!, contentWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
-							: formatUsageStatus(theme, usage!, ctx.model?.id, settings);
+							? formatUsageStatusWithWidth(theme, usage!, contentWidth, ctx.model, settings, { labelGapFill: wantsSplit })
+							: formatUsageStatus(theme, usage!, ctx.model, settings);
 
 					const alignLine = (line: string) => {
 						if (!shouldAlign) return line;
