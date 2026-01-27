@@ -50,14 +50,29 @@ const antigravityWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, w
 	const normalized = label.toLowerCase().replace(/\s+/g, "_");
 	if (normalized === "tab_flash_lite_preview") return false;
 
+	const labelTokens = normalizeTokens(label);
+
 	const modelProvider = model?.provider?.toLowerCase() ?? "";
 	const modelId = model?.id;
 	const providerMatches = modelProvider.includes("antigravity");
 	if (ps.showCurrentModel && providerMatches && modelId) {
 		const modelTokens = normalizeTokens(modelId);
-		const labelTokens = normalizeTokens(label);
 		const match = modelTokens.length > 0 && modelTokens.every((token) => labelTokens.includes(token));
 		if (match) return true;
+	}
+
+	if (ps.showScopedModels) {
+		const scopedPatterns = model?.scopedModelPatterns ?? [];
+		const matchesScoped = scopedPatterns.some((pattern) => {
+			if (!pattern) return false;
+			const [rawPattern] = pattern.split(":");
+			const trimmed = rawPattern?.trim();
+			if (!trimmed) return false;
+			const base = trimmed.includes("/") ? trimmed.slice(trimmed.lastIndexOf("/") + 1) : trimmed;
+			const tokens = normalizeTokens(base);
+			return tokens.length > 0 && tokens.every((token) => labelTokens.includes(token));
+		});
+		if (matchesScoped) return true;
 	}
 
 	if (!ps.windows.showModels) return false;

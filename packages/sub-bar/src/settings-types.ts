@@ -224,6 +224,7 @@ export interface GeminiProviderSettings extends BaseProviderSettings {
 
 export interface AntigravityProviderSettings extends BaseProviderSettings {
 	showCurrentModel: boolean;
+	showScopedModels: boolean;
 	windows: {
 		showModels: boolean;
 	};
@@ -415,6 +416,7 @@ export function getDefaultSettings(): Settings {
 			antigravity: {
 				showStatus: true,
 				showCurrentModel: true,
+				showScopedModels: false,
 				windows: {
 					showModels: true,
 				},

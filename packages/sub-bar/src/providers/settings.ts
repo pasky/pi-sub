@@ -143,6 +143,13 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 				values: ["on", "off"],
 				description: "Show the active Antigravity model even if hidden.",
 			},
+			{
+				id: "showScopedModels",
+				label: "Show Scoped Models",
+				currentValue: antigravitySettings.showScopedModels ? "on" : "off",
+				values: ["on", "off"],
+				description: "Show Antigravity models that are in the scoped model rotation.",
+			},
 		);
 
 		const modelVisibility = antigravitySettings.modelVisibility ?? {};
@@ -293,6 +300,9 @@ export function applyProviderSettingsChange(
 				break;
 			case "showCurrentModel":
 				antigravitySettings.showCurrentModel = value === "on";
+				break;
+			case "showScopedModels":
+				antigravitySettings.showScopedModels = value === "on";
 				break;
 			default:
 				if (id.startsWith("model:")) {
