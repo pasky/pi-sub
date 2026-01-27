@@ -160,21 +160,36 @@ export class AntigravityProvider extends BaseProvider {
 			return lastStatus ? this.emptySnapshot(httpError(lastStatus)) : this.emptySnapshot(fetchFailed());
 		}
 
-		const parsedModels: ParsedModelQuota[] = [];
+		const modelByName = new Map<string, ParsedModelQuota>();
 		for (const [modelId, model] of Object.entries(data.models ?? {})) {
 			if (model.isInternal) continue;
 			if (modelId && ANTIGRAVITY_HIDDEN_MODELS.has(modelId.toLowerCase())) continue;
 			const name = model.displayName ?? modelId ?? model.model ?? "unknown";
 			if (!name) continue;
 			if (ANTIGRAVITY_HIDDEN_MODELS.has(name.toLowerCase())) continue;
-			parsedModels.push({
-				name,
-				remainingFraction: model.quotaInfo?.remainingFraction ?? 1,
-				resetAt: parseResetTime(model.quotaInfo?.resetTime),
-			});
+			const remainingFraction = model.quotaInfo?.remainingFraction ?? 1;
+			const resetAt = parseResetTime(model.quotaInfo?.resetTime);
+			const existing = modelByName.get(name);
+			if (!existing) {
+				modelByName.set(name, { name, remainingFraction, resetAt });
+				continue;
+			}
+			let next = existing;
+			if (remainingFraction < existing.remainingFraction) {
+				next = { name, remainingFraction, resetAt };
+			} else if (remainingFraction === existing.remainingFraction && resetAt) {
+				if (!existing.resetAt || resetAt.getTime() < existing.resetAt.getTime()) {
+					next = { ...existing, resetAt };
+				}
+			} else if (!existing.resetAt && resetAt) {
+				next = { ...existing, resetAt };
+			}
+			if (next !== existing) {
+				modelByName.set(name, next);
+			}
 		}
 
-		parsedModels.sort((a, b) => a.name.localeCompare(b.name));
+		const parsedModels = Array.from(modelByName.values()).sort((a, b) => a.name.localeCompare(b.name));
 
 		const buildWindow = (label: string, remainingFraction: number, resetAt?: Date): RateWindow => ({
 			label,

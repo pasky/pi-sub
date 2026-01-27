@@ -156,9 +156,11 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 		const modelOrder = antigravitySettings.modelOrder?.length
 			? antigravitySettings.modelOrder
 			: Object.keys(modelVisibility).sort((a, b) => a.localeCompare(b));
+		const seenModels = new Set<string>();
 
 		for (const model of modelOrder) {
-			if (!model) continue;
+			if (!model || seenModels.has(model)) continue;
+			seenModels.add(model);
 			const normalized = model.toLowerCase().replace(/\s+/g, "_");
 			if (normalized === "tab_flash_lite_preview") continue;
 			const visible = modelVisibility[model] !== false;

@@ -68,7 +68,11 @@ const antigravityWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, w
 			const [rawPattern] = pattern.split(":");
 			const trimmed = rawPattern?.trim();
 			if (!trimmed) return false;
-			const base = trimmed.includes("/") ? trimmed.slice(trimmed.lastIndexOf("/") + 1) : trimmed;
+			const hasProvider = trimmed.includes("/");
+			if (!hasProvider) return false;
+			const providerPart = trimmed.slice(0, trimmed.indexOf("/")).trim().toLowerCase();
+			if (!providerPart.includes("antigravity")) return false;
+			const base = trimmed.slice(trimmed.lastIndexOf("/") + 1);
 			const tokens = normalizeTokens(base);
 			return tokens.length > 0 && tokens.every((token) => labelTokens.includes(token));
 		});
