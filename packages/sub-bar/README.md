@@ -44,7 +44,7 @@ https://github.com/user-attachments/assets/d61d82f6-afd0-45fc-82f3-69910543aa7a
 | Anthropic (Claude) | 5h, 7d, Extra | Extra usage label | ✅ | ✅ | Extra usage can show on/off state |
 | GitHub Copilot | Month | Model multiplier + requests left | ✅ | ✅ | Requests left uses model multiplier |
 | Google Gemini | Pro, Flash | - | ✅ | - | Quotas aggregated per model family |
-| Antigravity | Models | - | ✅ | - | Sandbox Cloud Code Assist quotas |
+| Antigravity | Models | - | ✅ | ✅ | Sandbox Cloud Code Assist quotas |
 | OpenAI Codex | Primary, Secondary | - | ✅ | ✅ | Credits not yet supported (PRs welcome!) |
 | AWS Kiro | Credits | - | - | - | - |
 | z.ai | Tokens, Monthly | - | - | - | API quota limits |
