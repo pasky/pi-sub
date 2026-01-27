@@ -148,7 +148,7 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 			value: "display-theme-random",
 			label: "Random theme",
 			description: "generate a new theme",
-			tooltip: "Generate a new random display theme.",
+			tooltip: "Generate a random display theme as inspiration or a starting point.",
 		},
 		{
 			value: "display-theme-restore",
