@@ -159,6 +159,17 @@ export default function createExtension(pi: ExtensionAPI) {
 		const hasCore = await probeSubCore();
 		if (hasCore) return;
 		try {
+			const bundledUrl = new URL("./node_modules/@marckrenn/pi-sub-core/index.ts", import.meta.url);
+			const module = await import(bundledUrl.toString());
+			const createCore = module.default as undefined | ((api: ExtensionAPI) => void | Promise<void>);
+			if (typeof createCore === "function") {
+				void createCore(pi);
+				return;
+			}
+		} catch {
+			// Fall back to package resolution
+		}
+		try {
 			const module = await import("@marckrenn/pi-sub-core");
 			const createCore = module.default as undefined | ((api: ExtensionAPI) => void | Promise<void>);
 			if (typeof createCore === "function") {
