@@ -49,10 +49,29 @@ jobs:
         run: |
           VERSION=$(node -p "require('./packages/sub-bar/package.json').version")
           TAG="v${VERSION}"
+          NOTES_FILE="release-notes.md"
+          export VERSION NOTES_FILE
+          node <<'NODE'
+          const fs = require("fs");
+          const version = process.env.VERSION;
+          const notesPath = process.env.NOTES_FILE;
+          const changelogPath = "packages/sub-bar/CHANGELOG.md";
+          if (!version || !fs.existsSync(changelogPath)) process.exit(0);
+          const content = fs.readFileSync(changelogPath, "utf8");
+          const sections = content.split("\n## ");
+          const match = sections.find((section) => section.startsWith(`${version}\n`));
+          if (!match) process.exit(0);
+          const notes = `## ${match.trim()}\n`;
+          fs.writeFileSync(notesPath, notes);
+          NODE
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists"
             exit 0
           fi
           git tag -a "$TAG" -m "$TAG"
           git push origin "$TAG"
-          gh release create "$TAG" --generate-notes
+          if [ -f "$NOTES_FILE" ]; then
+            gh release create "$TAG" --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG" --generate-notes
+          fi
