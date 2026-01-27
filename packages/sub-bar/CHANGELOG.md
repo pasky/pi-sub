@@ -1,5 +1,15 @@
 # @marckrenn/pi-sub-bar
 
+## 1.0.2
+
+### Patch Changes
+
+- [#3](https://github.com/marckrenn/pi-sub/pull/3) [`4ceb5ad`](https://github.com/marckrenn/pi-sub/commit/4ceb5ad133166237652d197ba9296ad1589a813c) Thanks [@marckrenn](https://github.com/marckrenn)! - Bundle sub-core with sub-bar, refresh Antigravity quotas + settings, and update UI copy/controls.
+
+- Updated dependencies [[`4ceb5ad`](https://github.com/marckrenn/pi-sub/commit/4ceb5ad133166237652d197ba9296ad1589a813c)]:
+  - @marckrenn/pi-sub-core@1.0.2
+  - @marckrenn/pi-sub-shared@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes
