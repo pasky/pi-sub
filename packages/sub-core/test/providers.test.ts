@@ -33,7 +33,7 @@ test("anthropic parses windows and extra usage", async () => {
 
 	const usage = await provider.fetchUsage(deps);
 	assertWindow(usage, "5h");
-	assertWindow(usage, "7d");
+	assertWindow(usage, "Week");
 	const extra = usage.windows.find((window) => window.label.startsWith("Extra"));
 	assert.ok(extra?.label.includes("Extra [active]"));
 	assert.equal(usage.extraUsageEnabled, true);

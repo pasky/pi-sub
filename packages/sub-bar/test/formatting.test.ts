@@ -238,7 +238,7 @@ test("extras render even when usage windows are hidden", () => {
 		displayName: "Anthropic (Claude)",
 		windows: [
 			{ label: "5h", usedPercent: 10 },
-			{ label: "7d", usedPercent: 20 },
+			{ label: "Week", usedPercent: 20 },
 		],
 		extraUsageEnabled: false,
 	};
@@ -247,7 +247,7 @@ test("extras render even when usage windows are hidden", () => {
 	assert.ok(output);
 	assert.ok(output.includes("Extra [off]"));
 	assert.ok(!output.includes("5h"));
-	assert.ok(!output.includes("7d"));
+	assert.ok(!output.includes("Week"));
 });
 
 test("percentage labels clamp to bounds", () => {

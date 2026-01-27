@@ -29,7 +29,7 @@ https://github.com/user-attachments/assets/d61d82f6-afd0-45fc-82f3-69910543aa7a
 
 | Provider | Usage Data | Status Page |
 |----------|-----------|-------------|
-| Anthropic (Claude) | 5h/7d windows, extra usage | ✅ |
+| Anthropic (Claude) | 5h/Week windows, extra usage | ✅ |
 | GitHub Copilot | Monthly quota, requests | ✅ |
 | Google Gemini | Pro/Flash quotas | ✅ |
 | Antigravity | Model quotas | ✅ |
@@ -41,7 +41,7 @@ https://github.com/user-attachments/assets/d61d82f6-afd0-45fc-82f3-69910543aa7a
 
 | Provider | Usage Windows | Extra Info | Status Indicator | Tested | Notes |
 |----------|--------------|------------|------------------|--------|-------|
-| Anthropic (Claude) | 5h, 7d, Extra | Extra usage label | ✅ | ✅ | Extra usage can show on/off state |
+| Anthropic (Claude) | 5h, Week, Extra | Extra usage label | ✅ | ✅ | Extra usage can show on/off state |
 | GitHub Copilot | Month | Model multiplier + requests left | ✅ | ✅ | Requests left uses model multiplier |
 | Google Gemini | Pro, Flash | - | ✅ | - | Quotas aggregated per model family |
 | Antigravity | Models | - | ✅ | - | Sandbox Cloud Code Assist quotas |

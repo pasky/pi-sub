@@ -57,10 +57,10 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 			},
 			{
 				id: "show7d",
-				label: "Show 7d Window",
+				label: "Show Week Window",
 				currentValue: anthroSettings.windows.show7d ? "on" : "off",
 				values: ["on", "off"],
-				description: "Show the 7-day usage window.",
+				description: "Show the weekly usage window.",
 			},
 			{
 				id: "showExtra",

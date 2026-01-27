@@ -23,7 +23,7 @@ const anthropicWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, win
 	if (!settings) return true;
 	const ps = settings.providers.anthropic;
 	if (window.label === "5h") return ps.windows.show5h;
-	if (window.label === "7d") return ps.windows.show7d;
+	if (window.label === "Week") return ps.windows.show7d;
 	if (window.label.startsWith("Extra [")) return ps.windows.showExtra;
 	return true;
 };

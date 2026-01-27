@@ -75,7 +75,7 @@ Sub-core stores a shared cache and lock file:
 
 | Provider | Usage Data | Status Page | Notes |
 |----------|-----------|-------------|-------|
-| Anthropic (Claude) | 5h/7d windows, extra usage | ✅ | Extra usage on/off state |
+| Anthropic (Claude) | 5h/Week windows, extra usage | ✅ | Extra usage on/off state |
 | GitHub Copilot | Monthly quota, requests | ✅ | Request multiplier support |
 | Google Gemini | Pro/Flash quotas | ✅ | Aggregated by model family |
 | Antigravity | Model quotas | ✅ | Sandbox Cloud Code Assist quotas |
