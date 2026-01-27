@@ -100,6 +100,7 @@ export async function showSettingsUI(
 			let themeActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
 			let displayPreviewBackup: Settings["display"] | null = null;
 			let randomThemeBackup: Settings["display"] | null = null;
+			let displayThemeSelection: string | null = null;
 			let pinnedProviderBackup: ProviderName | null | undefined;
 			let importCandidate: DecodedDisplayShare | null = null;
 			let importBackup: Settings["display"] | null = null;
@@ -547,8 +548,15 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					if (displayThemeSelection) {
+						const index = items.findIndex((item) => item.value === displayThemeSelection);
+						if (index >= 0) {
+							selectList.setSelectedIndex(index);
+						}
+					}
 					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
+						displayThemeSelection = item.value;
 						currentCategory = item.value as SettingsCategory;
 						rebuild();
 						tui.requestRender();
@@ -651,6 +659,7 @@ export async function showSettingsUI(
 						randomThemeBackup = { ...settings.display };
 						settings.displayUserTheme = { ...randomThemeBackup };
 					}
+					displayThemeSelection = "display-theme-random";
 					const randomDisplay = buildRandomDisplay(settings.display);
 					settings.display = { ...randomDisplay };
 					saveSettings(settings);
