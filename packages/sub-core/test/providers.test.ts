@@ -116,10 +116,10 @@ test("antigravity falls back to unknown model labels", async () => {
 	const provider = new AntigravityProvider();
 	const { deps, files } = createDeps({
 		fetch: async () => createJsonResponse({
-			buckets: [
-				{ modelId: "Unknown A", remainingFraction: 0.8 },
-				{ modelId: "Unknown B", remainingFraction: 0.7 },
-			],
+			models: {
+				"1": { displayName: "Unknown A", quotaInfo: { remainingFraction: 0.8 } },
+				"2": { displayName: "Unknown B", quotaInfo: { remainingFraction: 0.7 } },
+			},
 		}),
 	});
 	withAuth(files, { "google-antigravity": { access: "token" } }, deps.homedir());

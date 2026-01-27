@@ -4,7 +4,7 @@
 
 import { MODEL_MULTIPLIERS } from "@marckrenn/pi-sub-shared";
 
-function normalizeTokens(value: string): string[] {
+export function normalizeTokens(value: string): string[] {
 	return value
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, " ")

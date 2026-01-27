@@ -223,11 +223,13 @@ export interface GeminiProviderSettings extends BaseProviderSettings {
 }
 
 export interface AntigravityProviderSettings extends BaseProviderSettings {
+	showCurrentModel: boolean;
+	showScopedModels: boolean;
 	windows: {
-		showClaude: boolean;
-		showPro: boolean;
-		showFlash: boolean;
+		showModels: boolean;
 	};
+	modelVisibility: Record<string, boolean>;
+	modelOrder: string[];
 }
 
 export interface CodexProviderSettings extends BaseProviderSettings {
@@ -412,12 +414,14 @@ export function getDefaultSettings(): Settings {
 				},
 			},
 			antigravity: {
-				showStatus: false,
+				showStatus: true,
+				showCurrentModel: true,
+				showScopedModels: true,
 				windows: {
-					showClaude: true,
-					showPro: true,
-					showFlash: true,
+					showModels: true,
 				},
+				modelVisibility: {},
+				modelOrder: [],
 			},
 			codex: {
 				showStatus: true,
