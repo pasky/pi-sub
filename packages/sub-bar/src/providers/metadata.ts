@@ -79,9 +79,8 @@ const antigravityWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, w
 		if (matchesScoped) return true;
 	}
 
-	if (!ps.windows.showModels) return false;
 	const visibility = ps.modelVisibility?.[label];
-	return visibility !== false;
+	return visibility === true;
 };
 
 const codexWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings, _model) => {

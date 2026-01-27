@@ -367,7 +367,7 @@ export default function createExtension(pi: ExtensionAPI) {
 
 		for (const model of uniqueModels) {
 			if (!(model in visibility)) {
-				visibility[model] = true;
+				visibility[model] = false;
 				changed = true;
 			}
 		}

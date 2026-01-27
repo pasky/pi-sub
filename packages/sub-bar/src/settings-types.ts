@@ -416,7 +416,7 @@ export function getDefaultSettings(): Settings {
 			antigravity: {
 				showStatus: true,
 				showCurrentModel: true,
-				showScopedModels: false,
+				showScopedModels: true,
 				windows: {
 					showModels: true,
 				},

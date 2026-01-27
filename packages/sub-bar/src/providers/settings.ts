@@ -130,13 +130,6 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 		const antigravitySettings = ps as AntigravityProviderSettings;
 		items.push(
 			{
-				id: "showModels",
-				label: "Show Model Windows",
-				currentValue: antigravitySettings.windows.showModels ? "on" : "off",
-				values: ["on", "off"],
-				description: "Show quota windows for each Antigravity model.",
-			},
-			{
 				id: "showCurrentModel",
 				label: "Always Show Current Model",
 				currentValue: antigravitySettings.showCurrentModel ? "on" : "off",
