@@ -172,7 +172,7 @@ test("fetch errors rely on status text instead of appended warning", () => {
 
 	const output = formatUsageStatus(theme, usage, undefined, settings);
 	assert.ok(output);
-	assert.ok(output.includes("Updated: 5m"));
+	assert.ok(output.includes("Last upd.: 5m ago"));
 	assert.ok(!output.includes("(Fetch failed)"));
 	assert.ok(output.includes("5h"));
 });

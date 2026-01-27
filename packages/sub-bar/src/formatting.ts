@@ -279,7 +279,9 @@ function formatProviderLabel(theme: Theme, usage: UsageSnapshot, settings?: Sett
 	const baseStatus = showStatus ? usage.status : undefined;
 	const lastSuccessAt = usage.lastSuccessAt;
 	const elapsed = lastSuccessAt ? formatElapsedSince(lastSuccessAt) : undefined;
-	const fetchDescription = elapsed ? `Updated: ${elapsed}` : "Fetch failed";
+	const fetchDescription = elapsed
+		? (elapsed === "just now" ? "Last upd.: just now" : `Last upd.: ${elapsed} ago`)
+		: "Fetch failed";
 	const fetchStatus: ProviderStatus | undefined = fetchError
 		? { indicator: "minor", description: fetchDescription }
 		: undefined;
