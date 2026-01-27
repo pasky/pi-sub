@@ -22,7 +22,7 @@ export function buildMainMenuItems(settings: Settings, pinnedProvider?: Provider
 		{
 			value: "providers",
 			label: "Provider Settings",
-			description: `${Object.keys(settings.providers).length} providers`,
+			description: "provider specific settings",
 			tooltip: "Configure provider display toggles and window visibility.",
 		},
 		{
@@ -134,9 +134,9 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 		},
 		{
 			value: "display-theme-load",
-			label: "Load theme",
-			description: "restore or apply",
-			tooltip: "Load a saved or default theme.",
+			label: "Manage & Load themes",
+			description: "load, share, delete and restore themes",
+			tooltip: "Load, share, delete, and restore saved themes.",
 		},
 		{
 			value: "display-theme-import",
@@ -148,7 +148,13 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 			value: "display-theme-random",
 			label: "Random theme",
 			description: "generate a new theme",
-			tooltip: "Generate a new random display theme.",
+			tooltip: "Generate a random display theme as inspiration or a starting point.",
+		},
+		{
+			value: "display-theme-restore",
+			label: "Restore previous state",
+			description: "restore your last theme",
+			tooltip: "Restore your previous display theme.",
 		},
 	];
 }

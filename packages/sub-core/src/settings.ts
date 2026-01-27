@@ -4,9 +4,10 @@
 
 import * as path from "node:path";
 import type { Settings } from "./settings-types.js";
-import { getDefaultSettings, mergeSettings } from "./settings-types.js";
+import { getDefaultSettings, mergeSettings, SETTINGS_VERSION } from "./settings-types.js";
 import { getStorage } from "./storage.js";
 import { getSettingsPath } from "./paths.js";
+import { clearCache } from "./cache.js";
 
 /**
  * Settings file path
@@ -41,7 +42,14 @@ export function loadSettings(): Settings {
 			const content = storage.readFile(SETTINGS_PATH);
 			if (content) {
 				const loaded = JSON.parse(content) as Partial<Settings>;
-				cachedSettings = mergeSettings(loaded);
+				const loadedVersion = typeof loaded.version === "number" ? loaded.version : 0;
+				const merged = mergeSettings(loaded);
+				if (loadedVersion < SETTINGS_VERSION) {
+					clearCache();
+					merged.version = SETTINGS_VERSION;
+					saveSettings(merged);
+				}
+				cachedSettings = merged;
 				return cachedSettings;
 			}
 		}

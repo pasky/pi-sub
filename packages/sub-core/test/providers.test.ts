@@ -33,7 +33,7 @@ test("anthropic parses windows and extra usage", async () => {
 
 	const usage = await provider.fetchUsage(deps);
 	assertWindow(usage, "5h");
-	assertWindow(usage, "7d");
+	assertWindow(usage, "Week");
 	const extra = usage.windows.find((window) => window.label.startsWith("Extra"));
 	assert.ok(extra?.label.includes("Extra [active]"));
 	assert.equal(usage.extraUsageEnabled, true);
@@ -116,10 +116,10 @@ test("antigravity falls back to unknown model labels", async () => {
 	const provider = new AntigravityProvider();
 	const { deps, files } = createDeps({
 		fetch: async () => createJsonResponse({
-			buckets: [
-				{ modelId: "Unknown A", remainingFraction: 0.8 },
-				{ modelId: "Unknown B", remainingFraction: 0.7 },
-			],
+			models: {
+				"1": { displayName: "Unknown A", quotaInfo: { remainingFraction: 0.8 } },
+				"2": { displayName: "Unknown B", quotaInfo: { remainingFraction: 0.7 } },
+			},
 		}),
 	});
 	withAuth(files, { "google-antigravity": { access: "token" } }, deps.homedir());

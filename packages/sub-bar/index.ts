@@ -7,6 +7,8 @@
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { Container, Input, SelectList, Spacer, Text, truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import * as fs from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import type { ProviderName, ProviderUsageEntry, SubCoreAllState, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
 import { isBackgroundColor, resolveBaseTextColor, resolveDividerColor } from "./src/settings-types.js";
@@ -58,6 +60,56 @@ function applyBaseTextColor(theme: Theme, color: BaseTextColor, text: string): s
 	return theme.fg(resolveDividerColor(color), text);
 }
 
+type PiSettings = {
+	enabledModels?: unknown;
+};
+
+const AGENT_SETTINGS_ENV = "PI_CODING_AGENT_DIR";
+const DEFAULT_AGENT_DIR = join(homedir(), ".pi", "agent");
+const PROJECT_SETTINGS_DIR = ".pi";
+const SETTINGS_FILE_NAME = "settings.json";
+
+function expandTilde(value: string): string {
+	if (value === "~") return homedir();
+	if (value.startsWith("~/")) return join(homedir(), value.slice(2));
+	return value;
+}
+
+function resolveAgentSettingsPath(): string {
+	const envDir = process.env[AGENT_SETTINGS_ENV];
+	const agentDir = envDir ? expandTilde(envDir) : DEFAULT_AGENT_DIR;
+	return join(agentDir, SETTINGS_FILE_NAME);
+}
+
+function readPiSettings(path: string): PiSettings | null {
+	try {
+		if (!fs.existsSync(path)) return null;
+		const content = fs.readFileSync(path, "utf-8");
+		return JSON.parse(content) as PiSettings;
+	} catch {
+		return null;
+	}
+}
+
+function loadScopedModelPatterns(cwd: string): string[] {
+	const globalSettings = readPiSettings(resolveAgentSettingsPath());
+	const projectSettingsPath = join(cwd, PROJECT_SETTINGS_DIR, SETTINGS_FILE_NAME);
+	const projectSettings = readPiSettings(projectSettingsPath);
+
+	let enabledModels = Array.isArray(globalSettings?.enabledModels)
+		? (globalSettings?.enabledModels as string[])
+		: undefined;
+
+	if (projectSettings && Object.prototype.hasOwnProperty.call(projectSettings, "enabledModels")) {
+		enabledModels = Array.isArray(projectSettings.enabledModels)
+			? (projectSettings.enabledModels as string[])
+			: [];
+	}
+
+	if (!enabledModels || enabledModels.length === 0) return [];
+	return enabledModels.filter((value) => typeof value === "string");
+}
+
 /**
  * Create the extension
  */
@@ -69,6 +121,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	let coreAvailable = false;
 	let coreSettings: CoreSettings = getFallbackCoreSettings(settings);
 	let fetchFailureTimer: NodeJS.Timeout | undefined;
+	const antigravityHiddenModels = new Set(["tab_flash_lite_preview"]);
 	let settingsWatcher: fs.FSWatcher | undefined;
 	let settingsPoll: NodeJS.Timeout | undefined;
 	let settingsDebounce: NodeJS.Timeout | undefined;
@@ -233,11 +286,15 @@ export default function createExtension(pi: ExtensionAPI) {
 					const wantsSplit = alignment === "split";
 					const shouldAlign = !hasFill && !wantsSplit && (alignment === "center" || alignment === "right");
 					const baseTextColor = resolveBaseTextColor(settings.display.baseTextColor);
+					const scopedModelPatterns = loadScopedModelPatterns(ctx.cwd);
+					const modelInfo = ctx.model
+						? { provider: ctx.model.provider, id: ctx.model.id, scopedModelPatterns }
+						: { scopedModelPatterns };
 					const formatted = message
 						? applyBaseTextColor(theme, baseTextColor, message)
 						: (hasFill || wantsSplit)
-							? formatUsageStatusWithWidth(theme, usage!, contentWidth, ctx.model?.id, settings, { labelGapFill: wantsSplit })
-							: formatUsageStatus(theme, usage!, ctx.model?.id, settings);
+							? formatUsageStatusWithWidth(theme, usage!, contentWidth, modelInfo, settings, { labelGapFill: wantsSplit })
+							: formatUsageStatus(theme, usage!, modelInfo, settings);
 
 					const alignLine = (line: string) => {
 						if (!shouldAlign) return line;
@@ -251,7 +308,7 @@ export default function createExtension(pi: ExtensionAPI) {
 					let lines: string[] = [];
 					if (!formatted) {
 						lines = [];
-					} else if (settings.display.widgetWrapping === "wrap") {
+					} else if (settings.display.overflow === "wrap") {
 						lines = wrapTextWithAnsi(formatted, contentWidth).map(alignLine);
 					} else {
 						const trimmed = alignLine(truncateToWidth(formatted, contentWidth, theme.fg("dim", "...")));
@@ -295,6 +352,46 @@ export default function createExtension(pi: ExtensionAPI) {
 		return currentUsage;
 	}
 
+	function syncAntigravityModels(usage?: UsageSnapshot): void {
+		if (!usage || usage.provider !== "antigravity") return;
+		const normalizeModel = (label: string) => label.toLowerCase().replace(/\s+/g, "_");
+		const labels = usage.windows
+			.map((window) => window.label?.trim())
+			.filter((label): label is string => Boolean(label))
+			.filter((label) => !antigravityHiddenModels.has(normalizeModel(label)));
+		const uniqueModels = Array.from(new Set(labels));
+		const antigravitySettings = settings.providers.antigravity;
+		const visibility = { ...(antigravitySettings.modelVisibility ?? {}) };
+		const modelSet = new Set(uniqueModels);
+		let changed = false;
+
+		for (const model of uniqueModels) {
+			if (!(model in visibility)) {
+				visibility[model] = false;
+				changed = true;
+			}
+		}
+
+		for (const existing of Object.keys(visibility)) {
+			if (!modelSet.has(existing)) {
+				delete visibility[existing];
+				changed = true;
+			}
+		}
+
+		const currentOrder = antigravitySettings.modelOrder ?? [];
+		const orderChanged = currentOrder.length !== uniqueModels.length
+			|| currentOrder.some((model, index) => model !== uniqueModels[index]);
+		if (orderChanged) {
+			changed = true;
+		}
+
+		if (!changed) return;
+		antigravitySettings.modelVisibility = visibility;
+		antigravitySettings.modelOrder = uniqueModels;
+		saveSettings(settings);
+	}
+
 	function updateEntries(entries: ProviderUsageEntry[] | undefined): void {
 		if (!entries) return;
 		const next: Partial<Record<ProviderName, UsageSnapshot>> = {};
@@ -303,6 +400,7 @@ export default function createExtension(pi: ExtensionAPI) {
 			next[entry.provider] = entry.usage;
 		}
 		usageEntries = next;
+		syncAntigravityModels(next.antigravity);
 		updateFetchFailureTicker();
 	}
 
@@ -332,6 +430,7 @@ export default function createExtension(pi: ExtensionAPI) {
 
 	function updateUsage(usage: UsageSnapshot | undefined): void {
 		currentUsage = usage;
+		syncAntigravityModels(usage);
 		updateFetchFailureTicker();
 		if (lastContext) {
 			renderCurrent(lastContext);

@@ -24,7 +24,7 @@ export interface Settings extends CoreSettings {
 /**
  * Current settings version
  */
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 
 /**
  * Default settings

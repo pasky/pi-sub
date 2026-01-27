@@ -45,9 +45,10 @@ export type DividerCharacter =
 	| (string & {});
 
 /**
- * Widget line wrapping mode
+ * Widget overflow mode
  */
-export type WidgetWrapping = "truncate" | "wrap";
+export type OverflowMode = "truncate" | "wrap";
+export type WidgetWrapping = OverflowMode;
 
 /**
  * Widget placement
@@ -223,11 +224,13 @@ export interface GeminiProviderSettings extends BaseProviderSettings {
 }
 
 export interface AntigravityProviderSettings extends BaseProviderSettings {
+	showCurrentModel: boolean;
+	showScopedModels: boolean;
 	windows: {
-		showClaude: boolean;
-		showPro: boolean;
-		showFlash: boolean;
+		showModels: boolean;
 	};
+	modelVisibility: Record<string, boolean>;
+	modelOrder: string[];
 }
 
 export interface CodexProviderSettings extends BaseProviderSettings {
@@ -335,8 +338,8 @@ export interface DisplaySettings {
 	showTopDivider: boolean;
 	/** Show divider line below the bar */
 	showBottomDivider: boolean;
-	/** Widget line wrapping */
-	widgetWrapping: WidgetWrapping;
+	/** Widget overflow mode */
+	overflow: OverflowMode;
 	/** Left/right padding inside widget */
 	paddingX: number;
 	/** Widget placement */
@@ -412,12 +415,14 @@ export function getDefaultSettings(): Settings {
 				},
 			},
 			antigravity: {
-				showStatus: false,
+				showStatus: true,
+				showCurrentModel: true,
+				showScopedModels: true,
 				windows: {
-					showClaude: true,
-					showPro: true,
-					showFlash: true,
+					showModels: true,
 				},
+				modelVisibility: {},
+				modelOrder: [],
 			},
 			codex: {
 				showStatus: true,
@@ -486,7 +491,7 @@ export function getDefaultSettings(): Settings {
 			widgetPlacement: "belowEditor",
 			errorThreshold: 25,
 			warningThreshold: 50,
-			widgetWrapping: "truncate",
+			overflow: "truncate",
 			successThreshold: 75,
 		},
 
@@ -538,5 +543,28 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
  * Merge settings with defaults (no legacy migrations).
  */
 export function mergeSettings(loaded: Partial<Settings>): Settings {
-	return deepMerge(getDefaultSettings(), loaded);
+	const migrated = migrateSettings(loaded);
+	return deepMerge(getDefaultSettings(), migrated);
+}
+
+function migrateDisplaySettings(display?: Partial<DisplaySettings> | null): void {
+	if (!display) return;
+	const displayAny = display as Partial<DisplaySettings> & { widgetWrapping?: OverflowMode };
+	if (displayAny.widgetWrapping !== undefined && displayAny.overflow === undefined) {
+		displayAny.overflow = displayAny.widgetWrapping;
+	}
+	if ("widgetWrapping" in displayAny) {
+		delete (displayAny as { widgetWrapping?: unknown }).widgetWrapping;
+	}
+}
+
+function migrateSettings(loaded: Partial<Settings>): Partial<Settings> {
+	migrateDisplaySettings(loaded.display);
+	migrateDisplaySettings(loaded.displayUserTheme);
+	if (Array.isArray(loaded.displayThemes)) {
+		for (const theme of loaded.displayThemes) {
+			migrateDisplaySettings(theme.display as Partial<DisplaySettings> | undefined);
+		}
+	}
+	return loaded;
 }

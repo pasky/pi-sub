@@ -57,10 +57,10 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 			},
 			{
 				id: "show7d",
-				label: "Show 7d Window",
+				label: "Show Week Window",
 				currentValue: anthroSettings.windows.show7d ? "on" : "off",
 				values: ["on", "off"],
-				description: "Show the 7-day usage window.",
+				description: "Show the weekly usage window.",
 			},
 			{
 				id: "showExtra",
@@ -130,27 +130,41 @@ export function buildProviderSettingsItems(settings: Settings, provider: Provide
 		const antigravitySettings = ps as AntigravityProviderSettings;
 		items.push(
 			{
-				id: "showClaude",
-				label: "Show Claude Window",
-				currentValue: antigravitySettings.windows.showClaude ? "on" : "off",
+				id: "showCurrentModel",
+				label: "Always Show Current Model",
+				currentValue: antigravitySettings.showCurrentModel ? "on" : "off",
 				values: ["on", "off"],
-				description: "Show the Claude quota window.",
+				description: "Show the active Antigravity model even if hidden.",
 			},
 			{
-				id: "showPro",
-				label: "Show Pro Window",
-				currentValue: antigravitySettings.windows.showPro ? "on" : "off",
+				id: "showScopedModels",
+				label: "Show Scoped Models",
+				currentValue: antigravitySettings.showScopedModels ? "on" : "off",
 				values: ["on", "off"],
-				description: "Show the Gemini Pro quota window.",
-			},
-			{
-				id: "showFlash",
-				label: "Show Flash Window",
-				currentValue: antigravitySettings.windows.showFlash ? "on" : "off",
-				values: ["on", "off"],
-				description: "Show the Gemini Flash quota window.",
+				description: "Show Antigravity models that are in the scoped model rotation.",
 			},
 		);
+
+		const modelVisibility = antigravitySettings.modelVisibility ?? {};
+		const modelOrder = antigravitySettings.modelOrder?.length
+			? antigravitySettings.modelOrder
+			: Object.keys(modelVisibility).sort((a, b) => a.localeCompare(b));
+		const seenModels = new Set<string>();
+
+		for (const model of modelOrder) {
+			if (!model || seenModels.has(model)) continue;
+			seenModels.add(model);
+			const normalized = model.toLowerCase().replace(/\s+/g, "_");
+			if (normalized === "tab_flash_lite_preview") continue;
+			const visible = modelVisibility[model] !== false;
+			items.push({
+				id: `model:${model}`,
+				label: model,
+				currentValue: visible ? "on" : "off",
+				values: ["on", "off"],
+				description: "Toggle this model window.",
+			});
+		}
 	}
 
 	if (provider === "codex") {
@@ -276,14 +290,31 @@ export function applyProviderSettingsChange(
 	if (provider === "antigravity") {
 		const antigravitySettings = ps as AntigravityProviderSettings;
 		switch (id) {
-			case "showClaude":
-				antigravitySettings.windows.showClaude = value === "on";
+			case "showModels":
+				antigravitySettings.windows.showModels = value === "on";
 				break;
-			case "showPro":
-				antigravitySettings.windows.showPro = value === "on";
+			case "showCurrentModel":
+				antigravitySettings.showCurrentModel = value === "on";
 				break;
-			case "showFlash":
-				antigravitySettings.windows.showFlash = value === "on";
+			case "showScopedModels":
+				antigravitySettings.showScopedModels = value === "on";
+				break;
+			default:
+				if (id.startsWith("model:")) {
+					const model = id.slice("model:".length);
+					if (model) {
+						if (!antigravitySettings.modelVisibility) {
+							antigravitySettings.modelVisibility = {};
+						}
+						antigravitySettings.modelVisibility[model] = value === "on";
+						if (!antigravitySettings.modelOrder) {
+							antigravitySettings.modelOrder = [];
+						}
+						if (!antigravitySettings.modelOrder.includes(model)) {
+							antigravitySettings.modelOrder.push(model);
+						}
+					}
+				}
 				break;
 		}
 	}

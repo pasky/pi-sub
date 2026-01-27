@@ -29,10 +29,10 @@ https://github.com/user-attachments/assets/d61d82f6-afd0-45fc-82f3-69910543aa7a
 
 | Provider | Usage Data | Status Page |
 |----------|-----------|-------------|
-| Anthropic (Claude) | 5h/7d windows, extra usage | ✅ |
+| Anthropic (Claude) | 5h/Week windows, extra usage | ✅ |
 | GitHub Copilot | Monthly quota, requests | ✅ |
 | Google Gemini | Pro/Flash quotas | ✅ |
-| Antigravity | Claude/Pro/Flash quotas | ✅ |
+| Antigravity | Model quotas | ✅ |
 | OpenAI Codex | Primary/secondary windows | ✅ |
 | AWS Kiro | Credits | - |
 | z.ai | Tokens/monthly limits | - |
@@ -41,27 +41,25 @@ https://github.com/user-attachments/assets/d61d82f6-afd0-45fc-82f3-69910543aa7a
 
 | Provider | Usage Windows | Extra Info | Status Indicator | Tested | Notes |
 |----------|--------------|------------|------------------|--------|-------|
-| Anthropic (Claude) | 5h, 7d, Extra | Extra usage label | ✅ | ✅ | Extra usage can show on/off state |
+| Anthropic (Claude) | 5h, Week, Extra | Extra usage label | ✅ | ✅ | Extra usage can show on/off state |
 | GitHub Copilot | Month | Model multiplier + requests left | ✅ | ✅ | Requests left uses model multiplier |
 | Google Gemini | Pro, Flash | - | ✅ | - | Quotas aggregated per model family |
-| Antigravity | Claude, Pro, Flash | - | ✅ | - | Sandbox Cloud Code Assist quotas |
+| Antigravity | Models | - | ✅ | ✅ | Sandbox Cloud Code Assist quotas |
 | OpenAI Codex | Primary, Secondary | - | ✅ | ✅ | Credits not yet supported (PRs welcome!) |
 | AWS Kiro | Credits | - | - | - | - |
 | z.ai | Tokens, Monthly | - | - | - | API quota limits |
 
 ## Installation
 
-Install via the pi package manager (recommended). `sub-bar` depends on `sub-core` for data (it will not render without it):
+Install via the pi package manager (recommended). `sub-bar` bundles `sub-core`, so you only need to install `sub-bar`:
 
 ```bash
-pi install npm:@marckrenn/pi-sub-core
 pi install npm:@marckrenn/pi-sub-bar
 ```
 
 Use `-l` to install into project settings instead of global:
 
 ```bash
-pi install -l npm:@marckrenn/pi-sub-core
 pi install -l npm:@marckrenn/pi-sub-bar
 ```
 
@@ -69,17 +67,19 @@ Manual install (local development):
 
 ```bash
 git clone https://github.com/marckrenn/pi-sub.git
+cd pi-sub
+npm install
 
-ln -s /path/to/pi-sub/packages/sub-core ~/.pi/agent/extensions/sub-core
 ln -s /path/to/pi-sub/packages/sub-bar ~/.pi/agent/extensions/sub-bar
 ```
 
-Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
+If you want to develop `sub-core` separately, also symlink `packages/sub-core` into `~/.pi/agent/extensions`.
+
+Alternative (no symlink): add `sub-bar` to `~/.pi/agent/settings.json`:
 
 ```json
 {
   "extensions": [
-    "/path/to/pi-sub/packages/sub-core/index.ts",
     "/path/to/pi-sub/packages/sub-bar/index.ts"
   ]
 }
@@ -142,7 +142,6 @@ Credentials are loaded by sub-core from:
 Pi packages use a `pi` field in `package.json` plus the `pi-package` keyword for discoverability. This repo already declares `pi.extensions`, so you can install via:
 
 ```bash
-pi install npm:@marckrenn/pi-sub-core
 pi install npm:@marckrenn/pi-sub-bar
 ```
 
@@ -186,7 +185,7 @@ npm run check
 
 ## Credits
 
-- ~Hannes~ Helmut Januschka ([barts](https://github.com/hjanuschka/shitty-extensions?tab=readme-ov-file#usage-barts), [@hjanuschka](https://x.com/hjanuschka))
+- ~Hannes~ Helmut Januschka ([usage-bar.ts](https://github.com/hjanuschka/shitty-extensions?tab=readme-ov-file#usage-barts), [@hjanuschka](https://x.com/hjanuschka))
 - Peter Steinberger ([CodexBar](https://github.com/steipete/CodexBar), [@steipete](https://x.com/steipete))
 
 ## License

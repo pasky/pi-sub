@@ -62,6 +62,7 @@ type SettingsCategory =
 	| "display-theme-import"
 	| "display-theme-import-action"
 	| "display-theme-random"
+	| "display-theme-restore"
 	| "display-layout"
 	| "display-bar"
 	| "display-provider"
@@ -100,6 +101,7 @@ export async function showSettingsUI(
 			let themeActionTarget: { id?: string; name: string; display: Settings["display"]; deletable: boolean } | null = null;
 			let displayPreviewBackup: Settings["display"] | null = null;
 			let randomThemeBackup: Settings["display"] | null = null;
+			let displayThemeSelection: string | null = null;
 			let pinnedProviderBackup: ProviderName | null | undefined;
 			let importCandidate: DecodedDisplayShare | null = null;
 			let importBackup: Settings["display"] | null = null;
@@ -326,6 +328,7 @@ export async function showSettingsUI(
 					"display-theme-load": "Load Theme",
 					"display-theme-action": "Manage Theme",
 					"display-theme-import": "Import Theme",
+					"display-theme-restore": "Restore Theme",
 					"display-layout": "Layout & Structure",
 					"display-bar": "Bars",
 					"display-provider": "Labels & Text",
@@ -547,8 +550,15 @@ export async function showSettingsUI(
 						scrollInfo: (t: string) => theme.fg("dim", t),
 						noMatch: (t: string) => theme.fg("warning", t),
 					});
+					if (displayThemeSelection) {
+						const index = items.findIndex((item) => item.value === displayThemeSelection);
+						if (index >= 0) {
+							selectList.setSelectedIndex(index);
+						}
+					}
 					attachTooltip(items, selectList);
 					selectList.onSelect = (item) => {
+						displayThemeSelection = item.value;
 						currentCategory = item.value as SettingsCategory;
 						rebuild();
 						tui.requestRender();
@@ -651,10 +661,28 @@ export async function showSettingsUI(
 						randomThemeBackup = { ...settings.display };
 						settings.displayUserTheme = { ...randomThemeBackup };
 					}
+					displayThemeSelection = "display-theme-random";
 					const randomDisplay = buildRandomDisplay(settings.display);
 					settings.display = { ...randomDisplay };
 					saveSettings(settings);
 					if (onSettingsChange) void onSettingsChange(settings);
+					currentCategory = "display-theme";
+					rebuild();
+					tui.requestRender();
+				} else if (currentCategory === "display-theme-restore") {
+					displayThemeSelection = "display-theme-restore";
+					const defaults = getDefaultSettings();
+					const fallbackUser = settings.displayUserTheme ?? settings.display;
+					const target = resolveDisplayThemeTarget("user", settings, defaults, fallbackUser);
+					if (target) {
+						const backup = displayPreviewBackup ?? settings.display;
+						settings.displayUserTheme = { ...backup };
+						settings.display = { ...target.display };
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						if (onDisplayThemeApplied) void onDisplayThemeApplied(target.name, { source: "manual" });
+						displayPreviewBackup = null;
+					}
 					currentCategory = "display-theme";
 					rebuild();
 					tui.requestRender();
@@ -1018,7 +1046,8 @@ export async function showSettingsUI(
 						currentCategory === "display-theme" ||
 						currentCategory === "display-theme-load" ||
 						currentCategory === "display-theme-action" ||
-						currentCategory === "display-theme-random"
+						currentCategory === "display-theme-random" ||
+						currentCategory === "display-theme-restore"
 					) {
 						helpText = "↑↓ navigate • Enter/Space select • Esc back";
 					} else {

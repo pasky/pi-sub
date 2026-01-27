@@ -9,7 +9,7 @@ type BarWidth = DisplaySettings["barWidth"];
 type DividerCharacter = DisplaySettings["dividerCharacter"];
 type DividerBlanks = DisplaySettings["dividerBlanks"];
 type DisplayAlignment = DisplaySettings["alignment"];
-type WidgetWrapping = DisplaySettings["widgetWrapping"];
+type OverflowMode = DisplaySettings["overflow"];
 type BaseTextColor = DisplaySettings["baseTextColor"];
 type DividerColor = DisplaySettings["dividerColor"];
 type ResetTimeFormat = DisplaySettings["resetTimeFormat"];
@@ -34,7 +34,7 @@ const RANDOM_BAR_CHARACTERS: BarCharacter[] = [
 	"🚀_",
 ];
 const RANDOM_ALIGNMENTS: DisplayAlignment[] = ["left", "center", "right", "split"];
-const RANDOM_WRAPPINGS: WidgetWrapping[] = ["truncate", "wrap"];
+const RANDOM_OVERFLOW: OverflowMode[] = ["truncate", "wrap"];
 const RANDOM_RESET_POSITIONS: DisplaySettings["resetTimePosition"][] = ["off", "front", "back", "integrated"];
 const RANDOM_RESET_FORMATS: ResetTimeFormat[] = ["relative", "datetime"];
 const RANDOM_RESET_CONTAINMENTS: ResetTimerContainment[] = ["none", "blank", "()", "[]", "<>"];
@@ -189,7 +189,7 @@ export function resolveDisplayThemeTarget(
 				widgetPlacement: "belowEditor",
 				errorThreshold: 25,
 				warningThreshold: 50,
-				widgetWrapping: "truncate",
+				overflow: "truncate",
 				successThreshold: 75,
 			},
 			deletable: false,
@@ -208,7 +208,7 @@ export function buildRandomDisplay(base: DisplaySettings): DisplaySettings {
 	const display: DisplaySettings = { ...base };
 
 	display.alignment = pickRandom(RANDOM_ALIGNMENTS);
-	display.widgetWrapping = pickRandom(RANDOM_WRAPPINGS);
+	display.overflow = pickRandom(RANDOM_OVERFLOW);
 	display.paddingX = pickRandom(RANDOM_PADDING);
 	display.barStyle = pickRandom(RANDOM_BAR_STYLES);
 	display.barType = pickRandom(RANDOM_BAR_TYPES);

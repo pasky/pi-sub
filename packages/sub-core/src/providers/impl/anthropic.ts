@@ -123,7 +123,7 @@ export class AnthropicProvider extends BaseProvider {
 			if (data.seven_day?.utilization !== undefined) {
 				const resetAt = data.seven_day.resets_at ? new Date(data.seven_day.resets_at) : undefined;
 				windows.push({
-					label: "7d",
+					label: "Week",
 					usedPercent: data.seven_day.utilization,
 					resetDescription: resetAt ? formatReset(resetAt) : undefined,
 					resetAt: resetAt?.toISOString(),
