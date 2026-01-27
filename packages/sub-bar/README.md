@@ -186,7 +186,7 @@ npm run check
 
 ## Credits
 
-- ~Hannes~ Helmut Januschka ([barts](https://github.com/hjanuschka/shitty-extensions?tab=readme-ov-file#usage-barts), [@hjanuschka](https://x.com/hjanuschka))
+- ~Hannes~ Helmut Januschka ([usage-bar.ts](https://github.com/hjanuschka/shitty-extensions?tab=readme-ov-file#usage-barts), [@hjanuschka](https://x.com/hjanuschka))
 - Peter Steinberger ([CodexBar](https://github.com/steipete/CodexBar), [@steipete](https://x.com/steipete))
 
 ## License
