@@ -22,7 +22,7 @@ export function buildMainMenuItems(settings: Settings, pinnedProvider?: Provider
 		{
 			value: "providers",
 			label: "Provider Settings",
-			description: `${Object.keys(settings.providers).length} providers`,
+			description: "provider specific settings",
 			tooltip: "Configure provider display toggles and window visibility.",
 		},
 		{
