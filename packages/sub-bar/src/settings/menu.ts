@@ -150,6 +150,12 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 			description: "generate a new theme",
 			tooltip: "Generate a new random display theme.",
 		},
+		{
+			value: "display-theme-restore",
+			label: "Restore previous state",
+			description: "restore your last theme",
+			tooltip: "Restore your previous display theme.",
+		},
 	];
 }
 
