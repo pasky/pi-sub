@@ -13,7 +13,8 @@
   },
   "pi": {
     "extensions": [
-      "./index.ts"
+      "./index.ts",
+      "node_modules/@marckrenn/pi-sub-core/index.ts"
     ]
   },
   "scripts": {
@@ -28,9 +29,16 @@
     "typescript": "^5.8.0"
   },
   "dependencies": {
+    "@marckrenn/pi-sub-core": "^1.0.1",
     "@marckrenn/pi-sub-shared": "^1.0.1"
   },
+  "bundledDependencies": [
+    "@marckrenn/pi-sub-core"
+  ],
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*"
-  }
+  },
+  "bundleDependencies": [
+    "@marckrenn/pi-sub-core"
+  ]
 }
