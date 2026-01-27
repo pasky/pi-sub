@@ -308,7 +308,7 @@ export default function createExtension(pi: ExtensionAPI) {
 					let lines: string[] = [];
 					if (!formatted) {
 						lines = [];
-					} else if (settings.display.widgetWrapping === "wrap") {
+					} else if (settings.display.overflow === "wrap") {
 						lines = wrapTextWithAnsi(formatted, contentWidth).map(alignLine);
 					} else {
 						const trimmed = alignLine(truncateToWidth(formatted, contentWidth, theme.fg("dim", "...")));

@@ -42,11 +42,11 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			description: "Align the usage line inside the widget.",
 		},
 		{
-			id: "widgetWrapping",
-			label: "Widget Wrapping",
-			currentValue: settings.display.widgetWrapping,
+			id: "overflow",
+			label: "Overflow",
+			currentValue: settings.display.overflow,
 			values: ["truncate", "wrap"] as WidgetWrapping[],
-			description: "Wrap the usage line or truncate with ellipsis.",
+			description: "Wrap the usage line or truncate with ellipsis (requires bar width ≠ fill and alignment ≠ split).",
 		},
 		{
 			id: "paddingX",
@@ -666,8 +666,11 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "showBottomDivider":
 			settings.display.showBottomDivider = value === "on";
 			break;
+		case "overflow":
+			settings.display.overflow = value as WidgetWrapping;
+			break;
 		case "widgetWrapping":
-			settings.display.widgetWrapping = value as WidgetWrapping;
+			settings.display.overflow = value as WidgetWrapping;
 			break;
 		case "errorThreshold": {
 			const parsed = parseClampedNumber(value, 0, 100);
