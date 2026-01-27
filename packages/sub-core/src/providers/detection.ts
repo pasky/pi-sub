@@ -31,6 +31,10 @@ export function detectProviderFromModel(
 	const providerValue = model.provider?.toLowerCase() || "";
 	const idValue = model.id?.toLowerCase() || "";
 
+	if (providerValue.includes("antigravity") || idValue.includes("antigravity")) {
+		return "antigravity";
+	}
+
 	for (const hint of PROVIDER_DETECTION_HINTS) {
 		if (hint.providerTokens.some((token) => providerValue.includes(token))) {
 			return hint.provider;

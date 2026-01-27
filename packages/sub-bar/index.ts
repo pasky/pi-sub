@@ -69,6 +69,7 @@ export default function createExtension(pi: ExtensionAPI) {
 	let coreAvailable = false;
 	let coreSettings: CoreSettings = getFallbackCoreSettings(settings);
 	let fetchFailureTimer: NodeJS.Timeout | undefined;
+	const antigravityHiddenModels = new Set(["tab_flash_lite_preview"]);
 	let settingsWatcher: fs.FSWatcher | undefined;
 	let settingsPoll: NodeJS.Timeout | undefined;
 	let settingsDebounce: NodeJS.Timeout | undefined;
@@ -295,6 +296,46 @@ export default function createExtension(pi: ExtensionAPI) {
 		return currentUsage;
 	}
 
+	function syncAntigravityModels(usage?: UsageSnapshot): void {
+		if (!usage || usage.provider !== "antigravity") return;
+		const normalizeModel = (label: string) => label.toLowerCase().replace(/\s+/g, "_");
+		const labels = usage.windows
+			.map((window) => window.label?.trim())
+			.filter((label): label is string => Boolean(label))
+			.filter((label) => !antigravityHiddenModels.has(normalizeModel(label)));
+		const uniqueModels = Array.from(new Set(labels));
+		const antigravitySettings = settings.providers.antigravity;
+		const visibility = { ...(antigravitySettings.modelVisibility ?? {}) };
+		const modelSet = new Set(uniqueModels);
+		let changed = false;
+
+		for (const model of uniqueModels) {
+			if (!(model in visibility)) {
+				visibility[model] = true;
+				changed = true;
+			}
+		}
+
+		for (const existing of Object.keys(visibility)) {
+			if (!modelSet.has(existing)) {
+				delete visibility[existing];
+				changed = true;
+			}
+		}
+
+		const currentOrder = antigravitySettings.modelOrder ?? [];
+		const orderChanged = currentOrder.length !== uniqueModels.length
+			|| currentOrder.some((model, index) => model !== uniqueModels[index]);
+		if (orderChanged) {
+			changed = true;
+		}
+
+		if (!changed) return;
+		antigravitySettings.modelVisibility = visibility;
+		antigravitySettings.modelOrder = uniqueModels;
+		saveSettings(settings);
+	}
+
 	function updateEntries(entries: ProviderUsageEntry[] | undefined): void {
 		if (!entries) return;
 		const next: Partial<Record<ProviderName, UsageSnapshot>> = {};
@@ -303,6 +344,7 @@ export default function createExtension(pi: ExtensionAPI) {
 			next[entry.provider] = entry.usage;
 		}
 		usageEntries = next;
+		syncAntigravityModels(next.antigravity);
 		updateFetchFailureTicker();
 	}
 
@@ -332,6 +374,7 @@ export default function createExtension(pi: ExtensionAPI) {
 
 	function updateUsage(usage: UsageSnapshot | undefined): void {
 		currentUsage = usage;
+		syncAntigravityModels(usage);
 		updateFetchFailureTicker();
 		if (lastContext) {
 			renderCurrent(lastContext);

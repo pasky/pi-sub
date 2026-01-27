@@ -5,8 +5,8 @@
 import * as path from "node:path";
 import type { Dependencies, RateWindow, UsageSnapshot } from "../../types.js";
 import { BaseProvider } from "../../provider.js";
-import { noCredentials, fetchFailed } from "../../errors.js";
-import { createTimeoutController } from "../../utils.js";
+import { noCredentials, fetchFailed, httpError } from "../../errors.js";
+import { createTimeoutController, formatReset } from "../../utils.js";
 import { API_TIMEOUT_MS } from "../../config.js";
 
 const ANTIGRAVITY_ENDPOINTS = [
@@ -24,18 +24,56 @@ const ANTIGRAVITY_HEADERS = {
 	}),
 };
 
+const ANTIGRAVITY_HIDDEN_MODELS = new Set(["tab_flash_lite_preview"]);
+
+interface AntigravityAuth {
+	access?: string;
+	accessToken?: string;
+	token?: string;
+	key?: string;
+	projectId?: string;
+	project?: string;
+}
+
+interface CloudCodeQuotaResponse {
+	models?: Record<string, {
+		displayName?: string;
+		model?: string;
+		isInternal?: boolean;
+		quotaInfo?: {
+			remainingFraction?: number;
+			limit?: string;
+			resetTime?: string;
+		};
+	}>;
+}
+
+interface ParsedModelQuota {
+	name: string;
+	remainingFraction: number;
+	resetAt?: Date;
+}
+
 /**
  * Load Antigravity access token from auth.json
  */
-function loadAntigravityToken(deps: Dependencies): string | undefined {
+function loadAntigravityAuth(deps: Dependencies): AntigravityAuth | undefined {
 	const piAuthPath = path.join(deps.homedir(), ".pi", "agent", "auth.json");
 	try {
 		if (deps.fileExists(piAuthPath)) {
 			const data = JSON.parse(deps.readFile(piAuthPath) ?? "{}");
 			const entry = data["google-antigravity"];
-			if (entry?.access) return entry.access;
-			if (entry?.key) return entry.key;
-			if (typeof entry === "string") return entry;
+			if (!entry) return undefined;
+			if (typeof entry === "string") {
+				return { token: entry };
+			}
+			return {
+				access: entry.access,
+				accessToken: entry.accessToken,
+				token: entry.token,
+				key: entry.key,
+				projectId: entry.projectId ?? entry.project,
+			};
 		}
 	} catch {
 		// Ignore parse errors
@@ -44,29 +82,49 @@ function loadAntigravityToken(deps: Dependencies): string | undefined {
 	return undefined;
 }
 
+function resolveAntigravityToken(auth: AntigravityAuth | undefined): string | undefined {
+	return auth?.access ?? auth?.accessToken ?? auth?.token ?? auth?.key;
+}
+
+function parseResetTime(value?: string): Date | undefined {
+	if (!value) return undefined;
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return undefined;
+	return date;
+}
+
+function toUsedPercent(remainingFraction: number): number {
+	const fraction = Number.isFinite(remainingFraction) ? remainingFraction : 1;
+	const used = (1 - fraction) * 100;
+	return Math.max(0, Math.min(100, used));
+}
+
 async function fetchAntigravityQuota(
 	deps: Dependencies,
 	endpoint: string,
-	token: string
-): Promise<{ buckets?: Array<{ modelId?: string; remainingFraction?: number }> } | null> {
+	token: string,
+	projectId?: string
+): Promise<{ data?: CloudCodeQuotaResponse; status?: number }> {
 	const { controller, clear } = createTimeoutController(API_TIMEOUT_MS);
 	try {
-		const res = await deps.fetch(`${endpoint}/v1internal:retrieveUserQuota`, {
+		const payload = projectId ? { project: projectId } : {};
+		const res = await deps.fetch(`${endpoint}/v1internal:fetchAvailableModels`, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
 				"Content-Type": "application/json",
 				...ANTIGRAVITY_HEADERS,
 			},
-			body: "{}",
+			body: JSON.stringify(payload),
 			signal: controller.signal,
 		});
 		clear();
-		if (!res.ok) return null;
-		return (await res.json()) as { buckets?: Array<{ modelId?: string; remainingFraction?: number }> };
+		if (!res.ok) return { status: res.status };
+		const data = (await res.json()) as CloudCodeQuotaResponse;
+		return { data };
 	} catch {
 		clear();
-		return null;
+		return {};
 	}
 }
 
@@ -75,74 +133,57 @@ export class AntigravityProvider extends BaseProvider {
 	readonly displayName = "Antigravity";
 
 	hasCredentials(deps: Dependencies): boolean {
-		return Boolean(loadAntigravityToken(deps));
+		return Boolean(resolveAntigravityToken(loadAntigravityAuth(deps)));
 	}
 
 	async fetchUsage(deps: Dependencies): Promise<UsageSnapshot> {
-		const token = loadAntigravityToken(deps);
+		const auth = loadAntigravityAuth(deps);
+		const token = resolveAntigravityToken(auth);
 		if (!token) {
 			return this.emptySnapshot(noCredentials());
 		}
 
-		let data: { buckets?: Array<{ modelId?: string; remainingFraction?: number }> } | null = null;
+		let data: CloudCodeQuotaResponse | undefined;
+		let lastStatus: number | undefined;
 		for (const endpoint of ANTIGRAVITY_ENDPOINTS) {
-			data = await fetchAntigravityQuota(deps, endpoint, token);
-			if (data) break;
+			const result = await fetchAntigravityQuota(deps, endpoint, token, auth?.projectId);
+			if (result.data) {
+				data = result.data;
+				break;
+			}
+			if (result.status) {
+				lastStatus = result.status;
+			}
 		}
 
 		if (!data) {
-			return this.emptySnapshot(fetchFailed());
+			return lastStatus ? this.emptySnapshot(httpError(lastStatus)) : this.emptySnapshot(fetchFailed());
 		}
 
-		const quotas: Record<string, number> = {};
-		for (const bucket of data.buckets || []) {
-			const model = bucket.modelId || "unknown";
-			const frac = bucket.remainingFraction ?? 1;
-			if (!quotas[model] || frac < quotas[model]) {
-				quotas[model] = frac;
-			}
+		const parsedModels: ParsedModelQuota[] = [];
+		for (const [modelId, model] of Object.entries(data.models ?? {})) {
+			if (model.isInternal) continue;
+			if (modelId && ANTIGRAVITY_HIDDEN_MODELS.has(modelId.toLowerCase())) continue;
+			const name = model.displayName ?? modelId ?? model.model ?? "unknown";
+			if (!name) continue;
+			if (ANTIGRAVITY_HIDDEN_MODELS.has(name.toLowerCase())) continue;
+			parsedModels.push({
+				name,
+				remainingFraction: model.quotaInfo?.remainingFraction ?? 1,
+				resetAt: parseResetTime(model.quotaInfo?.resetTime),
+			});
 		}
 
-		let claudeMin = 1;
-		let proMin = 1;
-		let flashMin = 1;
-		let hasClaude = false;
-		let hasPro = false;
-		let hasFlash = false;
+		parsedModels.sort((a, b) => a.name.localeCompare(b.name));
 
-		for (const [model, frac] of Object.entries(quotas)) {
-			const lower = model.toLowerCase();
-			if (lower.includes("claude")) {
-				hasClaude = true;
-				if (frac < claudeMin) claudeMin = frac;
-			}
-			if (lower.includes("pro")) {
-				hasPro = true;
-				if (frac < proMin) proMin = frac;
-			}
-			if (lower.includes("flash")) {
-				hasFlash = true;
-				if (frac < flashMin) flashMin = frac;
-			}
-		}
+		const buildWindow = (label: string, remainingFraction: number, resetAt?: Date): RateWindow => ({
+			label,
+			usedPercent: toUsedPercent(remainingFraction),
+			resetDescription: resetAt ? formatReset(resetAt) : undefined,
+			resetAt: resetAt?.toISOString(),
+		});
 
-		const windows: RateWindow[] = [];
-		if (hasClaude) {
-			windows.push({ label: "Claude", usedPercent: (1 - claudeMin) * 100 });
-		}
-		if (hasPro) {
-			windows.push({ label: "Pro", usedPercent: (1 - proMin) * 100 });
-		}
-		if (hasFlash) {
-			windows.push({ label: "Flash", usedPercent: (1 - flashMin) * 100 });
-		}
-
-		if (windows.length === 0) {
-			const fallback = Object.entries(quotas).slice(0, 3);
-			for (const [model, frac] of fallback) {
-				windows.push({ label: model, usedPercent: (1 - frac) * 100 });
-			}
-		}
+		const windows = parsedModels.map((model) => buildWindow(model.name, model.remainingFraction, model.resetAt));
 
 		return this.snapshot({ windows });
 	}

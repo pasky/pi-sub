@@ -46,10 +46,12 @@ const geminiWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window
 const antigravityWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
 	if (!settings) return true;
 	const ps = settings.providers.antigravity;
-	if (window.label === "Claude") return ps.windows.showClaude;
-	if (window.label === "Pro") return ps.windows.showPro;
-	if (window.label === "Flash") return ps.windows.showFlash;
-	return true;
+	if (!ps.windows.showModels) return false;
+	const label = window.label.trim();
+	const normalized = label.toLowerCase().replace(/\s+/g, "_");
+	if (normalized === "tab_flash_lite_preview") return false;
+	const visibility = ps.modelVisibility?.[label];
+	return visibility !== false;
 };
 
 const codexWindowVisible: ProviderMetadata["isWindowVisible"] = (_usage, window, settings) => {
