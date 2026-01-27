@@ -134,9 +134,9 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 		},
 		{
 			value: "display-theme-load",
-			label: "Load theme",
-			description: "restore or apply",
-			tooltip: "Load a saved or default theme.",
+			label: "Manage & Load themes",
+			description: "load, share, delete and restore themes",
+			tooltip: "Load, share, delete, and restore saved themes.",
 		},
 		{
 			value: "display-theme-import",
