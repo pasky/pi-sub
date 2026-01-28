@@ -18,6 +18,15 @@
     "version": "changeset version",
     "release": "changeset publish"
   },
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "extensions": [
+      "packages/sub-core/index.ts",
+      "packages/sub-bar/index.ts"
+    ]
+  },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.9",
