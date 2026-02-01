@@ -327,3 +327,58 @@ test("fill bars with extras stay within width", () => {
 	assert.ok(output.includes("Model multiplier"));
 	assert.ok(visibleWidth(output) <= 140);
 });
+
+test("context bar appears as leftmost element when enabled", () => {
+	const settings = getDefaultSettings();
+	settings.display.showContextBar = true;
+	settings.display.barWidth = 6;
+
+	const contextInfo = { tokens: 50000, contextWindow: 200000, percent: 25 };
+	const output = formatUsageStatus(theme, buildUsage(), undefined, settings, contextInfo);
+	assert.ok(output);
+	assert.ok(output.includes("Ctx"));
+	assert.ok(output.includes("25%"));
+});
+
+test("context bar is hidden when showContextBar is false", () => {
+	const settings = getDefaultSettings();
+	settings.display.showContextBar = false;
+	settings.display.barWidth = 6;
+
+	const contextInfo = { tokens: 50000, contextWindow: 200000, percent: 25 };
+	const output = formatUsageStatus(theme, buildUsage(), undefined, settings, contextInfo);
+	assert.ok(output);
+	assert.ok(!output.includes("Ctx"));
+});
+
+test("context bar with fill width stays within bounds", () => {
+	const settings = getDefaultSettings();
+	settings.display.showContextBar = true;
+	settings.display.barWidth = "fill";
+	settings.display.containBar = true;
+
+	const contextInfo = { tokens: 100000, contextWindow: 200000, percent: 50 };
+	const output = formatUsageStatusWithWidth(
+		theme,
+		buildUsage(),
+		100,
+		undefined,
+		settings,
+		{ labelGapFill: true },
+		contextInfo
+	);
+	assert.ok(output);
+	assert.ok(output.includes("Ctx"));
+	assert.ok(visibleWidth(output) <= 100);
+});
+
+test("context bar not shown when contextWindow is 0", () => {
+	const settings = getDefaultSettings();
+	settings.display.showContextBar = true;
+	settings.display.barWidth = 6;
+
+	const contextInfo = { tokens: 0, contextWindow: 0, percent: 0 };
+	const output = formatUsageStatus(theme, buildUsage(), undefined, settings, contextInfo);
+	assert.ok(output);
+	assert.ok(!output.includes("Ctx"));
+});

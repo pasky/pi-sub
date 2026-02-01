@@ -35,6 +35,20 @@ import { CUSTOM_OPTION } from "../ui/settings-list.js";
 export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 	return [
 		{
+			id: "widgetPlacement",
+			label: "Widget Placement",
+			currentValue: settings.display.widgetPlacement ?? "belowEditor",
+			values: ["belowEditor", "status"] as WidgetPlacement[],
+			description: "Show as widget below editor (3 lines) or compact in footer status line (1 line).",
+		},
+		{
+			id: "showContextBar",
+			label: "Show Context Bar",
+			currentValue: settings.display.showContextBar ? "on" : "off",
+			values: ["on", "off"],
+			description: "Show context window usage as leftmost progress bar.",
+		},
+		{
 			id: "alignment",
 			label: "Alignment",
 			currentValue: settings.display.alignment,
@@ -629,6 +643,9 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 			break;
 		case "widgetPlacement":
 			settings.display.widgetPlacement = value as WidgetPlacement;
+			break;
+		case "showContextBar":
+			settings.display.showContextBar = value === "on";
 			break;
 		case "paddingX": {
 			const parsed = parseClampedNumber(value, 0, 100);

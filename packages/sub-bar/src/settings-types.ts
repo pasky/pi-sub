@@ -53,7 +53,7 @@ export type WidgetWrapping = OverflowMode;
 /**
  * Widget placement
  */
-export type WidgetPlacement = "belowEditor";
+export type WidgetPlacement = "belowEditor" | "status";
 
 /**
  * Alignment for the widget
@@ -344,6 +344,8 @@ export interface DisplaySettings {
 	paddingX: number;
 	/** Widget placement */
 	widgetPlacement: WidgetPlacement;
+	/** Show context window usage as leftmost progress bar */
+	showContextBar: boolean;
 	/** Error threshold (percentage remaining below this = red) */
 	errorThreshold: number;
 	/** Warning threshold (percentage remaining below this = yellow) */
@@ -489,6 +491,7 @@ export function getDefaultSettings(): Settings {
 			showBottomDivider: true,
 			paddingX: 1,
 			widgetPlacement: "belowEditor",
+			showContextBar: true,
 			errorThreshold: 25,
 			warningThreshold: 50,
 			overflow: "truncate",
