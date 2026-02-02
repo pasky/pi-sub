@@ -1,5 +1,11 @@
 # @marckrenn/pi-sub-shared
 
+## 1.0.3
+
+### Patch Changes
+
+- [`6fa2736`](https://github.com/marckrenn/pi-sub/commit/6fa27363573f34c38a372a6d7b8b74e756716724) Thanks [@marckrenn](https://github.com/marckrenn)! - Update extension tool execute signature order for compatibility with latest Pi API.
+
 ## 1.0.2
 
 ### Patch Changes
