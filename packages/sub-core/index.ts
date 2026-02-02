@@ -204,7 +204,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		parameters: Type.Object({
 			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
 		}),
-		async execute(_toolCallId, params, _onUpdate, ctx) {
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const { force } = params as { force?: boolean };
 			await refresh(ctx, { force: force ?? true });
 			const payload = { provider: lastState.provider, usage: stripUsageProvider(lastState.usage) };
@@ -222,7 +222,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		parameters: Type.Object({
 			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
 		}),
-		async execute(_toolCallId, params) {
+		async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
 			const { force } = params as { force?: boolean };
 			const entries = await getEntries(force ?? true);
 			const payload = entries.map((entry) => ({
