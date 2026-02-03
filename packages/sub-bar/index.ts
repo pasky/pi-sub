@@ -7,7 +7,7 @@
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { Container, Input, SelectList, Spacer, Text, truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import * as fs from "node:fs";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ProviderName, ProviderUsageEntry, SubCoreAllState, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
@@ -191,6 +191,131 @@ export default function createExtension(pi: ExtensionAPI) {
 			if (trimmed) return trimmed;
 			ctx.ui.notify("Enter a theme name", "warning");
 		}
+	}
+
+	const THEME_GIST_FILE_BASE = "pi-sub-bar Theme";
+	const THEME_GIST_STATUS_KEY = "sub-bar:share";
+
+	function buildThemeGistFileName(name: string): string {
+		const trimmed = name.trim();
+		if (!trimmed) return THEME_GIST_FILE_BASE;
+		const safeName = trimmed.replace(/[\\/:*?"<>|]+/g, "-").trim();
+		return safeName ? `${THEME_GIST_FILE_BASE} ${safeName}` : THEME_GIST_FILE_BASE;
+	}
+
+	async function createThemeGist(ctx: ExtensionContext, name: string, shareString: string): Promise<string | null> {
+		const notify = (message: string, level: "info" | "warning" | "error") => {
+			if (ctx.hasUI) {
+				ctx.ui.notify(message, level);
+				return;
+			}
+			if (level === "error") {
+				console.error(message);
+			} else if (level === "warning") {
+				console.warn(message);
+			} else {
+				console.log(message);
+			}
+		};
+
+		try {
+			const authResult = await pi.exec("gh", ["auth", "status"]);
+			if (authResult.code !== 0) {
+				notify("GitHub CLI is not logged in. Run 'gh auth login' first.", "error");
+				return null;
+			}
+		} catch {
+			notify("GitHub CLI (gh) is not installed. Install it from https://cli.github.com/", "error");
+			return null;
+		}
+
+		const tempDir = fs.mkdtempSync(join(tmpdir(), "pi-sub-bar-"));
+		const fileName = buildThemeGistFileName(name);
+		const filePath = join(tempDir, fileName);
+		fs.writeFileSync(filePath, shareString, "utf-8");
+
+		if (ctx.hasUI) {
+			ctx.ui.setStatus(THEME_GIST_STATUS_KEY, "Creating gist...");
+		}
+
+		try {
+			const result = await pi.exec("gh", ["gist", "create", "--public=false", filePath]);
+			if (result.code !== 0) {
+				const errorMsg = result.stderr?.trim() || "Unknown error";
+				notify(`Failed to create gist: ${errorMsg}`, "error");
+				return null;
+			}
+			const gistUrl = result.stdout?.trim();
+			if (!gistUrl) {
+				notify("Failed to create gist: empty response", "error");
+				return null;
+			}
+			return gistUrl;
+		} catch (error) {
+			notify(`Failed to create gist: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			return null;
+		} finally {
+			if (ctx.hasUI) {
+				ctx.ui.setStatus(THEME_GIST_STATUS_KEY, undefined);
+			}
+			try {
+				fs.rmSync(tempDir, { recursive: true, force: true });
+			} catch {
+				// Ignore cleanup errors
+			}
+		}
+	}
+
+	async function shareThemeString(
+		ctx: ExtensionContext,
+		name: string,
+		shareString: string,
+		mode: "prompt" | "gist" | "string" = "prompt",
+	): Promise<void> {
+		const trimmedName = name.trim();
+		const notify = (message: string, level: "info" | "warning" | "error") => {
+			if (ctx.hasUI) {
+				ctx.ui.notify(message, level);
+				return;
+			}
+			if (level === "error") {
+				console.error(message);
+			} else if (level === "warning") {
+				console.warn(message);
+			} else {
+				console.log(message);
+			}
+		};
+		let resolvedMode = mode;
+		if (resolvedMode === "prompt") {
+			if (!ctx.hasUI) {
+				resolvedMode = "string";
+			} else {
+				const wantsGist = await ctx.ui.confirm("Share Theme", "Upload to a secret GitHub gist?");
+				resolvedMode = wantsGist ? "gist" : "string";
+			}
+		}
+
+		if (resolvedMode === "gist") {
+			const gistUrl = await createThemeGist(ctx, trimmedName, shareString);
+			if (gistUrl) {
+				pi.sendMessage({
+					customType: "sub-bar",
+					content: `Theme gist:\n${gistUrl}`,
+					display: true,
+				});
+				notify("Theme gist posted to chat", "info");
+				return;
+			}
+			notify("Posting share string instead.", "warning");
+		}
+
+		pi.sendMessage({
+			customType: "sub-bar",
+			content: `Theme share string:\n${shareString}`,
+			display: true,
+		});
+		notify("Theme share string posted to chat", "info");
 	}
 
 	function readSettingsFile(): string | undefined {
@@ -610,13 +735,7 @@ export default function createExtension(pi: ExtensionAPI) {
 						display: true,
 					});
 				},
-				onDisplayThemeShared: (_name, shareString) => {
-					pi.sendMessage({
-						customType: "sub-bar",
-						content: `Theme share string:\n${shareString}`,
-						display: true,
-					});
-				},
+				onDisplayThemeShared: (name, shareString, mode) => shareThemeString(ctx, name, shareString, mode ?? "prompt"),
 			});
 			settings = newSettings;
 			void ensurePinnedEntries(settings.pinnedProvider ?? null);
