@@ -408,8 +408,9 @@ export default function createExtension(pi: ExtensionAPI) {
 			(_tui: unknown, theme: Theme) => ({
 				render(width: number) {
 					const safeWidth = Math.max(1, width);
-					const paddingX = settings.display.paddingX ?? 0;
-					const contentWidth = Math.max(1, safeWidth - paddingX * 2);
+					const paddingLeft = settings.display.paddingLeft ?? 0;
+					const paddingRight = settings.display.paddingRight ?? 0;
+					const contentWidth = Math.max(1, safeWidth - paddingLeft - paddingRight);
 					const showTopDivider = settings.display.showTopDivider ?? false;
 					const showBottomDivider = settings.display.showBottomDivider ?? true;
 					const dividerChar = settings.display.dividerCharacter ?? "•";
@@ -450,9 +451,10 @@ export default function createExtension(pi: ExtensionAPI) {
 						lines = [trimmed];
 					}
 
-					if (paddingX > 0) {
-						const pad = " ".repeat(paddingX);
-						lines = lines.map((line) => pad + line + pad);
+					if (paddingLeft > 0 || paddingRight > 0) {
+						const leftPad = " ".repeat(paddingLeft);
+						const rightPad = " ".repeat(paddingRight);
+						lines = lines.map((line) => `${leftPad}${line}${rightPad}`);
 					}
 
 					if (showTopDivider) {

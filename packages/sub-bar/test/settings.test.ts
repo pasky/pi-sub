@@ -70,8 +70,11 @@ test("mixed bar characters fill full width", () => {
 test("applyDisplayChange clamps custom numeric values", () => {
 	const settings = getDefaultSettings();
 
-	applyDisplayChange(settings, "paddingX", "-5");
-	assert.equal(settings.display.paddingX, 0);
+	applyDisplayChange(settings, "paddingLeft", "-5");
+	assert.equal(settings.display.paddingLeft, 0);
+
+	applyDisplayChange(settings, "paddingRight", "-3");
+	assert.equal(settings.display.paddingRight, 0);
 
 	applyDisplayChange(settings, "barWidth", "150");
 	assert.equal(settings.display.barWidth, 100);
@@ -137,7 +140,8 @@ test("applyDisplayChange ignores invalid numeric values", () => {
 	const settings = getDefaultSettings();
 	const initialBarWidth = settings.display.barWidth;
 	const initialDividerBlanks = settings.display.dividerBlanks;
-	const initialPaddingX = settings.display.paddingX;
+	const initialPaddingLeft = settings.display.paddingLeft;
+	const initialPaddingRight = settings.display.paddingRight;
 
 	applyDisplayChange(settings, "barWidth", "abc");
 	assert.equal(settings.display.barWidth, initialBarWidth);
@@ -145,8 +149,11 @@ test("applyDisplayChange ignores invalid numeric values", () => {
 	applyDisplayChange(settings, "dividerBlanks", "nope");
 	assert.equal(settings.display.dividerBlanks, initialDividerBlanks);
 
-	applyDisplayChange(settings, "paddingX", "NaN");
-	assert.equal(settings.display.paddingX, initialPaddingX);
+	applyDisplayChange(settings, "paddingLeft", "NaN");
+	assert.equal(settings.display.paddingLeft, initialPaddingLeft);
+
+	applyDisplayChange(settings, "paddingRight", "NaN");
+	assert.equal(settings.display.paddingRight, initialPaddingRight);
 });
 
 test("applyDisplayChange supports fill and numeric values", () => {
