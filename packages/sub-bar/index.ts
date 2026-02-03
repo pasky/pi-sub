@@ -603,7 +603,7 @@ export default function createExtension(pi: ExtensionAPI) {
 				onDisplayThemeApplied: (name, options) => {
 					const content = options?.source === "manual"
 						? `sub-bar Theme ${name} loaded`
-						: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Theme -> Manage themes`;
+						: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Themes -> Load & Manage themes`;
 					pi.sendMessage({
 						customType: "sub-bar",
 						content,
