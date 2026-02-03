@@ -1,5 +1,11 @@
 # @marckrenn/pi-sub-shared
 
+## 1.0.4
+
+### Patch Changes
+
+- [`7da1e08`](https://github.com/marckrenn/pi-sub/commit/7da1e082e634f4e4dee2560b4d490527d1543ade) Thanks [@marckrenn](https://github.com/marckrenn)! - Add a minimum refresh interval setting to cap refresh frequency even when refresh is triggered every turn.
+
 ## 1.0.3
 
 ### Patch Changes
