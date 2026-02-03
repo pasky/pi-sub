@@ -18,6 +18,7 @@ export interface DecodedDisplayShare {
 	display: Settings["display"];
 	version: number;
 	isNewerVersion: boolean;
+	hasName: boolean;
 }
 
 function encodeDisplaySharePayload(display: Settings["display"]): string {
@@ -39,6 +40,7 @@ export function decodeDisplayShareString(input: string): DecodedDisplayShare | n
 	const trimmed = input.trim();
 	if (!trimmed) return null;
 	let name = "custom";
+	let hasName = false;
 	let payload = trimmed;
 	const separatorIndex = trimmed.indexOf(SHARE_SEPARATOR);
 	if (separatorIndex >= 0) {
@@ -46,6 +48,7 @@ export function decodeDisplayShareString(input: string): DecodedDisplayShare | n
 		payload = trimmed.slice(separatorIndex + 1).trim();
 		if (candidateName) {
 			name = candidateName;
+			hasName = true;
 		}
 	}
 	if (!payload) return null;
@@ -64,6 +67,7 @@ export function decodeDisplayShareString(input: string): DecodedDisplayShare | n
 			display: merged,
 			version,
 			isNewerVersion: version > DISPLAY_SHARE_VERSION,
+			hasName,
 		};
 	} catch {
 		return null;

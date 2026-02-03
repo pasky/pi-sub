@@ -183,6 +183,16 @@ export default function createExtension(pi: ExtensionAPI) {
 		});
 	}
 
+	async function promptImportName(ctx: ExtensionContext): Promise<string | undefined> {
+		while (true) {
+			const name = await ctx.ui.input("Theme name", "Theme");
+			if (name === undefined) return undefined;
+			const trimmed = name.trim();
+			if (trimmed) return trimmed;
+			ctx.ui.notify("Enter a theme name", "warning");
+		}
+	}
+
 	function readSettingsFile(): string | undefined {
 		try {
 			return fs.readFileSync(SETTINGS_PATH, "utf-8");
@@ -642,35 +652,47 @@ export default function createExtension(pi: ExtensionAPI) {
 			}
 
 			const action = await promptImportAction(ctx);
-			const notifyImported = () => {
+			let resolvedName = decoded.name;
+			if ((action === "save-apply" || action === "save") && !decoded.hasName) {
+				const providedName = await promptImportName(ctx);
+				if (!providedName) {
+					settings.display = { ...backup };
+					if (lastContext) {
+						renderUsageWidget(lastContext, currentUsage);
+					}
+					return;
+				}
+				resolvedName = providedName;
+			}
+			const notifyImported = (name: string) => {
 				const message = decoded.isNewerVersion
-					? `Imported ${decoded.name} (newer version, some fields may be ignored)`
-					: `Imported ${decoded.name}`;
+					? `Imported ${name} (newer version, some fields may be ignored)`
+					: `Imported ${name}`;
 				ctx.ui.notify(message, decoded.isNewerVersion ? "warning" : "info");
 			};
 
 			if (action === "save-apply") {
 				settings.displayUserTheme = { ...backup };
-				settings = upsertDisplayTheme(settings, decoded.name, decoded.display, "imported");
+				settings = upsertDisplayTheme(settings, resolvedName, decoded.display, "imported");
 				settings.display = { ...decoded.display };
 				saveSettings(settings);
 				if (lastContext) {
 					renderUsageWidget(lastContext, currentUsage);
 				}
-				notifyImported();
+				notifyImported(resolvedName);
 				pi.sendMessage({
 					customType: "sub-bar",
-					content: `sub-bar Theme ${decoded.name} loaded`,
+					content: `sub-bar Theme ${resolvedName} loaded`,
 					display: true,
 				});
 				return;
 			}
 
 			if (action === "save") {
-				settings = upsertDisplayTheme(settings, decoded.name, decoded.display, "imported");
+				settings = upsertDisplayTheme(settings, resolvedName, decoded.display, "imported");
 				settings.display = { ...backup };
 				saveSettings(settings);
-				notifyImported();
+				notifyImported(resolvedName);
 				if (lastContext) {
 					renderUsageWidget(lastContext, currentUsage);
 				}
