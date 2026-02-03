@@ -20,19 +20,34 @@ export interface DecodedDisplayShare {
 	isNewerVersion: boolean;
 }
 
-export function buildDisplayShareString(name: string, display: Settings["display"]): string {
+function encodeDisplaySharePayload(display: Settings["display"]): string {
 	const payload: DisplaySharePayload = { v: DISPLAY_SHARE_VERSION, display };
-	const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+	return Buffer.from(JSON.stringify(payload)).toString("base64url");
+}
+
+export function buildDisplayShareString(name: string, display: Settings["display"]): string {
+	const encoded = encodeDisplaySharePayload(display);
 	const trimmedName = name.trim() || "custom";
 	return `${trimmedName}${SHARE_SEPARATOR}${encoded}`;
 }
 
+export function buildDisplayShareStringWithoutName(display: Settings["display"]): string {
+	return encodeDisplaySharePayload(display);
+}
+
 export function decodeDisplayShareString(input: string): DecodedDisplayShare | null {
 	const trimmed = input.trim();
+	if (!trimmed) return null;
+	let name = "custom";
+	let payload = trimmed;
 	const separatorIndex = trimmed.indexOf(SHARE_SEPARATOR);
-	if (separatorIndex <= 0) return null;
-	const name = trimmed.slice(0, separatorIndex).trim() || "custom";
-	const payload = trimmed.slice(separatorIndex + 1).trim();
+	if (separatorIndex >= 0) {
+		const candidateName = trimmed.slice(0, separatorIndex).trim();
+		payload = trimmed.slice(separatorIndex + 1).trim();
+		if (candidateName) {
+			name = candidateName;
+		}
+	}
 	if (!payload) return null;
 	try {
 		const decoded = Buffer.from(payload, "base64url").toString("utf-8");

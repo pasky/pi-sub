@@ -42,7 +42,12 @@ import {
 	saveDisplayTheme,
 	upsertDisplayTheme,
 } from "./themes.js";
-import { buildDisplayShareString, decodeDisplayShareString, type DecodedDisplayShare } from "../share.js";
+import {
+	buildDisplayShareString,
+	buildDisplayShareStringWithoutName,
+	decodeDisplayShareString,
+	type DecodedDisplayShare,
+} from "../share.js";
 
 /**
  * Settings category
@@ -57,6 +62,7 @@ type SettingsCategory =
 	| "display"
 	| "display-theme"
 	| "display-theme-save"
+	| "display-theme-share"
 	| "display-theme-load"
 	| "display-theme-action"
 	| "display-theme-import"
@@ -325,6 +331,7 @@ export async function showSettingsUI(
 					display: "Display Settings",
 					"display-theme": "Theme",
 					"display-theme-save": "Save Theme",
+					"display-theme-share": "Share Theme",
 					"display-theme-load": "Load Theme",
 					"display-theme-action": "Manage Theme",
 					"display-theme-import": "Import Theme",
@@ -584,6 +591,13 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 						ctx.ui.notify(`Theme ${trimmed} saved`, "info");
+						const shareString = buildDisplayShareString(trimmed, settings.display);
+						if (onDisplayThemeShared) {
+							void onDisplayThemeShared(trimmed, shareString);
+							ctx.ui.notify("Theme share string posted to chat", "info");
+						} else {
+							ctx.ui.notify(shareString, "info");
+						}
 						currentCategory = "display-theme";
 						rebuild();
 						tui.requestRender();
@@ -597,6 +611,18 @@ export async function showSettingsUI(
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 					activeList = input;
+				} else if (currentCategory === "display-theme-share") {
+					displayThemeSelection = "display-theme-share";
+					const shareString = buildDisplayShareStringWithoutName(settings.display);
+					if (onDisplayThemeShared) {
+						void onDisplayThemeShared("Current Theme", shareString);
+						ctx.ui.notify("Theme share string posted to chat", "info");
+					} else {
+						ctx.ui.notify(shareString, "info");
+					}
+					currentCategory = "display-theme";
+					rebuild();
+					tui.requestRender();
 				} else if (currentCategory === "display-theme-load") {
 					if (!displayPreviewBackup) {
 						displayPreviewBackup = { ...settings.display };

@@ -133,6 +133,12 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 			tooltip: "Save the current display theme with a custom name.",
 		},
 		{
+			value: "display-theme-share",
+			label: "Share theme",
+			description: "share without a name",
+			tooltip: "Post a share string for the current theme without a name.",
+		},
+		{
 			value: "display-theme-load",
 			label: "Manage & Load themes",
 			description: "load, share, delete and restore themes",
