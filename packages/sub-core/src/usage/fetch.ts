@@ -15,8 +15,16 @@ export function getCacheTtlMs(settings: Settings): number {
 	return settings.behavior.refreshInterval * 1000;
 }
 
+export function getMinRefreshIntervalMs(settings: Settings): number {
+	return settings.behavior.minRefreshInterval * 1000;
+}
+
 export function getStatusCacheTtlMs(settings: Settings): number {
 	return settings.statusRefresh.refreshInterval * 1000;
+}
+
+export function getStatusMinRefreshIntervalMs(settings: Settings): number {
+	return settings.statusRefresh.minRefreshInterval * 1000;
 }
 
 const PROVIDER_FETCH_CONCURRENCY = 3;
@@ -48,15 +56,22 @@ function resolveStatusFetchedAt(entry?: { fetchedAt: number; statusFetchedAt?: n
 	return entry.statusFetchedAt ?? entry.fetchedAt;
 }
 
+function isWithinMinInterval(fetchedAt: number | undefined, minIntervalMs: number): boolean {
+	if (!fetchedAt || minIntervalMs <= 0) return false;
+	return Date.now() - fetchedAt < minIntervalMs;
+}
+
 function shouldRefreshStatus(
 	settings: Settings,
 	entry?: { fetchedAt: number; statusFetchedAt?: number } | null,
 	options?: { force?: boolean }
 ): boolean {
+	const fetchedAt = resolveStatusFetchedAt(entry);
+	const minIntervalMs = getStatusMinRefreshIntervalMs(settings);
+	if (isWithinMinInterval(fetchedAt, minIntervalMs)) return false;
 	if (options?.force) return true;
 	const ttlMs = getStatusCacheTtlMs(settings);
 	if (ttlMs <= 0) return true;
-	const fetchedAt = resolveStatusFetchedAt(entry);
 	if (!fetchedAt) return true;
 	return Date.now() - fetchedAt >= ttlMs;
 }
@@ -108,6 +123,11 @@ export async function fetchUsageForProvider(
 	const cache = readCache();
 	const cachedEntry = cache[provider];
 	const cachedStatus = cachedEntry?.status;
+	const minIntervalMs = getMinRefreshIntervalMs(settings);
+	if (cachedEntry?.usage && isWithinMinInterval(cachedEntry.fetchedAt, minIntervalMs)) {
+		const usage = { ...cachedEntry.usage, status: cachedEntry.status } as UsageSnapshot;
+		return { usage, status: cachedEntry.status };
+	}
 	const providerInstance = createProvider(provider);
 	const shouldFetchStatus = Boolean(options?.forceStatus)
 		&& settings.providers[provider].fetchStatus

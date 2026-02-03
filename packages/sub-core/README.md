@@ -51,7 +51,7 @@ Alternative (no symlink): add it to `~/.pi/agent/settings.json`:
 
 Use `sub-core:settings` to configure shared provider settings plus **Usage Refresh Settings** and **Status Refresh Settings**. Provider enablement supports `auto` (default), `on`, and `off` — `auto` enables a provider only when credentials are detected.
 
-Usage refresh controls cache/usage updates, while status refresh controls incident polling (you can keep status on a slower interval).
+Usage refresh controls cache/usage updates, while status refresh controls incident polling (you can keep status on a slower interval). The Minimum Refresh Interval caps how often refresh triggers can fetch new data even if you refresh every turn.
 
 Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `google-antigravity` key.
 

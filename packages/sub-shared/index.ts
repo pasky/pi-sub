@@ -77,12 +77,14 @@ export interface CoreProviderSettingsMap {
 
 export interface BehaviorSettings {
 	refreshInterval: number;
+	minRefreshInterval: number;
 	refreshOnTurnStart: boolean;
 	refreshOnToolResult: boolean;
 }
 
 export const DEFAULT_BEHAVIOR_SETTINGS: BehaviorSettings = {
 	refreshInterval: 60,
+	minRefreshInterval: 10,
 	refreshOnTurnStart: false,
 	refreshOnToolResult: false,
 };

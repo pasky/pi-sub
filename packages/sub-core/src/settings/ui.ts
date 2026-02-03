@@ -106,6 +106,23 @@ export async function showSettingsUI(
 				return clamped === 0 ? "off" : `${clamped}s`;
 			};
 
+			const parseMinRefreshInterval = (raw: string): string | null => {
+				const trimmed = raw.trim().toLowerCase();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a value", "warning");
+					return null;
+				}
+				if (trimmed === "off") return "off";
+				const cleaned = trimmed.replace(/s$/, "");
+				const parsed = Number.parseInt(cleaned, 10);
+				if (Number.isNaN(parsed)) {
+					ctx.ui.notify("Enter seconds", "warning");
+					return null;
+				}
+				const clamped = parsed <= 0 ? 0 : clamp(parsed, 5, 3600);
+				return clamped === 0 ? "off" : `${clamped}s`;
+			};
+
 			const parseCurrencySymbol = (raw: string): string | null => {
 				const trimmed = raw.trim();
 				if (!trimmed) {
@@ -319,6 +336,7 @@ export async function showSettingsUI(
 						items = buildRefreshItems(refreshTarget);
 						const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {
 							refreshInterval: buildInputSubmenu("Auto-refresh Interval (seconds)", parseRefreshInterval),
+						minRefreshInterval: buildInputSubmenu("Minimum Refresh Interval (seconds)", parseMinRefreshInterval),
 						};
 						for (const item of items) {
 							if (item.values?.includes(CUSTOM_OPTION) && customHandlers[item.id]) {

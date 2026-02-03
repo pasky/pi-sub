@@ -16,6 +16,13 @@ export function buildRefreshItems(settings: BehaviorSettings): SettingItem[] {
 			description: "How often to refresh automatically.",
 		},
 		{
+			id: "minRefreshInterval",
+			label: "Minimum Refresh Interval",
+			currentValue: settings.minRefreshInterval === 0 ? "off" : `${settings.minRefreshInterval}s`,
+			values: ["off", "5s", "10s", "15s", "30s", "60s", "120s", CUSTOM_OPTION],
+			description: "Cap refreshes even when triggered each turn.",
+		},
+		{
 			id: "refreshOnTurnStart",
 			label: "Refresh on Turn Start",
 			currentValue: settings.refreshOnTurnStart ? "on" : "off",
@@ -36,6 +43,9 @@ export function applyRefreshChange(settings: BehaviorSettings, id: string, value
 	switch (id) {
 		case "refreshInterval":
 			settings.refreshInterval = value === "off" ? 0 : parseInt(value, 10);
+			break;
+		case "minRefreshInterval":
+			settings.minRefreshInterval = value === "off" ? 0 : parseInt(value, 10);
 			break;
 		case "refreshOnTurnStart":
 			settings.refreshOnTurnStart = value === "on";
