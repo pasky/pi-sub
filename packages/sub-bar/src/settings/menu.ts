@@ -14,8 +14,14 @@ export function buildMainMenuItems(settings: Settings, pinnedProvider?: Provider
 	const pinnedLabel = pinnedProvider ? PROVIDER_DISPLAY_NAMES[pinnedProvider] : "auto (current provider)";
 	return [
 		{
+			value: "display-theme",
+			label: "Themes",
+			description: "save, manage, share",
+			tooltip: "Save, load, and share display themes.",
+		},
+		{
 			value: "display",
-			label: "Display Settings",
+			label: "Adv. Display Settings",
 			description: "layout, bars, colors",
 			tooltip: "Adjust layout, colors, bar styling, status indicators, and dividers.",
 		},
@@ -74,12 +80,6 @@ export function buildProviderListItems(settings: Settings, coreProviders?: CoreP
 export function buildDisplayMenuItems(): TooltipSelectItem[] {
 	return [
 		{
-			value: "display-theme",
-			label: "Theme",
-			description: "save, manage, share",
-			tooltip: "Save or manage display themes.",
-		},
-		{
 			value: "display-layout",
 			label: "Layout & Structure",
 			description: "alignment, wrapping, padding",
@@ -134,7 +134,7 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 		},
 		{
 			value: "display-theme-load",
-			label: "Manage & Load Themes",
+			label: "Load & Manage themes",
 			description: "load, share, rename and delete themes",
 			tooltip: "Load, share, delete, rename, and restore saved themes.",
 		},
