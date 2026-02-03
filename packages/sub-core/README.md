@@ -63,8 +63,10 @@ Anthropic extra usage formatting is controlled in Provider Settings (currency sy
 
 Sub-core stores a shared cache and lock file:
 
-- `cache.json` (next to the extension entry)
-- `cache.lock` (next to the extension entry)
+- `~/.pi/agent/pi-sub-core-cache.json`
+- `~/.pi/agent/pi-sub-core-cache.lock`
+
+Legacy cache files next to the extension entry are migrated to the agent directory and removed on first run.
 
 ## Security notes
 

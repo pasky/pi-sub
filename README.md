@@ -99,8 +99,8 @@ UI extensions like `sub-bar` listen for updates and render the current provider 
 
 - **sub-core settings**: `settings.json` next to the sub-core extension entry
 - **sub-bar settings**: `settings.json` next to the sub-bar extension entry
-- **cache**: `cache.json` next to the sub-core extension entry
-- **lock**: `cache.lock` next to the sub-core extension entry
+- **cache**: `~/.pi/agent/pi-sub-core-cache.json`
+- **lock**: `~/.pi/agent/pi-sub-core-cache.lock`
 
 ## Adding a Provider (summary)
 
