@@ -57,7 +57,9 @@ Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `
 
 Anthropic extra usage formatting is controlled in Provider Settings (currency symbol + decimal separator).
 
-**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
+Settings are stored in `~/.pi/agent/pi-sub-core-settings.json` (migrated from the legacy extension `settings.json` when present; the legacy file is removed after a successful migration).
+
+**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `pi-sub-core-settings.json`).
 
 ## Cache
 

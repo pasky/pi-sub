@@ -97,8 +97,10 @@ UI extensions like `sub-bar` listen for updates and render the current provider 
 
 ## Settings & Cache
 
-- **sub-core settings**: `settings.json` next to the sub-core extension entry
-- **sub-bar settings**: `settings.json` next to the sub-bar extension entry
+Settings live in the agent directory to survive updates (legacy extension `settings.json` files are migrated on first run when present, and removed after successful migration):
+
+- **sub-core settings**: `~/.pi/agent/pi-sub-core-settings.json`
+- **sub-bar settings**: `~/.pi/agent/pi-sub-bar-settings.json`
 - **cache**: `cache.json` next to the sub-core extension entry
 - **lock**: `cache.lock` next to the sub-core extension entry
 

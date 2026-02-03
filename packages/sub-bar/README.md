@@ -110,9 +110,9 @@ The extension loads automatically. Use:
 
 ## Settings
 
-Display and provider UI settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Core settings are managed by sub-core, and the sub-bar settings menu includes a shortcut that points you to `sub-core:settings` for additional options.
+Display and provider UI settings are stored in `~/.pi/agent/pi-sub-bar-settings.json` (migrated from the legacy extension `settings.json` when present; the legacy file is removed after a successful migration). Core settings are managed by sub-core, and the sub-bar settings menu includes a shortcut that points you to `sub-core:settings` for additional options.
 
-**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
+**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `pi-sub-bar-settings.json`).
 
 ### Provider UI Settings
 

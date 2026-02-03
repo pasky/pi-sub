@@ -6,12 +6,13 @@ import * as path from "node:path";
 import type { Settings } from "./settings-types.js";
 import { getDefaultSettings, mergeSettings } from "./settings-types.js";
 import { getStorage } from "./storage.js";
-import { getSettingsPath } from "./paths.js";
+import { getLegacySettingsPath, getSettingsPath } from "./paths.js";
 
 /**
  * Settings file path
  */
 export const SETTINGS_PATH = getSettingsPath();
+const LEGACY_SETTINGS_PATH = getLegacySettingsPath();
 
 /**
  * In-memory settings cache
@@ -42,19 +43,24 @@ function parseSettings(content: string): Settings {
 	} as Partial<Settings>);
 }
 
-function loadSettingsFromDisk(): Settings | null {
+function loadSettingsFromDisk(settingsPath: string): Settings | null {
 	const storage = getStorage();
-	try {
-		if (storage.exists(SETTINGS_PATH)) {
-			const content = storage.readFile(SETTINGS_PATH);
-			if (content) {
-				return parseSettings(content);
-			}
+	if (storage.exists(settingsPath)) {
+		const content = storage.readFile(settingsPath);
+		if (content) {
+			return parseSettings(content);
 		}
-	} catch {
-		return null;
 	}
 	return null;
+}
+
+function tryLoadSettings(settingsPath: string): Settings | null {
+	try {
+		return loadSettingsFromDisk(settingsPath);
+	} catch (error) {
+		console.error(`Failed to load settings from ${settingsPath}:`, error);
+		return null;
+	}
 }
 
 /**
@@ -65,14 +71,20 @@ export function loadSettings(): Settings {
 		return cachedSettings;
 	}
 
-	try {
-		const diskSettings = loadSettingsFromDisk();
-		if (diskSettings) {
-			cachedSettings = diskSettings;
-			return cachedSettings;
+	const diskSettings = tryLoadSettings(SETTINGS_PATH);
+	if (diskSettings) {
+		cachedSettings = diskSettings;
+		return cachedSettings;
+	}
+
+	const legacySettings = tryLoadSettings(LEGACY_SETTINGS_PATH);
+	if (legacySettings) {
+		const saved = saveSettings(legacySettings);
+		if (saved) {
+			getStorage().removeFile(LEGACY_SETTINGS_PATH);
 		}
-	} catch (error) {
-		console.error(`Failed to load settings from ${SETTINGS_PATH}:`, error);
+		cachedSettings = legacySettings;
+		return cachedSettings;
 	}
 
 	// Return defaults if file doesn't exist or failed to load
@@ -89,7 +101,7 @@ export function saveSettings(settings: Settings): boolean {
 		ensureSettingsDir();
 		let next = settings;
 		if (cachedSettings) {
-			const diskSettings = loadSettingsFromDisk();
+			const diskSettings = loadSettingsFromDisk(SETTINGS_PATH);
 			if (diskSettings) {
 				const displayChanged = JSON.stringify(settings.display) !== JSON.stringify(cachedSettings.display);
 				const providersChanged = JSON.stringify(settings.providers) !== JSON.stringify(cachedSettings.providers);
