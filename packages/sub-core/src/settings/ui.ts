@@ -13,6 +13,7 @@ import { getSettings, saveSettings, resetSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
 import { buildRefreshItems, applyRefreshChange } from "./behavior.js";
+import { buildToolItems, applyToolChange } from "./tools.js";
 import { buildMainMenuItems, buildProviderListItems, buildProviderOrderItems, type TooltipSelectItem } from "./menu.js";
 
 /**
@@ -26,6 +27,7 @@ type SettingsCategory =
 	| ProviderCategory
 	| "behavior"
 	| "status-refresh"
+	| "tools"
 	| "provider-order";
 
 /**
@@ -163,6 +165,7 @@ export async function showSettingsUI(
 					providers: "Provider Settings",
 					behavior: "Usage Refresh Settings",
 					"status-refresh": "Status Refresh Settings",
+					tools: "Tool Settings",
 					"provider-order": "Provider Order",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
@@ -331,6 +334,14 @@ export async function showSettingsUI(
 							if (onSettingsChange) void onSettingsChange(settings);
 						};
 						backCategory = "providers";
+					} else if (currentCategory === "tools") {
+						items = buildToolItems(settings.tools);
+						handleChange = (id, value) => {
+							settings = applyToolChange(settings, id, value);
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+						};
+						backCategory = "main";
 					} else {
 						const refreshTarget = currentCategory === "status-refresh" ? settings.statusRefresh : settings.behavior;
 						items = buildRefreshItems(refreshTarget);
@@ -379,6 +390,7 @@ export async function showSettingsUI(
 				const usesSettingsList =
 					currentCategory === "behavior" ||
 					currentCategory === "status-refresh" ||
+					currentCategory === "tools" ||
 					getProviderFromCategory(currentCategory) !== null;
 				if (!usesSettingsList) {
 					let helpText: string;

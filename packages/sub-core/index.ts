@@ -76,7 +76,6 @@ function stripUsageProvider(usage?: UsageSnapshot): Omit<UsageSnapshot, "provide
  */
 export default function createExtension(pi: ExtensionAPI, deps: Dependencies = createDefaultDependencies()): void {
 	if (subCoreGlobal.__piSubCore?.active) {
-		console.warn("[sub-core] Duplicate instance detected; skipping initialization.");
 		return;
 	}
 	subCoreGlobal.__piSubCore = { active: true };
@@ -256,13 +255,19 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		});
 	};
 
-	for (const name of TOOL_NAMES.usage) {
-		registerUsageTool(name);
-	}
-	for (const name of TOOL_NAMES.allUsage) {
-		registerAllUsageTool(name);
-	}
+	const usageToolEnabled = settings.tools?.usageTool ?? false;
+	const allUsageToolEnabled = settings.tools?.allUsageTool ?? false;
 
+	if (usageToolEnabled) {
+		for (const name of TOOL_NAMES.usage) {
+			registerUsageTool(name);
+		}
+	}
+	if (allUsageToolEnabled) {
+		for (const name of TOOL_NAMES.allUsage) {
+			registerAllUsageTool(name);
+		}
+	}
 	pi.registerCommand("sub-core:settings", {
 		description: "Open sub-core settings",
 		handler: async (_args, ctx) => {

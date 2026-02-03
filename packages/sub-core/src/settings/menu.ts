@@ -12,6 +12,8 @@ export type TooltipSelectItem = SelectItem & { tooltip?: string };
 export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 	const enabledCount = Object.values(settings.providers).filter((p) => p.enabled !== "off" && p.enabled !== false).length;
 	const totalCount = Object.keys(settings.providers).length;
+	const toolEnabledCount = [settings.tools.usageTool, settings.tools.allUsageTool].filter(Boolean).length;
+	const toolTotalCount = 2;
 
 	return [
 		{
@@ -31,6 +33,12 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 			label: "Status Refresh Settings",
 			description: `refresh ${settings.statusRefresh.refreshInterval}s`,
 			tooltip: "Control status refresh interval and triggers.",
+		},
+		{
+			value: "tools",
+			label: "Tool Settings",
+			description: `${toolEnabledCount}/${toolTotalCount} enabled`,
+			tooltip: "Enable sub-core tools (requires /reload to take effect).",
 		},
 		{
 			value: "provider-order",

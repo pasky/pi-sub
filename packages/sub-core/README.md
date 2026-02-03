@@ -42,7 +42,21 @@ Alternative (no symlink): add it to `~/.pi/agent/settings.json`:
 
 ## Tool Access
 
-`sub-core` registers tools to expose usage snapshots to Pi:
+Tool registration is gated by `tools` in `~/.pi/agent/pi-sub-core-settings.json`.
+By default, both tools are **off**. To enable them, set:
+
+```json
+{
+  "tools": {
+    "usageTool": true,
+    "allUsageTool": true
+  }
+}
+```
+
+Then run `/reload` (tool registration only happens on load). You can also toggle these in `/sub-core:settings` → Tool Settings.
+
+When enabled, `sub-core` registers tools to expose usage snapshots to Pi:
 
 - `sub_get_usage` / `get_current_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
 - `sub_get_all_usage` / `get_all_usage` – refreshes and returns all enabled provider entries (auto-enabled providers require credentials).
