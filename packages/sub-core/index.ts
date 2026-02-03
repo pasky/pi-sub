@@ -34,11 +34,11 @@ type SubCoreAction = {
 };
 
 const TOOL_NAMES = {
-	usage: "sub_get_usage",
-	allUsage: "sub_get_all_usage",
+	usage: ["sub_get_usage", "get_current_usage"],
+	allUsage: ["sub_get_all_usage", "get_all_usage"],
 } as const;
 
-type ToolName = (typeof TOOL_NAMES)[keyof typeof TOOL_NAMES];
+type ToolName = (typeof TOOL_NAMES)[keyof typeof TOOL_NAMES][number];
 
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 	const result = { ...target } as T;
@@ -133,18 +133,20 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 
 	function syncToolActivation(): void {
 		const activeTools = new Set(pi.getActiveTools());
-		const desiredTools: Array<{ name: ToolName; enabled: boolean }> = [
-			{ name: TOOL_NAMES.usage, enabled: settings.tools.usageTool },
-			{ name: TOOL_NAMES.allUsage, enabled: settings.tools.allUsageTool },
+		const desiredTools: Array<{ names: readonly ToolName[]; enabled: boolean }> = [
+			{ names: TOOL_NAMES.usage, enabled: settings.tools.usageTool },
+			{ names: TOOL_NAMES.allUsage, enabled: settings.tools.allUsageTool },
 		];
 		let changed = false;
 		for (const tool of desiredTools) {
-			if (tool.enabled && !activeTools.has(tool.name)) {
-				activeTools.add(tool.name);
-				changed = true;
-			} else if (!tool.enabled && activeTools.has(tool.name)) {
-				activeTools.delete(tool.name);
-				changed = true;
+			for (const name of tool.names) {
+				if (tool.enabled && !activeTools.has(name)) {
+					activeTools.add(name);
+					changed = true;
+				} else if (!tool.enabled && activeTools.has(name)) {
+					activeTools.delete(name);
+					changed = true;
+				}
 			}
 		}
 		if (changed) {
@@ -226,46 +228,55 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		return getCachedUsageEntries(enabledProviders, settings);
 	}
 
-	pi.registerTool({
-		name: TOOL_NAMES.usage,
-		label: "Sub Usage",
-		description: "Refresh and return the latest subscription usage snapshot.",
-		parameters: Type.Object({
-			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
-		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
-			const { force } = params as { force?: boolean };
-			await refresh(ctx, { force: force ?? true });
-			const payload = { provider: lastState.provider, usage: stripUsageProvider(lastState.usage) };
-			return {
-				content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
-				details: payload,
-			};
-		},
-	});
+	const registerUsageTool = (name: ToolName): void => {
+		pi.registerTool({
+			name,
+			label: "Sub Usage",
+			description: "Refresh and return the latest subscription usage snapshot.",
+			parameters: Type.Object({
+				force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
+			}),
+			async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+				const { force } = params as { force?: boolean };
+				await refresh(ctx, { force: force ?? true });
+				const payload = { provider: lastState.provider, usage: stripUsageProvider(lastState.usage) };
+				return {
+					content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+					details: payload,
+				};
+			},
+		});
+	};
 
-	pi.registerTool({
-		name: TOOL_NAMES.allUsage,
-		label: "Sub All Usage",
-		description: "Refresh and return usage snapshots for all enabled providers.",
-		parameters: Type.Object({
-			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
-		}),
-		async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
-			const { force } = params as { force?: boolean };
-			const entries = await getEntries(force ?? true);
-			const payload = entries.map((entry) => ({
-				provider: entry.provider,
-				usage: stripUsageProvider(entry.usage),
-			}));
-			return {
-				content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
-				details: { entries: payload },
-			};
-		},
-	});
+	const registerAllUsageTool = (name: ToolName): void => {
+		pi.registerTool({
+			name,
+			label: "Sub All Usage",
+			description: "Refresh and return usage snapshots for all enabled providers.",
+			parameters: Type.Object({
+				force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
+			}),
+			async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+				const { force } = params as { force?: boolean };
+				const entries = await getEntries(force ?? true);
+				const payload = entries.map((entry) => ({
+					provider: entry.provider,
+					usage: stripUsageProvider(entry.usage),
+				}));
+				return {
+					content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+					details: { entries: payload },
+				};
+			},
+		});
+	};
 
-	syncToolActivation();
+	for (const name of TOOL_NAMES.usage) {
+		registerUsageTool(name);
+	}
+	for (const name of TOOL_NAMES.allUsage) {
+		registerAllUsageTool(name);
+	}
 
 	pi.registerCommand("sub-core:settings", {
 		description: "Open sub-core settings",

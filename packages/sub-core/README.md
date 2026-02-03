@@ -44,8 +44,8 @@ Alternative (no symlink): add it to `~/.pi/agent/settings.json`:
 
 `sub-core` registers tools to expose usage snapshots to Pi:
 
-- `sub_get_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
-- `sub_get_all_usage` – refreshes and returns all enabled provider entries (auto-enabled providers require credentials).
+- `sub_get_usage` / `get_current_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
+- `sub_get_all_usage` / `get_all_usage` – refreshes and returns all enabled provider entries (auto-enabled providers require credentials).
 
 ## Settings
 
@@ -53,7 +53,7 @@ Use `sub-core:settings` to configure shared provider settings plus **Usage Refre
 
 Usage refresh controls cache/usage updates, while status refresh controls incident polling (you can keep status on a slower interval). The Minimum Refresh Interval caps how often refresh triggers can fetch new data even if you refresh every turn.
 
-Tools settings allow you to expose `sub_get_usage` and `sub_get_all_usage` to the model. These are off by default and can be toggled on in `sub-core:settings` → Tools.
+Tools settings allow you to expose `sub_get_usage`/`get_current_usage` and `sub_get_all_usage`/`get_all_usage` to the model. These are off by default and can be toggled on in `sub-core:settings` → Tools.
 
 Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `google-antigravity` key.
 

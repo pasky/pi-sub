@@ -12,14 +12,14 @@ export function buildToolItems(settings: ToolsSettings): SettingItem[] {
 			label: "Usage Tool",
 			currentValue: settings.usageTool ? "on" : "off",
 			values: ["on", "off"],
-			description: "Expose sub_get_usage to fetch current provider usage.",
+			description: "Expose sub_get_usage / get_current_usage to fetch current provider usage.",
 		},
 		{
 			id: "allUsageTool",
 			label: "All Usage Tool",
 			currentValue: settings.allUsageTool ? "on" : "off",
 			values: ["on", "off"],
-			description: "Expose sub_get_all_usage for all enabled providers.",
+			description: "Expose sub_get_all_usage / get_all_usage for all enabled providers.",
 		},
 	];
 }

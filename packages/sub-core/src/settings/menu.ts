@@ -39,7 +39,7 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 			value: "tools",
 			label: "Tools",
 			description: toolDescription,
-			tooltip: "Enable or disable sub-core tools (sub_get_usage, sub_get_all_usage).",
+			tooltip: "Enable or disable sub-core tools (sub_get_usage/get_current_usage, sub_get_all_usage/get_all_usage).",
 		},
 		{
 			value: "provider-order",
