@@ -395,7 +395,7 @@ export function getDefaultSettings(): Settings {
 				windows: {
 					show5h: true,
 					show7d: true,
-					showExtra: true,
+					showExtra: false,
 				},
 			},
 			copilot: {
