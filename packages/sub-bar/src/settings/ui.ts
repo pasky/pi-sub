@@ -42,7 +42,12 @@ import {
 	saveDisplayTheme,
 	upsertDisplayTheme,
 } from "./themes.js";
-import { buildDisplayShareString, decodeDisplayShareString, type DecodedDisplayShare } from "../share.js";
+import {
+	buildDisplayShareString,
+	buildDisplayShareStringWithoutName,
+	decodeDisplayShareString,
+	type DecodedDisplayShare,
+} from "../share.js";
 
 /**
  * Settings category
@@ -57,10 +62,12 @@ type SettingsCategory =
 	| "display"
 	| "display-theme"
 	| "display-theme-save"
+	| "display-theme-share"
 	| "display-theme-load"
 	| "display-theme-action"
 	| "display-theme-import"
 	| "display-theme-import-action"
+	| "display-theme-import-name"
 	| "display-theme-random"
 	| "display-theme-restore"
 	| "display-layout"
@@ -105,6 +112,7 @@ export async function showSettingsUI(
 			let pinnedProviderBackup: ProviderName | null | undefined;
 			let importCandidate: DecodedDisplayShare | null = null;
 			let importBackup: Settings["display"] | null = null;
+			let importPendingAction: "save" | "save-apply" | null = null;
 			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 			const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -325,9 +333,11 @@ export async function showSettingsUI(
 					display: "Display Settings",
 					"display-theme": "Theme",
 					"display-theme-save": "Save Theme",
+					"display-theme-share": "Share Theme",
 					"display-theme-load": "Load Theme",
 					"display-theme-action": "Manage Theme",
 					"display-theme-import": "Import Theme",
+					"display-theme-import-name": "Name Theme",
 					"display-theme-restore": "Restore Theme",
 					"display-layout": "Layout & Structure",
 					"display-bar": "Bars",
@@ -584,6 +594,13 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 						ctx.ui.notify(`Theme ${trimmed} saved`, "info");
+						const shareString = buildDisplayShareString(trimmed, settings.display);
+						if (onDisplayThemeShared) {
+							void onDisplayThemeShared(trimmed, shareString);
+							ctx.ui.notify("Theme share string posted to chat", "info");
+						} else {
+							ctx.ui.notify(shareString, "info");
+						}
 						currentCategory = "display-theme";
 						rebuild();
 						tui.requestRender();
@@ -597,6 +614,18 @@ export async function showSettingsUI(
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 					activeList = input;
+				} else if (currentCategory === "display-theme-share") {
+					displayThemeSelection = "display-theme-share";
+					const shareString = buildDisplayShareStringWithoutName(settings.display);
+					if (onDisplayThemeShared) {
+						void onDisplayThemeShared("Current Theme", shareString);
+						ctx.ui.notify("Theme share string posted to chat", "info");
+					} else {
+						ctx.ui.notify(shareString, "info");
+					}
+					currentCategory = "display-theme";
+					rebuild();
+					tui.requestRender();
 				} else if (currentCategory === "display-theme-load") {
 					if (!displayPreviewBackup) {
 						displayPreviewBackup = { ...settings.display };
@@ -689,11 +718,11 @@ export async function showSettingsUI(
 				} else if (currentCategory === "display-theme-import") {
 					const input = new Input();
 					input.focused = true;
-					const titleText = new Text(theme.fg("muted", "Share string"), 1, 0);
+					const titleText = new Text(theme.fg("muted", "Paste Theme Share string"), 1, 0);
 					input.onSubmit = (value) => {
 						const trimmed = value.trim();
 						if (!trimmed) {
-							ctx.ui.notify("Enter a share string", "warning");
+							ctx.ui.notify("Enter a theme share string", "warning");
 							return;
 						}
 						const decoded = decodeDisplayShareString(trimmed);
@@ -751,10 +780,10 @@ export async function showSettingsUI(
 						},
 					];
 
-					const notifyImported = () => {
+					const notifyImported = (name: string) => {
 						const message = candidate.isNewerVersion
-							? `Imported ${candidate.name} (newer version, some fields may be ignored)`
-							: `Imported ${candidate.name}`;
+							? `Imported ${name} (newer version, some fields may be ignored)`
+							: `Imported ${name}`;
 						ctx.ui.notify(message, candidate.isNewerVersion ? "warning" : "info");
 					};
 
@@ -784,31 +813,42 @@ export async function showSettingsUI(
 					attachTooltip(importItems, selectList);
 
 					selectList.onSelect = (item) => {
+						if ((item.value === "save-apply" || item.value === "save") && !candidate.hasName) {
+							importPendingAction = item.value as "save" | "save-apply";
+							currentCategory = "display-theme-import-name";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
 						if (item.value === "save-apply") {
+							const resolvedName = candidate.name;
 							if (importBackup) {
 								settings.displayUserTheme = { ...importBackup };
 							}
-							settings = upsertDisplayTheme(settings, candidate.name, candidate.display, "imported");
+							settings = upsertDisplayTheme(settings, resolvedName, candidate.display, "imported");
 							settings.display = { ...candidate.display };
 							saveSettings(settings);
 							if (onSettingsChange) void onSettingsChange(settings);
-							if (onDisplayThemeApplied) void onDisplayThemeApplied(candidate.name, { source: "manual" });
-							notifyImported();
+							if (onDisplayThemeApplied) void onDisplayThemeApplied(resolvedName, { source: "manual" });
+							notifyImported(resolvedName);
 							displayPreviewBackup = null;
 							importCandidate = null;
 							importBackup = null;
+							importPendingAction = null;
 							currentCategory = "display-theme";
 							rebuild();
 							tui.requestRender();
 							return;
 						}
 						if (item.value === "save") {
-							settings = upsertDisplayTheme(settings, candidate.name, candidate.display, "imported");
+							const resolvedName = candidate.name;
+							settings = upsertDisplayTheme(settings, resolvedName, candidate.display, "imported");
 							restoreBackup();
 							saveSettings(settings);
-							notifyImported();
+							notifyImported(resolvedName);
 							importCandidate = null;
 							importBackup = null;
+							importPendingAction = null;
 							currentCategory = "display-theme-load";
 							rebuild();
 							tui.requestRender();
@@ -817,6 +857,7 @@ export async function showSettingsUI(
 						restoreBackup();
 						importCandidate = null;
 						importBackup = null;
+						importPendingAction = null;
 						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
@@ -825,12 +866,79 @@ export async function showSettingsUI(
 						restoreBackup();
 						importCandidate = null;
 						importBackup = null;
+						importPendingAction = null;
 						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 					};
 					activeList = selectList;
 					container.addChild(selectList);
+				} else if (currentCategory === "display-theme-import-name") {
+					const candidate = importCandidate;
+					if (!candidate) {
+						currentCategory = "display-theme-load";
+						rebuild();
+						tui.requestRender();
+						return;
+					}
+
+					const notifyImported = (name: string) => {
+						const message = candidate.isNewerVersion
+							? `Imported ${name} (newer version, some fields may be ignored)`
+							: `Imported ${name}`;
+						ctx.ui.notify(message, candidate.isNewerVersion ? "warning" : "info");
+					};
+
+					const restoreBackup = () => {
+						if (importBackup) {
+							settings.display = { ...importBackup };
+							if (onSettingsChange) void onSettingsChange(settings);
+						}
+					};
+
+					const input = new Input();
+					input.focused = true;
+					const titleText = new Text(theme.fg("muted", "Theme name"), 1, 0);
+					input.onSubmit = (value) => {
+						const trimmed = value.trim();
+						if (!trimmed) {
+							ctx.ui.notify("Enter a theme name", "warning");
+							return;
+						}
+						const applyImport = importPendingAction === "save-apply";
+						if (applyImport && importBackup) {
+							settings.displayUserTheme = { ...importBackup };
+						}
+						settings = upsertDisplayTheme(settings, trimmed, candidate.display, "imported");
+						if (applyImport) {
+							settings.display = { ...candidate.display };
+						} else {
+							restoreBackup();
+						}
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						if (applyImport && onDisplayThemeApplied) {
+							void onDisplayThemeApplied(trimmed, { source: "manual" });
+						}
+						notifyImported(trimmed);
+						displayPreviewBackup = null;
+						importCandidate = null;
+						importBackup = null;
+						importPendingAction = null;
+						currentCategory = applyImport ? "display-theme" : "display-theme-load";
+						rebuild();
+						tui.requestRender();
+					};
+					input.onEscape = () => {
+						importPendingAction = null;
+						currentCategory = "display-theme-import-action";
+						rebuild();
+						tui.requestRender();
+					};
+					container.addChild(titleText);
+					container.addChild(new Spacer(1));
+					container.addChild(input);
+					activeList = input;
 				} else if (currentCategory === "display-theme-action") {
 					const target = themeActionTarget;
 					if (!target) {
@@ -1035,10 +1143,10 @@ export async function showSettingsUI(
 					currentCategory === "display-color";
 				if (!usesSettingsList) {
 					let helpText: string;
-					if (currentCategory === "display-theme-save") {
+					if (currentCategory === "display-theme-save" || currentCategory === "display-theme-import-name") {
 						helpText = "Type name • Enter to save • Esc back";
 					} else if (currentCategory === "display-theme-import") {
-						helpText = "Paste share string • Enter to import • Esc back";
+						helpText = "Paste theme share string • Enter to import • Esc back";
 					} else if (
 						currentCategory === "main" ||
 						currentCategory === "providers" ||
