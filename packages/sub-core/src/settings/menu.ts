@@ -13,8 +13,9 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 	const enabledCount = Object.values(settings.providers).filter((p) => p.enabled !== "off" && p.enabled !== false).length;
 	const totalCount = Object.keys(settings.providers).length;
 
-	const toolEnabledCount = Object.values(settings.tools).filter(Boolean).length;
-	const toolDescription = toolEnabledCount === 0 ? "disabled" : `${toolEnabledCount}/2 enabled`;
+	const tools = settings.tools ?? { usageTool: false, allUsageTool: false };
+	const toolEnabledCount = Object.values(tools).filter(Boolean).length;
+	const toolDescription = toolEnabledCount === 0 ? "disabled by default" : `${toolEnabledCount}/2 enabled`;
 
 	return [
 		{
@@ -39,7 +40,7 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 			value: "tools",
 			label: "Tools",
 			description: toolDescription,
-			tooltip: "Enable or disable sub-core tools (sub_get_usage/get_current_usage, sub_get_all_usage/get_all_usage).",
+			tooltip: "Tools are disabled by default. See details to enable usage tools.",
 		},
 		{
 			value: "provider-order",

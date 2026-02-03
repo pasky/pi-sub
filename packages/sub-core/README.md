@@ -53,7 +53,16 @@ Use `sub-core:settings` to configure shared provider settings plus **Usage Refre
 
 Usage refresh controls cache/usage updates, while status refresh controls incident polling (you can keep status on a slower interval). The Minimum Refresh Interval caps how often refresh triggers can fetch new data even if you refresh every turn.
 
-Tools settings allow you to expose `sub_get_usage`/`get_current_usage` and `sub_get_all_usage`/`get_all_usage` to the model. These are off by default and can be toggled on in `sub-core:settings` → Tools.
+Tools are disabled by default. To enable them, edit `~/.pi/agent/pi-sub-core-settings.json` and set:
+
+```json
+"tools": {
+  "usageTool": true,
+  "allUsageTool": true
+}
+```
+
+Then run `/reload` (or restart pi) so the tools are registered.
 
 Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `google-antigravity` key.
 

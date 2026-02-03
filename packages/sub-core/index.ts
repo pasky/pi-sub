@@ -131,29 +131,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		emitCurrentUpdate(update.provider, update.usage);
 	}
 
-	function syncToolActivation(): void {
-		const activeTools = new Set(pi.getActiveTools());
-		const desiredTools: Array<{ names: readonly ToolName[]; enabled: boolean }> = [
-			{ names: TOOL_NAMES.usage, enabled: settings.tools.usageTool },
-			{ names: TOOL_NAMES.allUsage, enabled: settings.tools.allUsageTool },
-		];
-		let changed = false;
-		for (const tool of desiredTools) {
-			for (const name of tool.names) {
-				if (tool.enabled && !activeTools.has(name)) {
-					activeTools.add(name);
-					changed = true;
-				} else if (!tool.enabled && activeTools.has(name)) {
-					activeTools.delete(name);
-					changed = true;
-				}
-			}
-		}
-		if (changed) {
-			pi.setActiveTools(Array.from(activeTools));
-		}
-	}
-
 	async function refresh(ctx: ExtensionContext, options?: { force?: boolean; allowStaleCache?: boolean }) {
 		lastContext = ctx;
 		try {
@@ -215,7 +192,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		settings = deepMerge(settings, patch);
 		saveSettings(settings);
 		setupRefreshInterval();
-		syncToolActivation();
 		pi.events.emit("sub-core:settings:updated", { settings });
 	}
 
@@ -271,11 +247,16 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		});
 	};
 
-	for (const name of TOOL_NAMES.usage) {
-		registerUsageTool(name);
+	const toolsEnabled = settings.tools ?? { usageTool: false, allUsageTool: false };
+	if (toolsEnabled.usageTool) {
+		for (const name of TOOL_NAMES.usage) {
+			registerUsageTool(name);
+		}
 	}
-	for (const name of TOOL_NAMES.allUsage) {
-		registerAllUsageTool(name);
+	if (toolsEnabled.allUsageTool) {
+		for (const name of TOOL_NAMES.allUsage) {
+			registerAllUsageTool(name);
+		}
 	}
 
 	pi.registerCommand("sub-core:settings", {
@@ -339,7 +320,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		lastContext = ctx;
 		settings = loadSettings();
 		setupRefreshInterval();
-		syncToolActivation();
 		void refresh(ctx, { force: true, allowStaleCache: true });
 		void refreshStatus(ctx, { force: true, allowStaleCache: true });
 		pi.events.emit("sub-core:ready", { state: lastState, settings });

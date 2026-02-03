@@ -3,4 +3,4 @@
 "@marckrenn/pi-sub-shared": patch
 ---
 
-Add a Tools submenu in sub-core settings to enable or disable usage tools (off by default), with aliases `get_current_usage` and `get_all_usage`.
+Add a Tools submenu that explains how to enable usage tools (off by default) and add aliases `get_current_usage` and `get_all_usage`.
