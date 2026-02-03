@@ -340,8 +340,10 @@ export interface DisplaySettings {
 	showBottomDivider: boolean;
 	/** Widget overflow mode */
 	overflow: OverflowMode;
-	/** Left/right padding inside widget */
-	paddingX: number;
+	/** Left padding inside widget */
+	paddingLeft: number;
+	/** Right padding inside widget */
+	paddingRight: number;
 	/** Widget placement */
 	widgetPlacement: WidgetPlacement;
 	/** Error threshold (percentage remaining below this = red) */
@@ -395,7 +397,7 @@ export function getDefaultSettings(): Settings {
 				windows: {
 					show5h: true,
 					show7d: true,
-					showExtra: true,
+					showExtra: false,
 				},
 			},
 			copilot: {
@@ -487,7 +489,8 @@ export function getDefaultSettings(): Settings {
 			dividerFooterJoin: true,
 			showTopDivider: false,
 			showBottomDivider: true,
-			paddingX: 1,
+			paddingLeft: 1,
+			paddingRight: 1,
 			widgetPlacement: "belowEditor",
 			errorThreshold: 25,
 			warningThreshold: 50,
@@ -501,11 +504,13 @@ export function getDefaultSettings(): Settings {
 
 		behavior: {
 			refreshInterval: 60,
+			minRefreshInterval: 10,
 			refreshOnTurnStart: false,
 			refreshOnToolResult: false,
 		},
 		statusRefresh: {
 			refreshInterval: 60,
+			minRefreshInterval: 10,
 			refreshOnTurnStart: false,
 			refreshOnToolResult: false,
 		},
@@ -549,9 +554,18 @@ export function mergeSettings(loaded: Partial<Settings>): Settings {
 
 function migrateDisplaySettings(display?: Partial<DisplaySettings> | null): void {
 	if (!display) return;
-	const displayAny = display as Partial<DisplaySettings> & { widgetWrapping?: OverflowMode };
+	const displayAny = display as Partial<DisplaySettings> & { widgetWrapping?: OverflowMode; paddingX?: number };
 	if (displayAny.widgetWrapping !== undefined && displayAny.overflow === undefined) {
 		displayAny.overflow = displayAny.widgetWrapping;
+	}
+	if (displayAny.paddingX !== undefined) {
+		if (displayAny.paddingLeft === undefined) {
+			displayAny.paddingLeft = displayAny.paddingX;
+		}
+		if (displayAny.paddingRight === undefined) {
+			displayAny.paddingRight = displayAny.paddingX;
+		}
+		delete (displayAny as { paddingX?: unknown }).paddingX;
 	}
 	if ("widgetWrapping" in displayAny) {
 		delete (displayAny as { widgetWrapping?: unknown }).widgetWrapping;

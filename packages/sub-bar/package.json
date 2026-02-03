@@ -21,7 +21,8 @@
     "check": "tsc --noEmit",
     "check:watch": "tsc --noEmit --watch",
     "test": "tsx test/all.test.ts",
-    "test:watch": "tsx watch test/all.test.ts"
+    "test:watch": "tsx watch test/all.test.ts",
+    "prepack": "npm install --workspaces=false --omit=dev --no-package-lock"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

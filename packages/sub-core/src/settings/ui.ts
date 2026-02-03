@@ -13,6 +13,7 @@ import { getSettings, saveSettings, resetSettings } from "../settings.js";
 import { PROVIDER_DISPLAY_NAMES } from "../providers/metadata.js";
 import { buildProviderSettingsItems, applyProviderSettingsChange } from "../providers/settings.js";
 import { buildRefreshItems, applyRefreshChange } from "./behavior.js";
+import { buildToolItems, applyToolChange } from "./tools.js";
 import { buildMainMenuItems, buildProviderListItems, buildProviderOrderItems, type TooltipSelectItem } from "./menu.js";
 
 /**
@@ -26,6 +27,7 @@ type SettingsCategory =
 	| ProviderCategory
 	| "behavior"
 	| "status-refresh"
+	| "tools"
 	| "provider-order";
 
 /**
@@ -106,6 +108,23 @@ export async function showSettingsUI(
 				return clamped === 0 ? "off" : `${clamped}s`;
 			};
 
+			const parseMinRefreshInterval = (raw: string): string | null => {
+				const trimmed = raw.trim().toLowerCase();
+				if (!trimmed) {
+					ctx.ui.notify("Enter a value", "warning");
+					return null;
+				}
+				if (trimmed === "off") return "off";
+				const cleaned = trimmed.replace(/s$/, "");
+				const parsed = Number.parseInt(cleaned, 10);
+				if (Number.isNaN(parsed)) {
+					ctx.ui.notify("Enter seconds", "warning");
+					return null;
+				}
+				const clamped = parsed <= 0 ? 0 : clamp(parsed, 5, 3600);
+				return clamped === 0 ? "off" : `${clamped}s`;
+			};
+
 			const parseCurrencySymbol = (raw: string): string | null => {
 				const trimmed = raw.trim();
 				if (!trimmed) {
@@ -146,6 +165,7 @@ export async function showSettingsUI(
 					providers: "Provider Settings",
 					behavior: "Usage Refresh Settings",
 					"status-refresh": "Status Refresh Settings",
+					tools: "Tool Settings",
 					"provider-order": "Provider Order",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
@@ -314,11 +334,20 @@ export async function showSettingsUI(
 							if (onSettingsChange) void onSettingsChange(settings);
 						};
 						backCategory = "providers";
+					} else if (currentCategory === "tools") {
+						items = buildToolItems(settings.tools);
+						handleChange = (id, value) => {
+							settings = applyToolChange(settings, id, value);
+							saveSettings(settings);
+							if (onSettingsChange) void onSettingsChange(settings);
+						};
+						backCategory = "main";
 					} else {
 						const refreshTarget = currentCategory === "status-refresh" ? settings.statusRefresh : settings.behavior;
 						items = buildRefreshItems(refreshTarget);
 						const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {
 							refreshInterval: buildInputSubmenu("Auto-refresh Interval (seconds)", parseRefreshInterval),
+							minRefreshInterval: buildInputSubmenu("Minimum Refresh Interval (seconds)", parseMinRefreshInterval),
 						};
 						for (const item of items) {
 							if (item.values?.includes(CUSTOM_OPTION) && customHandlers[item.id]) {
@@ -358,7 +387,11 @@ export async function showSettingsUI(
 					container.addChild(settingsList);
 				}
 
-				const usesSettingsList = currentCategory === "behavior" || currentCategory === "status-refresh" || getProviderFromCategory(currentCategory) !== null;
+				const usesSettingsList =
+					currentCategory === "behavior" ||
+					currentCategory === "status-refresh" ||
+					currentCategory === "tools" ||
+					getProviderFromCategory(currentCategory) !== null;
 				if (!usesSettingsList) {
 					let helpText: string;
 					if (currentCategory === "main" || currentCategory === "providers") {

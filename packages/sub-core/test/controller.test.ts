@@ -76,6 +76,7 @@ test("refresh falls back to cached usage on fetch error", async () => {
 
 		const controller = createUsageController(deps);
 		const settings = getDefaultSettings();
+		settings.behavior.minRefreshInterval = 0;
 		settings.providers.copilot.enabled = "on";
 
 		const state = { providerCycleIndex: 0 };

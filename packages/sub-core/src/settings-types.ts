@@ -2,7 +2,14 @@
  * Settings types and defaults for sub-core
  */
 
-import type { CoreSettings, CoreProviderSettingsMap, CoreProviderSettings, BehaviorSettings, ProviderName, ProviderEnabledSetting } from "@marckrenn/pi-sub-shared";
+import type {
+	CoreSettings,
+	CoreProviderSettingsMap,
+	CoreProviderSettings,
+	BehaviorSettings,
+	ProviderName,
+	ProviderEnabledSetting,
+} from "@marckrenn/pi-sub-shared";
 import { PROVIDERS, getDefaultCoreSettings } from "@marckrenn/pi-sub-shared";
 
 export type {
@@ -14,11 +21,21 @@ export type {
 } from "@marckrenn/pi-sub-shared";
 
 /**
+ * Tool registration settings
+ */
+export interface ToolSettings {
+	usageTool: boolean;
+	allUsageTool: boolean;
+}
+
+/**
  * All settings
  */
 export interface Settings extends CoreSettings {
 	/** Version for migration */
 	version: number;
+	/** Tool registration settings */
+	tools: ToolSettings;
 }
 
 /**
@@ -33,6 +50,10 @@ export function getDefaultSettings(): Settings {
 	const coreDefaults = getDefaultCoreSettings();
 	return {
 		version: SETTINGS_VERSION,
+		tools: {
+			usageTool: false,
+			allUsageTool: false,
+		},
 		providers: coreDefaults.providers,
 		behavior: coreDefaults.behavior,
 		statusRefresh: coreDefaults.statusRefresh,
