@@ -40,9 +40,15 @@ import {
 	buildRandomDisplay,
 	resolveDisplayThemeTarget,
 	saveDisplayTheme,
+	renameDisplayTheme,
 	upsertDisplayTheme,
 } from "./themes.js";
-import { buildDisplayShareString, decodeDisplayShareString, type DecodedDisplayShare } from "../share.js";
+import {
+	buildDisplayShareString,
+	buildDisplayShareStringWithoutName,
+	decodeDisplayShareString,
+	type DecodedDisplayShare,
+} from "../share.js";
 
 /**
  * Settings category
@@ -57,10 +63,13 @@ type SettingsCategory =
 	| "display"
 	| "display-theme"
 	| "display-theme-save"
+	| "display-theme-share"
 	| "display-theme-load"
 	| "display-theme-action"
 	| "display-theme-import"
 	| "display-theme-import-action"
+	| "display-theme-import-name"
+	| "display-theme-rename"
 	| "display-theme-random"
 	| "display-theme-restore"
 	| "display-layout"
@@ -82,7 +91,7 @@ export async function showSettingsUI(
 		onCoreSettingsChange?: (patch: Partial<CoreSettings>, next: CoreSettings) => void | Promise<void>;
 		onOpenCoreSettings?: () => void | Promise<void>;
 		onDisplayThemeApplied?: (name: string, options?: { source?: "manual" }) => void | Promise<void>;
-		onDisplayThemeShared?: (name: string, shareString: string) => void | Promise<void>;
+		onDisplayThemeShared?: (name: string, shareString: string, mode?: "prompt" | "gist" | "string") => void | Promise<void>;
 	}
 ): Promise<Settings> {
 	const onSettingsChange = options?.onSettingsChange;
@@ -105,6 +114,8 @@ export async function showSettingsUI(
 			let pinnedProviderBackup: ProviderName | null | undefined;
 			let importCandidate: DecodedDisplayShare | null = null;
 			let importBackup: Settings["display"] | null = null;
+			let importPendingAction: "save" | "save-apply" | null = null;
+			let pendingShare: { name: string; shareString: string; backCategory: SettingsCategory } | null = null;
 			const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 			const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -142,6 +153,14 @@ export async function showSettingsUI(
 						handleInput: (data: string) => input.handleInput(data),
 					};
 				};
+			};
+
+			const requestThemeShare = (name: string, shareString: string, backCategory: SettingsCategory) => {
+				pendingShare = { name, shareString, backCategory };
+				displayThemeSelection = "display-theme-share";
+				currentCategory = "display-theme-share";
+				rebuild();
+				tui.requestRender();
 			};
 
 			const parseInteger = (raw: string, min: number, max: number): string | null => {
@@ -322,12 +341,15 @@ export async function showSettingsUI(
 					main: "sub-bar Settings",
 					providers: "Provider Settings",
 					"pin-provider": "Provider Shown",
-					display: "Display Settings",
-					"display-theme": "Theme",
+					display: "Adv. Display Settings",
+					"display-theme": "Themes",
 					"display-theme-save": "Save Theme",
-					"display-theme-load": "Load Theme",
+					"display-theme-share": "Share Theme",
+					"display-theme-rename": "Rename Theme",
+					"display-theme-load": "Load & Manage themes",
 					"display-theme-action": "Manage Theme",
 					"display-theme-import": "Import Theme",
+					"display-theme-import-name": "Name Theme",
 					"display-theme-restore": "Restore Theme",
 					"display-layout": "Layout & Structure",
 					"display-bar": "Bars",
@@ -560,11 +582,13 @@ export async function showSettingsUI(
 					selectList.onSelect = (item) => {
 						displayThemeSelection = item.value;
 						currentCategory = item.value as SettingsCategory;
+						pendingShare = null;
 						rebuild();
 						tui.requestRender();
 					};
 					selectList.onCancel = () => {
 						currentCategory = "display";
+						pendingShare = null;
 						rebuild();
 						tui.requestRender();
 					};
@@ -584,6 +608,12 @@ export async function showSettingsUI(
 						saveSettings(settings);
 						if (onSettingsChange) void onSettingsChange(settings);
 						ctx.ui.notify(`Theme ${trimmed} saved`, "info");
+						const shareString = buildDisplayShareString(trimmed, settings.display);
+						if (onDisplayThemeShared) {
+							requestThemeShare(trimmed, shareString, "display-theme");
+							return;
+						}
+						ctx.ui.notify(shareString, "info");
 						currentCategory = "display-theme";
 						rebuild();
 						tui.requestRender();
@@ -597,6 +627,68 @@ export async function showSettingsUI(
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 					activeList = input;
+				} else if (currentCategory === "display-theme-share") {
+					displayThemeSelection = "display-theme-share";
+					const shareTarget = pendingShare ?? {
+						name: "",
+						shareString: buildDisplayShareStringWithoutName(settings.display),
+						backCategory: "display-theme" as SettingsCategory,
+					};
+					pendingShare = shareTarget;
+
+					const shareItems: TooltipSelectItem[] = [
+						{
+							value: "gist",
+							label: "Upload secret gist",
+							description: "share via GitHub gist",
+							tooltip: "Create a secret GitHub gist using the gh CLI.",
+						},
+						{
+							value: "string",
+							label: "Post share string",
+							description: "share in chat",
+							tooltip: "Post the raw share string to chat.",
+						},
+						{
+							value: "cancel",
+							label: "Cancel",
+							description: "discard share",
+							tooltip: "Cancel without sharing.",
+						},
+					];
+
+					const selectList = new SelectList(shareItems, shareItems.length, {
+						selectedPrefix: (t: string) => theme.fg("accent", t),
+						selectedText: (t: string) => theme.fg("accent", t),
+						description: (t: string) => theme.fg("muted", t),
+						scrollInfo: (t: string) => theme.fg("dim", t),
+						noMatch: (t: string) => theme.fg("warning", t),
+					});
+					attachTooltip(shareItems, selectList);
+
+					selectList.onSelect = (item) => {
+						if (item.value === "gist" || item.value === "string") {
+							if (onDisplayThemeShared) {
+								void onDisplayThemeShared(shareTarget.name, shareTarget.shareString, item.value as "gist" | "string");
+							} else {
+								ctx.ui.notify(shareTarget.shareString, "info");
+							}
+						}
+						pendingShare = null;
+						currentCategory = shareTarget.backCategory;
+						rebuild();
+						tui.requestRender();
+					};
+
+					selectList.onCancel = () => {
+						pendingShare = null;
+						currentCategory = shareTarget.backCategory;
+						rebuild();
+						tui.requestRender();
+					};
+
+					activeList = selectList;
+					container.addChild(selectList);
 				} else if (currentCategory === "display-theme-load") {
 					if (!displayPreviewBackup) {
 						displayPreviewBackup = { ...settings.display };
@@ -689,11 +781,11 @@ export async function showSettingsUI(
 				} else if (currentCategory === "display-theme-import") {
 					const input = new Input();
 					input.focused = true;
-					const titleText = new Text(theme.fg("muted", "Share string"), 1, 0);
+					const titleText = new Text(theme.fg("muted", "Paste Theme Share string"), 1, 0);
 					input.onSubmit = (value) => {
 						const trimmed = value.trim();
 						if (!trimmed) {
-							ctx.ui.notify("Enter a share string", "warning");
+							ctx.ui.notify("Enter a theme share string", "warning");
 							return;
 						}
 						const decoded = decodeDisplayShareString(trimmed);
@@ -751,10 +843,10 @@ export async function showSettingsUI(
 						},
 					];
 
-					const notifyImported = () => {
+					const notifyImported = (name: string) => {
 						const message = candidate.isNewerVersion
-							? `Imported ${candidate.name} (newer version, some fields may be ignored)`
-							: `Imported ${candidate.name}`;
+							? `Imported ${name} (newer version, some fields may be ignored)`
+							: `Imported ${name}`;
 						ctx.ui.notify(message, candidate.isNewerVersion ? "warning" : "info");
 					};
 
@@ -784,31 +876,42 @@ export async function showSettingsUI(
 					attachTooltip(importItems, selectList);
 
 					selectList.onSelect = (item) => {
+						if ((item.value === "save-apply" || item.value === "save") && !candidate.hasName) {
+							importPendingAction = item.value as "save" | "save-apply";
+							currentCategory = "display-theme-import-name";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
 						if (item.value === "save-apply") {
+							const resolvedName = candidate.name;
 							if (importBackup) {
 								settings.displayUserTheme = { ...importBackup };
 							}
-							settings = upsertDisplayTheme(settings, candidate.name, candidate.display, "imported");
+							settings = upsertDisplayTheme(settings, resolvedName, candidate.display, "imported");
 							settings.display = { ...candidate.display };
 							saveSettings(settings);
 							if (onSettingsChange) void onSettingsChange(settings);
-							if (onDisplayThemeApplied) void onDisplayThemeApplied(candidate.name, { source: "manual" });
-							notifyImported();
+							if (onDisplayThemeApplied) void onDisplayThemeApplied(resolvedName, { source: "manual" });
+							notifyImported(resolvedName);
 							displayPreviewBackup = null;
 							importCandidate = null;
 							importBackup = null;
+							importPendingAction = null;
 							currentCategory = "display-theme";
 							rebuild();
 							tui.requestRender();
 							return;
 						}
 						if (item.value === "save") {
-							settings = upsertDisplayTheme(settings, candidate.name, candidate.display, "imported");
+							const resolvedName = candidate.name;
+							settings = upsertDisplayTheme(settings, resolvedName, candidate.display, "imported");
 							restoreBackup();
 							saveSettings(settings);
-							notifyImported();
+							notifyImported(resolvedName);
 							importCandidate = null;
 							importBackup = null;
+							importPendingAction = null;
 							currentCategory = "display-theme-load";
 							rebuild();
 							tui.requestRender();
@@ -817,6 +920,7 @@ export async function showSettingsUI(
 						restoreBackup();
 						importCandidate = null;
 						importBackup = null;
+						importPendingAction = null;
 						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
@@ -825,12 +929,114 @@ export async function showSettingsUI(
 						restoreBackup();
 						importCandidate = null;
 						importBackup = null;
+						importPendingAction = null;
 						currentCategory = "display-theme-load";
 						rebuild();
 						tui.requestRender();
 					};
 					activeList = selectList;
 					container.addChild(selectList);
+				} else if (currentCategory === "display-theme-import-name") {
+					const candidate = importCandidate;
+					if (!candidate) {
+						currentCategory = "display-theme-load";
+						rebuild();
+						tui.requestRender();
+						return;
+					}
+
+					const notifyImported = (name: string) => {
+						const message = candidate.isNewerVersion
+							? `Imported ${name} (newer version, some fields may be ignored)`
+							: `Imported ${name}`;
+						ctx.ui.notify(message, candidate.isNewerVersion ? "warning" : "info");
+					};
+
+					const restoreBackup = () => {
+						if (importBackup) {
+							settings.display = { ...importBackup };
+							if (onSettingsChange) void onSettingsChange(settings);
+						}
+					};
+
+					const input = new Input();
+					input.focused = true;
+					const titleText = new Text(theme.fg("muted", "Theme name"), 1, 0);
+					input.onSubmit = (value) => {
+						const trimmed = value.trim();
+						if (!trimmed) {
+							ctx.ui.notify("Enter a theme name", "warning");
+							return;
+						}
+						const applyImport = importPendingAction === "save-apply";
+						if (applyImport && importBackup) {
+							settings.displayUserTheme = { ...importBackup };
+						}
+						settings = upsertDisplayTheme(settings, trimmed, candidate.display, "imported");
+						if (applyImport) {
+							settings.display = { ...candidate.display };
+						} else {
+							restoreBackup();
+						}
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						if (applyImport && onDisplayThemeApplied) {
+							void onDisplayThemeApplied(trimmed, { source: "manual" });
+						}
+						notifyImported(trimmed);
+						displayPreviewBackup = null;
+						importCandidate = null;
+						importBackup = null;
+						importPendingAction = null;
+						currentCategory = applyImport ? "display-theme" : "display-theme-load";
+						rebuild();
+						tui.requestRender();
+					};
+					input.onEscape = () => {
+						importPendingAction = null;
+						currentCategory = "display-theme-import-action";
+						rebuild();
+						tui.requestRender();
+					};
+					container.addChild(titleText);
+					container.addChild(new Spacer(1));
+					container.addChild(input);
+					activeList = input;
+				} else if (currentCategory === "display-theme-rename") {
+					const target = themeActionTarget;
+					if (!target || !target.id) {
+						currentCategory = "display-theme-load";
+						rebuild();
+						tui.requestRender();
+						return;
+					}
+
+					const input = new Input();
+					input.focused = true;
+					const titleText = new Text(theme.fg("muted", `Rename ${target.name}`), 1, 0);
+					input.onSubmit = (value) => {
+						const trimmed = value.trim();
+						if (!trimmed) {
+							ctx.ui.notify("Enter a theme name", "warning");
+							return;
+						}
+						settings = renameDisplayTheme(settings, target.id!, trimmed);
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						themeActionTarget = null;
+						currentCategory = "display-theme-load";
+						rebuild();
+						tui.requestRender();
+					};
+					input.onEscape = () => {
+						currentCategory = "display-theme-action";
+						rebuild();
+						tui.requestRender();
+					};
+					container.addChild(titleText);
+					container.addChild(new Spacer(1));
+					container.addChild(input);
+					activeList = input;
 				} else if (currentCategory === "display-theme-action") {
 					const target = themeActionTarget;
 					if (!target) {
@@ -869,13 +1075,18 @@ export async function showSettingsUI(
 						if (item.value === "share") {
 							const shareString = buildDisplayShareString(target.name, target.display);
 							if (onDisplayThemeShared) {
-								void onDisplayThemeShared(target.name, shareString);
-								ctx.ui.notify("Theme share string posted to chat", "info");
-							} else {
-								ctx.ui.notify(shareString, "info");
+								requestThemeShare(target.name, shareString, "display-theme-load");
+								return;
 							}
+							ctx.ui.notify(shareString, "info");
 							themeActionTarget = null;
 							currentCategory = "display-theme-load";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						if (item.value === "rename" && target.deletable && target.id) {
+							currentCategory = "display-theme-rename";
 							rebuild();
 							tui.requestRender();
 							return;
@@ -934,7 +1145,8 @@ export async function showSettingsUI(
 
 					const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {};
 					if (currentCategory === "display-layout") {
-						customHandlers.paddingX = buildInputSubmenu("Padding X", (value) => parseInteger(value, 0, 100));
+						customHandlers.paddingLeft = buildInputSubmenu("Padding Left", (value) => parseInteger(value, 0, 100));
+						customHandlers.paddingRight = buildInputSubmenu("Padding Right", (value) => parseInteger(value, 0, 100));
 					}
 					if (currentCategory === "display-color") {
 						customHandlers.errorThreshold = buildInputSubmenu("Error Threshold (%)", (value) => parseInteger(value, 0, 100));
@@ -1035,10 +1247,14 @@ export async function showSettingsUI(
 					currentCategory === "display-color";
 				if (!usesSettingsList) {
 					let helpText: string;
-					if (currentCategory === "display-theme-save") {
+					if (
+						currentCategory === "display-theme-save" ||
+						currentCategory === "display-theme-import-name" ||
+						currentCategory === "display-theme-rename"
+					) {
 						helpText = "Type name • Enter to save • Esc back";
 					} else if (currentCategory === "display-theme-import") {
-						helpText = "Paste share string • Enter to import • Esc back";
+						helpText = "Paste theme share string • Enter to import • Esc back";
 					} else if (
 						currentCategory === "main" ||
 						currentCategory === "providers" ||

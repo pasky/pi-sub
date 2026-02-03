@@ -63,11 +63,18 @@ export function buildDisplayLayoutItems(settings: Settings): SettingItem[] {
 			description: "Wrap the usage line or truncate with ellipsis (requires bar width ≠ fill and alignment ≠ split).",
 		},
 		{
-			id: "paddingX",
-			label: "Padding X",
-			currentValue: String(settings.display.paddingX ?? 0),
+			id: "paddingLeft",
+			label: "Padding Left",
+			currentValue: String(settings.display.paddingLeft ?? 0),
 			values: ["0", "1", "2", "3", "4", CUSTOM_OPTION],
-			description: "Add left/right padding inside the widget.",
+			description: "Add left padding inside the widget.",
+		},
+		{
+			id: "paddingRight",
+			label: "Padding Right",
+			currentValue: String(settings.display.paddingRight ?? 0),
+			values: ["0", "1", "2", "3", "4", CUSTOM_OPTION],
+			description: "Add right padding inside the widget.",
 		},
 	];
 }
@@ -647,10 +654,17 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "showContextBar":
 			settings.display.showContextBar = value === "on";
 			break;
-		case "paddingX": {
+		case "paddingLeft": { 
 			const parsed = parseClampedNumber(value, 0, 100);
 			if (parsed !== null) {
-				settings.display.paddingX = parsed;
+				settings.display.paddingLeft = parsed;
+			}
+			break;
+		}
+		case "paddingRight": {
+			const parsed = parseClampedNumber(value, 0, 100);
+			if (parsed !== null) {
+				settings.display.paddingRight = parsed;
 			}
 			break;
 		}

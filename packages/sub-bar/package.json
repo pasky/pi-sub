@@ -1,6 +1,6 @@
 {
   "name": "@marckrenn/pi-sub-bar",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Usage widget extension for pi-coding-agent - shows current provider usage above the editor",
   "keywords": [
     "pi-package"
@@ -21,7 +21,8 @@
     "check": "tsc --noEmit",
     "check:watch": "tsc --noEmit --watch",
     "test": "tsx test/all.test.ts",
-    "test:watch": "tsx watch test/all.test.ts"
+    "test:watch": "tsx watch test/all.test.ts",
+    "prepack": "npm install --workspaces=false --omit=dev --no-package-lock"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -29,8 +30,8 @@
     "typescript": "^5.8.0"
   },
   "dependencies": {
-    "@marckrenn/pi-sub-core": "^1.0.2",
-    "@marckrenn/pi-sub-shared": "^1.0.2"
+    "@marckrenn/pi-sub-core": "^1.0.4",
+    "@marckrenn/pi-sub-shared": "^1.0.4"
   },
   "bundledDependencies": [
     "@marckrenn/pi-sub-core"

@@ -7,7 +7,7 @@
 import type { ExtensionAPI, ExtensionContext, Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
 import { Container, Input, SelectList, Spacer, Text, truncateToWidth, wrapTextWithAnsi, visibleWidth } from "@mariozechner/pi-tui";
 import * as fs from "node:fs";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ProviderName, ProviderUsageEntry, SubCoreAllState, SubCoreState, UsageSnapshot } from "./src/types.js";
 import type { Settings, BaseTextColor } from "./src/settings-types.js";
@@ -129,6 +129,59 @@ export default function createExtension(pi: ExtensionAPI) {
 	let settingsSnapshot = "";
 	let settingsMtimeMs = 0;
 	let settingsWatchStarted = false;
+	let subCoreBootstrapAttempted = false;
+
+	async function probeSubCore(timeoutMs = 200): Promise<boolean> {
+		return new Promise((resolve) => {
+			let resolved = false;
+			const timer = setTimeout(() => {
+				if (!resolved) {
+					resolved = true;
+					resolve(false);
+				}
+			}, timeoutMs);
+
+			const request: SubCoreRequest = {
+				type: "current",
+				reply: () => {
+					if (resolved) return;
+					resolved = true;
+					clearTimeout(timer);
+					resolve(true);
+				},
+			};
+			pi.events.emit("sub-core:request", request);
+		});
+	}
+
+	async function ensureSubCoreLoaded(): Promise<void> {
+		if (subCoreBootstrapAttempted) return;
+		subCoreBootstrapAttempted = true;
+		const hasCore = await probeSubCore();
+		if (hasCore) return;
+		try {
+			const bundledUrl = new URL("./node_modules/@marckrenn/pi-sub-core/index.ts", import.meta.url);
+			const module = await import(bundledUrl.toString());
+			const createCore = module.default as undefined | ((api: ExtensionAPI) => void | Promise<void>);
+			if (typeof createCore === "function") {
+				void createCore(pi);
+				return;
+			}
+		} catch {
+			// Fall back to package resolution
+		}
+		try {
+			const module = await import("@marckrenn/pi-sub-core");
+			const createCore = module.default as undefined | ((api: ExtensionAPI) => void | Promise<void>);
+			if (typeof createCore === "function") {
+				void createCore(pi);
+			}
+		} catch (error) {
+			console.warn("Failed to auto-load sub-core:", error);
+		}
+	}
+
+	void ensureSubCoreLoaded();
 
 	async function promptImportAction(ctx: ExtensionContext): Promise<"save-apply" | "save" | "cancel"> {
 		return new Promise((resolve) => {
@@ -172,7 +225,7 @@ export default function createExtension(pi: ExtensionAPI) {
 					resolve(undefined);
 				};
 				const container = new Container();
-				container.addChild(new Text(theme.fg("muted", "Share string"), 1, 0));
+				container.addChild(new Text(theme.fg("muted", "Paste Theme Share string"), 1, 0));
 				container.addChild(new Spacer(1));
 				container.addChild(input);
 				return {
@@ -182,6 +235,141 @@ export default function createExtension(pi: ExtensionAPI) {
 				};
 			});
 		});
+	}
+
+	async function promptImportName(ctx: ExtensionContext): Promise<string | undefined> {
+		while (true) {
+			const name = await ctx.ui.input("Theme name", "Theme");
+			if (name === undefined) return undefined;
+			const trimmed = name.trim();
+			if (trimmed) return trimmed;
+			ctx.ui.notify("Enter a theme name", "warning");
+		}
+	}
+
+	const THEME_GIST_FILE_BASE = "pi-sub-bar Theme";
+	const THEME_GIST_STATUS_KEY = "sub-bar:share";
+
+	function buildThemeGistFileName(name: string): string {
+		const trimmed = name.trim();
+		if (!trimmed) return THEME_GIST_FILE_BASE;
+		const safeName = trimmed.replace(/[\\/:*?"<>|]+/g, "-").trim();
+		return safeName ? `${THEME_GIST_FILE_BASE} ${safeName}` : THEME_GIST_FILE_BASE;
+	}
+
+	async function createThemeGist(ctx: ExtensionContext, name: string, shareString: string): Promise<string | null> {
+		const notify = (message: string, level: "info" | "warning" | "error") => {
+			if (ctx.hasUI) {
+				ctx.ui.notify(message, level);
+				return;
+			}
+			if (level === "error") {
+				console.error(message);
+			} else if (level === "warning") {
+				console.warn(message);
+			} else {
+				console.log(message);
+			}
+		};
+
+		try {
+			const authResult = await pi.exec("gh", ["auth", "status"]);
+			if (authResult.code !== 0) {
+				notify("GitHub CLI is not logged in. Run 'gh auth login' first.", "error");
+				return null;
+			}
+		} catch {
+			notify("GitHub CLI (gh) is not installed. Install it from https://cli.github.com/", "error");
+			return null;
+		}
+
+		const tempDir = fs.mkdtempSync(join(tmpdir(), "pi-sub-bar-"));
+		const fileName = buildThemeGistFileName(name);
+		const filePath = join(tempDir, fileName);
+		fs.writeFileSync(filePath, shareString, "utf-8");
+
+		if (ctx.hasUI) {
+			ctx.ui.setStatus(THEME_GIST_STATUS_KEY, "Creating gist...");
+		}
+
+		try {
+			const result = await pi.exec("gh", ["gist", "create", "--public=false", filePath]);
+			if (result.code !== 0) {
+				const errorMsg = result.stderr?.trim() || "Unknown error";
+				notify(`Failed to create gist: ${errorMsg}`, "error");
+				return null;
+			}
+			const gistUrl = result.stdout?.trim();
+			if (!gistUrl) {
+				notify("Failed to create gist: empty response", "error");
+				return null;
+			}
+			return gistUrl;
+		} catch (error) {
+			notify(`Failed to create gist: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			return null;
+		} finally {
+			if (ctx.hasUI) {
+				ctx.ui.setStatus(THEME_GIST_STATUS_KEY, undefined);
+			}
+			try {
+				fs.rmSync(tempDir, { recursive: true, force: true });
+			} catch {
+				// Ignore cleanup errors
+			}
+		}
+	}
+
+	async function shareThemeString(
+		ctx: ExtensionContext,
+		name: string,
+		shareString: string,
+		mode: "prompt" | "gist" | "string" = "prompt",
+	): Promise<void> {
+		const trimmedName = name.trim();
+		const notify = (message: string, level: "info" | "warning" | "error") => {
+			if (ctx.hasUI) {
+				ctx.ui.notify(message, level);
+				return;
+			}
+			if (level === "error") {
+				console.error(message);
+			} else if (level === "warning") {
+				console.warn(message);
+			} else {
+				console.log(message);
+			}
+		};
+		let resolvedMode = mode;
+		if (resolvedMode === "prompt") {
+			if (!ctx.hasUI) {
+				resolvedMode = "string";
+			} else {
+				const wantsGist = await ctx.ui.confirm("Share Theme", "Upload to a secret GitHub gist?");
+				resolvedMode = wantsGist ? "gist" : "string";
+			}
+		}
+
+		if (resolvedMode === "gist") {
+			const gistUrl = await createThemeGist(ctx, trimmedName, shareString);
+			if (gistUrl) {
+				pi.sendMessage({
+					customType: "sub-bar",
+					content: `Theme gist:\n${gistUrl}`,
+					display: true,
+				});
+				notify("Theme gist posted to chat", "info");
+				return;
+			}
+			notify("Posting share string instead.", "warning");
+		}
+
+		pi.sendMessage({
+			customType: "sub-bar",
+			content: `Theme share string:\n${shareString}`,
+			display: true,
+		});
+		notify("Theme share string posted to chat", "info");
 	}
 
 	function readSettingsFile(): string | undefined {
@@ -270,8 +458,9 @@ export default function createExtension(pi: ExtensionAPI) {
 		message?: string,
 		options?: { forceNoFill?: boolean }
 	): string[] {
-		const paddingX = settings.display.paddingX ?? 0;
-		const innerWidth = Math.max(1, contentWidth - paddingX * 2);
+		const paddingLeft = settings.display.paddingLeft ?? 0;
+		const paddingRight = settings.display.paddingRight ?? 0;
+		const innerWidth = Math.max(1, contentWidth - paddingLeft - paddingRight);
 		const alignment = settings.display.alignment ?? "left";
 		const configuredHasFill = settings.display.barWidth === "fill" || settings.display.dividerBlanks === "fill";
 		const hasFill = options?.forceNoFill ? false : configuredHasFill;
@@ -316,9 +505,10 @@ export default function createExtension(pi: ExtensionAPI) {
 			lines = [trimmed];
 		}
 
-		if (paddingX > 0) {
-			const pad = " ".repeat(paddingX);
-			lines = lines.map((line) => pad + line + pad);
+		if (paddingLeft > 0 || paddingRight > 0) {
+			const leftPad = " ".repeat(paddingLeft);
+			const rightPad = " ".repeat(paddingRight);
+			lines = lines.map((line) => `${leftPad}${line}${rightPad}`);
 		}
 
 		return lines;
@@ -645,20 +835,14 @@ export default function createExtension(pi: ExtensionAPI) {
 				onDisplayThemeApplied: (name, options) => {
 					const content = options?.source === "manual"
 						? `sub-bar Theme ${name} loaded`
-						: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Display Settings -> Theme -> Manage themes`;
+						: `sub-bar Theme ${name} loaded / applied / saved. Restore settings in /sub-bar:settings -> Themes -> Load & Manage themes`;
 					pi.sendMessage({
 						customType: "sub-bar",
 						content,
 						display: true,
 					});
 				},
-				onDisplayThemeShared: (_name, shareString) => {
-					pi.sendMessage({
-						customType: "sub-bar",
-						content: `Theme share string:\n/sub-bar:import ${shareString}`,
-						display: true,
-					});
-				},
+				onDisplayThemeShared: (name, shareString, mode) => shareThemeString(ctx, name, shareString, mode ?? "prompt"),
 			});
 			settings = newSettings;
 			void ensurePinnedEntries(settings.pinnedProvider ?? null);
@@ -694,35 +878,47 @@ export default function createExtension(pi: ExtensionAPI) {
 			}
 
 			const action = await promptImportAction(ctx);
-			const notifyImported = () => {
+			let resolvedName = decoded.name;
+			if ((action === "save-apply" || action === "save") && !decoded.hasName) {
+				const providedName = await promptImportName(ctx);
+				if (!providedName) {
+					settings.display = { ...backup };
+					if (lastContext) {
+						renderUsageWidget(lastContext, currentUsage);
+					}
+					return;
+				}
+				resolvedName = providedName;
+			}
+			const notifyImported = (name: string) => {
 				const message = decoded.isNewerVersion
-					? `Imported ${decoded.name} (newer version, some fields may be ignored)`
-					: `Imported ${decoded.name}`;
+					? `Imported ${name} (newer version, some fields may be ignored)`
+					: `Imported ${name}`;
 				ctx.ui.notify(message, decoded.isNewerVersion ? "warning" : "info");
 			};
 
 			if (action === "save-apply") {
 				settings.displayUserTheme = { ...backup };
-				settings = upsertDisplayTheme(settings, decoded.name, decoded.display, "imported");
+				settings = upsertDisplayTheme(settings, resolvedName, decoded.display, "imported");
 				settings.display = { ...decoded.display };
 				saveSettings(settings);
 				if (lastContext) {
 					renderUsageWidget(lastContext, currentUsage);
 				}
-				notifyImported();
+				notifyImported(resolvedName);
 				pi.sendMessage({
 					customType: "sub-bar",
-					content: `sub-bar Theme ${decoded.name} loaded`,
+					content: `sub-bar Theme ${resolvedName} loaded`,
 					display: true,
 				});
 				return;
 			}
 
 			if (action === "save") {
-				settings = upsertDisplayTheme(settings, decoded.name, decoded.display, "imported");
+				settings = upsertDisplayTheme(settings, resolvedName, decoded.display, "imported");
 				settings.display = { ...backup };
 				saveSettings(settings);
-				notifyImported();
+				notifyImported(resolvedName);
 				if (lastContext) {
 					renderUsageWidget(lastContext, currentUsage);
 				}

@@ -51,19 +51,19 @@ https://github.com/user-attachments/assets/d61d82f6-afd0-45fc-82f3-69910543aa7a
 
 ## Installation
 
-Install via the pi package manager (recommended). `sub-bar` depends on `sub-core` for data (it will not render without it):
+Install via the pi package manager (recommended). `sub-bar` bundles `sub-core`, so you only need to install sub-bar:
 
 ```bash
-pi install npm:@marckrenn/pi-sub-core
 pi install npm:@marckrenn/pi-sub-bar
 ```
 
 Use `-l` to install into project settings instead of global:
 
 ```bash
-pi install -l npm:@marckrenn/pi-sub-core
 pi install -l npm:@marckrenn/pi-sub-bar
 ```
+
+If you previously installed `sub-core` separately, remove it from `~/.pi/agent/extensions` or `~/.pi/agent/settings.json` to avoid duplicate core instances.
 
 Manual install (local development):
 
@@ -72,16 +72,16 @@ git clone https://github.com/marckrenn/pi-sub.git
 cd pi-sub
 npm install
 
-ln -s /path/to/pi-sub/packages/sub-core ~/.pi/agent/extensions/sub-core
 ln -s /path/to/pi-sub/packages/sub-bar ~/.pi/agent/extensions/sub-bar
 ```
 
-Alternative (no symlink): add both to `~/.pi/agent/settings.json`:
+For local development, also ensure sub-core is available (either link it separately or link it into `packages/sub-bar/node_modules`).
+
+Alternative (no symlink): add sub-bar to `~/.pi/agent/settings.json`:
 
 ```json
 {
   "extensions": [
-    "/path/to/pi-sub/packages/sub-core/index.ts",
     "/path/to/pi-sub/packages/sub-bar/index.ts"
   ]
 }
@@ -98,7 +98,7 @@ The extension loads automatically. Use:
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
 
 **Caching:**
-- Handled by sub-core at `cache.json` next to the sub-core extension entry
+- Handled by sub-core at `~/.pi/agent/cache/sub-core/cache.json`
 - Cache TTL matches your auto-refresh interval setting
 - Lock file prevents race conditions between multiple pi windows
 
@@ -110,9 +110,9 @@ The extension loads automatically. Use:
 
 ## Settings
 
-Display and provider UI settings are persisted next to the extension entry (`settings.json` in the same folder as `index.ts`). Core settings are managed by sub-core, and the sub-bar settings menu includes a shortcut that points you to `sub-core:settings` for additional options.
+Display and provider UI settings are stored in `~/.pi/agent/pi-sub-bar-settings.json` (migrated from the legacy extension `settings.json` when present; the legacy file is removed after a successful migration). Core settings are managed by sub-core, and the sub-bar settings menu includes a shortcut that points you to `sub-core:settings` for additional options.
 
-**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
+**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `pi-sub-bar-settings.json`).
 
 ### Provider UI Settings
 

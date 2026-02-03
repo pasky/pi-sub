@@ -8,7 +8,14 @@ import * as fs from "node:fs";
 import type { ProviderName, ProviderStatus, UsageSnapshot } from "./types.js";
 import { isExpectedMissingData } from "./errors.js";
 import { getStorage } from "./storage.js";
-import { getCachePath, getCacheLockPath } from "./paths.js";
+import {
+	getCachePath,
+	getCacheLockPath,
+	getLegacyAgentCacheLockPath,
+	getLegacyAgentCachePath,
+	getLegacyCacheLockPath,
+	getLegacyCachePath,
+} from "./paths.js";
 import { tryAcquireFileLock, releaseFileLock, waitForLockRelease } from "./storage/lock.js";
 
 /**
@@ -37,6 +44,7 @@ const cacheSnapshotListeners = new Set<CacheSnapshotListener>();
 let lastCacheSnapshot: Cache | null = null;
 let lastCacheContent = "";
 let lastCacheMtimeMs = 0;
+let legacyCacheMigrated = false;
 
 function updateCacheSnapshot(cache: Cache, content: string, mtimeMs: number): void {
 	lastCacheSnapshot = cache;
@@ -48,6 +56,37 @@ function resetCacheSnapshot(): void {
 	lastCacheSnapshot = {};
 	lastCacheContent = "";
 	lastCacheMtimeMs = 0;
+}
+
+function migrateLegacyCache(): void {
+	if (legacyCacheMigrated) return;
+	legacyCacheMigrated = true;
+	const storage = getStorage();
+	try {
+		const legacyCachePaths = [LEGACY_AGENT_CACHE_PATH, LEGACY_CACHE_PATH];
+		if (!storage.exists(CACHE_PATH)) {
+			const legacyPath = legacyCachePaths.find((path) => storage.exists(path));
+			if (legacyPath) {
+				const content = storage.readFile(legacyPath);
+				if (content) {
+					ensureCacheDir();
+					storage.writeFile(CACHE_PATH, content);
+				}
+			}
+		}
+		for (const legacyPath of legacyCachePaths) {
+			if (storage.exists(legacyPath)) {
+				storage.removeFile(legacyPath);
+			}
+		}
+		for (const legacyLockPath of [LEGACY_AGENT_LOCK_PATH, LEGACY_LOCK_PATH]) {
+			if (storage.exists(legacyLockPath)) {
+				storage.removeFile(legacyLockPath);
+			}
+		}
+	} catch (error) {
+		console.error("Failed to migrate cache:", error);
+	}
 }
 
 export function onCacheUpdate(listener: CacheUpdateListener): () => void {
@@ -88,11 +127,15 @@ function emitCacheSnapshot(cache: Cache): void {
  * Cache file path
  */
 export const CACHE_PATH = getCachePath();
+const LEGACY_CACHE_PATH = getLegacyCachePath();
+const LEGACY_AGENT_CACHE_PATH = getLegacyAgentCachePath();
 
 /**
  * Lock file path
  */
 const LOCK_PATH = getCacheLockPath();
+const LEGACY_LOCK_PATH = getLegacyCacheLockPath();
+const LEGACY_AGENT_LOCK_PATH = getLegacyAgentCacheLockPath();
 
 /**
  * Lock timeout in milliseconds
@@ -112,6 +155,7 @@ function ensureCacheDir(): void {
  * Read cache from disk
  */
 export function readCache(): Cache {
+	migrateLegacyCache();
 	const storage = getStorage();
 	try {
 		const cacheExists = storage.exists(CACHE_PATH);
@@ -168,6 +212,7 @@ export function readCache(): Cache {
  * Write cache to disk
  */
 function writeCache(cache: Cache): void {
+	migrateLegacyCache();
 	const storage = getStorage();
 	try {
 		ensureCacheDir();
@@ -195,6 +240,7 @@ export interface CacheWatchOptions {
 }
 
 export function watchCacheUpdates(options?: CacheWatchOptions): () => void {
+	migrateLegacyCache();
 	const debounceMs = options?.debounceMs ?? 250;
 	const pollIntervalMs = options?.pollIntervalMs ?? 5000;
 	const lockRetryMs = options?.lockRetryMs ?? 1000;

@@ -33,6 +33,16 @@ type SubCoreAction = {
 	force?: boolean;
 };
 
+const TOOL_NAMES = {
+	usage: ["sub_get_usage", "get_current_usage"],
+	allUsage: ["sub_get_all_usage", "get_all_usage"],
+} as const;
+
+type ToolName = (typeof TOOL_NAMES)[keyof typeof TOOL_NAMES][number];
+
+type SubCoreGlobalState = { active: boolean };
+const subCoreGlobal = globalThis as typeof globalThis & { __piSubCore?: SubCoreGlobalState };
+
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 	const result = { ...target } as T;
 	for (const key of Object.keys(source) as (keyof T)[]) {
@@ -65,6 +75,11 @@ function stripUsageProvider(usage?: UsageSnapshot): Omit<UsageSnapshot, "provide
  * Create the extension
  */
 export default function createExtension(pi: ExtensionAPI, deps: Dependencies = createDefaultDependencies()): void {
+	if (subCoreGlobal.__piSubCore?.active) {
+		return;
+	}
+	subCoreGlobal.__piSubCore = { active: true };
+
 	let usageRefreshInterval: ReturnType<typeof setInterval> | undefined;
 	let statusRefreshInterval: ReturnType<typeof setInterval> | undefined;
 	let lastContext: ExtensionContext | undefined;
@@ -197,45 +212,62 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		return getCachedUsageEntries(enabledProviders, settings);
 	}
 
-	pi.registerTool({
-		name: "sub_get_usage",
-		label: "Sub Usage",
-		description: "Refresh and return the latest subscription usage snapshot.",
-		parameters: Type.Object({
-			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
-		}),
-		async execute(_toolCallId, params, _onUpdate, ctx) {
-			const { force } = params as { force?: boolean };
-			await refresh(ctx, { force: force ?? true });
-			const payload = { provider: lastState.provider, usage: stripUsageProvider(lastState.usage) };
-			return {
-				content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
-				details: payload,
-			};
-		},
-	});
+	const registerUsageTool = (name: ToolName): void => {
+		pi.registerTool({
+			name,
+			label: "Sub Usage",
+			description: "Refresh and return the latest subscription usage snapshot.",
+			parameters: Type.Object({
+				force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
+			}),
+			async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+				const { force } = params as { force?: boolean };
+				await refresh(ctx, { force: force ?? true });
+				const payload = { provider: lastState.provider, usage: stripUsageProvider(lastState.usage) };
+				return {
+					content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+					details: payload,
+				};
+			},
+		});
+	};
 
-	pi.registerTool({
-		name: "sub_get_all_usage",
-		label: "Sub All Usage",
-		description: "Refresh and return usage snapshots for all enabled providers.",
-		parameters: Type.Object({
-			force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
-		}),
-		async execute(_toolCallId, params) {
-			const { force } = params as { force?: boolean };
-			const entries = await getEntries(force ?? true);
-			const payload = entries.map((entry) => ({
-				provider: entry.provider,
-				usage: stripUsageProvider(entry.usage),
-			}));
-			return {
-				content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
-				details: { entries: payload },
-			};
-		},
-	});
+	const registerAllUsageTool = (name: ToolName): void => {
+		pi.registerTool({
+			name,
+			label: "Sub All Usage",
+			description: "Refresh and return usage snapshots for all enabled providers.",
+			parameters: Type.Object({
+				force: Type.Optional(Type.Boolean({ description: "Force refresh" })),
+			}),
+			async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+				const { force } = params as { force?: boolean };
+				const entries = await getEntries(force ?? true);
+				const payload = entries.map((entry) => ({
+					provider: entry.provider,
+					usage: stripUsageProvider(entry.usage),
+				}));
+				return {
+					content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+					details: { entries: payload },
+				};
+			},
+		});
+	};
 
+	const usageToolEnabled = settings.tools?.usageTool ?? false;
+	const allUsageToolEnabled = settings.tools?.allUsageTool ?? false;
+
+	if (usageToolEnabled) {
+		for (const name of TOOL_NAMES.usage) {
+			registerUsageTool(name);
+		}
+	}
+	if (allUsageToolEnabled) {
+		for (const name of TOOL_NAMES.allUsage) {
+			registerAllUsageTool(name);
+		}
+	}
 	pi.registerCommand("sub-core:settings", {
 		description: "Open sub-core settings",
 		handler: async (_args, ctx) => {
@@ -358,5 +390,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		unsubscribeCacheSnapshot();
 		stopCacheWatch();
 		lastContext = undefined;
+		subCoreGlobal.__piSubCore = undefined;
 	});
 }

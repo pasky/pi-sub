@@ -42,29 +42,47 @@ Alternative (no symlink): add it to `~/.pi/agent/settings.json`:
 
 ## Tool Access
 
-`sub-core` registers tools to expose usage snapshots to Pi:
+Tool registration is gated by `tools` in `~/.pi/agent/pi-sub-core-settings.json`.
+By default, both tools are **off**. To enable them, set:
 
-- `sub_get_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
-- `sub_get_all_usage` – refreshes and returns all enabled provider entries (auto-enabled providers require credentials).
+```json
+{
+  "tools": {
+    "usageTool": true,
+    "allUsageTool": true
+  }
+}
+```
+
+Then run `/reload` (tool registration only happens on load). You can also toggle these in `/sub-core:settings` → Tool Settings.
+
+When enabled, `sub-core` registers tools to expose usage snapshots to Pi:
+
+- `sub_get_usage` / `get_current_usage` – refreshes usage (forced by default) and returns `{ provider, usage }`.
+- `sub_get_all_usage` / `get_all_usage` – refreshes and returns all enabled provider entries (auto-enabled providers require credentials).
 
 ## Settings
 
 Use `sub-core:settings` to configure shared provider settings plus **Usage Refresh Settings** and **Status Refresh Settings**. Provider enablement supports `auto` (default), `on`, and `off` — `auto` enables a provider only when credentials are detected.
 
-Usage refresh controls cache/usage updates, while status refresh controls incident polling (you can keep status on a slower interval).
+Usage refresh controls cache/usage updates, while status refresh controls incident polling (you can keep status on a slower interval). The Minimum Refresh Interval caps how often refresh triggers can fetch new data even if you refresh every turn.
 
 Antigravity usage requires an OAuth token in `~/.pi/agent/auth.json` under the `google-antigravity` key.
 
 Anthropic extra usage formatting is controlled in Provider Settings (currency symbol + decimal separator).
 
-**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `settings.json`).
+Settings are stored in `~/.pi/agent/pi-sub-core-settings.json` (migrated from the legacy extension `settings.json` when present; the legacy file is removed after a successful migration).
+
+**Settings migrations:** settings are merged with defaults on load, but renames/removals are not migrated automatically. When adding new settings or changing schema, update the defaults/merge logic and provide a migration (or instruct users to reset `pi-sub-core-settings.json`).
 
 ## Cache
 
 Sub-core stores a shared cache and lock file:
 
-- `cache.json` (next to the extension entry)
-- `cache.lock` (next to the extension entry)
+- `~/.pi/agent/cache/sub-core/cache.json`
+- `~/.pi/agent/cache/sub-core/cache.lock`
+
+Legacy cache files next to the extension entry or in the agent root are migrated to the cache directory and removed on first run.
 
 ## Security notes
 

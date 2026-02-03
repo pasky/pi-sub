@@ -14,8 +14,14 @@ export function buildMainMenuItems(settings: Settings, pinnedProvider?: Provider
 	const pinnedLabel = pinnedProvider ? PROVIDER_DISPLAY_NAMES[pinnedProvider] : "auto (current provider)";
 	return [
 		{
+			value: "display-theme",
+			label: "Themes",
+			description: "save, manage, share",
+			tooltip: "Save, load, and share display themes.",
+		},
+		{
 			value: "display",
-			label: "Display Settings",
+			label: "Adv. Display Settings",
 			description: "layout, bars, colors",
 			tooltip: "Adjust layout, colors, bar styling, status indicators, and dividers.",
 		},
@@ -74,12 +80,6 @@ export function buildProviderListItems(settings: Settings, coreProviders?: CoreP
 export function buildDisplayMenuItems(): TooltipSelectItem[] {
 	return [
 		{
-			value: "display-theme",
-			label: "Theme",
-			description: "save, manage, share",
-			tooltip: "Save or manage display themes.",
-		},
-		{
 			value: "display-layout",
 			label: "Layout & Structure",
 			description: "alignment, wrapping, padding",
@@ -128,15 +128,21 @@ export function buildDisplayThemeMenuItems(): TooltipSelectItem[] {
 	return [
 		{
 			value: "display-theme-save",
-			label: "Save current theme",
+			label: "Save Theme",
 			description: "store current theme",
 			tooltip: "Save the current display theme with a custom name.",
 		},
 		{
 			value: "display-theme-load",
-			label: "Manage & Load themes",
-			description: "load, share, delete and restore themes",
-			tooltip: "Load, share, delete, and restore saved themes.",
+			label: "Load & Manage themes",
+			description: "load, share, rename and delete themes",
+			tooltip: "Load, share, delete, rename, and restore saved themes.",
+		},
+		{
+			value: "display-theme-share",
+			label: "Share Theme",
+			description: "share current theme",
+			tooltip: "Post a share string for the current theme.",
 		},
 		{
 			value: "display-theme-import",
