@@ -40,6 +40,7 @@ import {
 	buildRandomDisplay,
 	resolveDisplayThemeTarget,
 	saveDisplayTheme,
+	renameDisplayTheme,
 	upsertDisplayTheme,
 } from "./themes.js";
 import {
@@ -68,6 +69,7 @@ type SettingsCategory =
 	| "display-theme-import"
 	| "display-theme-import-action"
 	| "display-theme-import-name"
+	| "display-theme-rename"
 	| "display-theme-random"
 	| "display-theme-restore"
 	| "display-layout"
@@ -334,7 +336,8 @@ export async function showSettingsUI(
 					"display-theme": "Theme",
 					"display-theme-save": "Save Theme",
 					"display-theme-share": "Share Theme",
-					"display-theme-load": "Load Theme",
+					"display-theme-load": "Manage & Load Themes",
+					"display-theme-rename": "Rename Theme",
 					"display-theme-action": "Manage Theme",
 					"display-theme-import": "Import Theme",
 					"display-theme-import-name": "Name Theme",
@@ -939,6 +942,41 @@ export async function showSettingsUI(
 					container.addChild(new Spacer(1));
 					container.addChild(input);
 					activeList = input;
+				} else if (currentCategory === "display-theme-rename") {
+					const target = themeActionTarget;
+					if (!target || !target.id) {
+						currentCategory = "display-theme-load";
+						rebuild();
+						tui.requestRender();
+						return;
+					}
+
+					const input = new Input();
+					input.focused = true;
+					const titleText = new Text(theme.fg("muted", `Rename ${target.name}`), 1, 0);
+					input.onSubmit = (value) => {
+						const trimmed = value.trim();
+						if (!trimmed) {
+							ctx.ui.notify("Enter a theme name", "warning");
+							return;
+						}
+						settings = renameDisplayTheme(settings, target.id!, trimmed);
+						saveSettings(settings);
+						if (onSettingsChange) void onSettingsChange(settings);
+						themeActionTarget = null;
+						currentCategory = "display-theme-load";
+						rebuild();
+						tui.requestRender();
+					};
+					input.onEscape = () => {
+						currentCategory = "display-theme-action";
+						rebuild();
+						tui.requestRender();
+					};
+					container.addChild(titleText);
+					container.addChild(new Spacer(1));
+					container.addChild(input);
+					activeList = input;
 				} else if (currentCategory === "display-theme-action") {
 					const target = themeActionTarget;
 					if (!target) {
@@ -984,6 +1022,12 @@ export async function showSettingsUI(
 							}
 							themeActionTarget = null;
 							currentCategory = "display-theme-load";
+							rebuild();
+							tui.requestRender();
+							return;
+						}
+						if (item.value === "rename" && target.deletable && target.id) {
+							currentCategory = "display-theme-rename";
 							rebuild();
 							tui.requestRender();
 							return;
@@ -1143,7 +1187,11 @@ export async function showSettingsUI(
 					currentCategory === "display-color";
 				if (!usesSettingsList) {
 					let helpText: string;
-					if (currentCategory === "display-theme-save" || currentCategory === "display-theme-import-name") {
+					if (
+						currentCategory === "display-theme-save" ||
+						currentCategory === "display-theme-import-name" ||
+						currentCategory === "display-theme-rename"
+					) {
 						helpText = "Type name • Enter to save • Esc back";
 					} else if (currentCategory === "display-theme-import") {
 						helpText = "Paste theme share string • Enter to import • Esc back";

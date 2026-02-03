@@ -283,6 +283,12 @@ export function buildThemeActionItems(target: DisplayThemeTarget): TooltipSelect
 	];
 	if (target.deletable) {
 		items.push({
+			value: "rename",
+			label: "Rename",
+			description: "rename saved theme",
+			tooltip: "Rename this saved theme.",
+		});
+		items.push({
 			value: "delete",
 			label: "Delete",
 			description: "remove saved theme",
@@ -310,6 +316,28 @@ export function upsertDisplayTheme(
 	} else {
 		settings.displayThemes.push({ id, name: trimmed, display: snapshot, source: resolvedSource });
 	}
+	return settings;
+}
+
+export function renameDisplayTheme(settings: Settings, id: string, name: string): Settings {
+	const trimmed = name.trim() || "Theme";
+	const nextId = buildThemeId(trimmed);
+	const existing = settings.displayThemes.find((theme) => theme.id === id);
+	if (!existing) return settings;
+	if (nextId === id) {
+		existing.name = trimmed;
+		return settings;
+	}
+	const collision = settings.displayThemes.find((theme) => theme.id === nextId);
+	if (collision) {
+		collision.name = trimmed;
+		collision.display = existing.display;
+		collision.source = existing.source;
+		settings.displayThemes = settings.displayThemes.filter((theme) => theme.id !== id);
+		return settings;
+	}
+	existing.id = nextId;
+	existing.name = trimmed;
 	return settings;
 }
 
