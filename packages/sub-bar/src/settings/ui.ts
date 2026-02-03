@@ -1042,7 +1042,8 @@ export async function showSettingsUI(
 
 					const customHandlers: Record<string, ReturnType<typeof buildInputSubmenu>> = {};
 					if (currentCategory === "display-layout") {
-						customHandlers.paddingX = buildInputSubmenu("Padding X", (value) => parseInteger(value, 0, 100));
+						customHandlers.paddingLeft = buildInputSubmenu("Padding Left", (value) => parseInteger(value, 0, 100));
+						customHandlers.paddingRight = buildInputSubmenu("Padding Right", (value) => parseInteger(value, 0, 100));
 					}
 					if (currentCategory === "display-color") {
 						customHandlers.errorThreshold = buildInputSubmenu("Error Threshold (%)", (value) => parseInteger(value, 0, 100));

@@ -185,7 +185,8 @@ export function resolveDisplayThemeTarget(
 				dividerFooterJoin: true,
 				showTopDivider: false,
 				showBottomDivider: false,
-				paddingX: 1,
+				paddingLeft: 1,
+			paddingRight: 1,
 				widgetPlacement: "belowEditor",
 				errorThreshold: 25,
 				warningThreshold: 50,
@@ -209,7 +210,9 @@ export function buildRandomDisplay(base: DisplaySettings): DisplaySettings {
 
 	display.alignment = pickRandom(RANDOM_ALIGNMENTS);
 	display.overflow = pickRandom(RANDOM_OVERFLOW);
-	display.paddingX = pickRandom(RANDOM_PADDING);
+	const padding = pickRandom(RANDOM_PADDING);
+	display.paddingLeft = padding;
+	display.paddingRight = padding;
 	display.barStyle = pickRandom(RANDOM_BAR_STYLES);
 	display.barType = pickRandom(RANDOM_BAR_TYPES);
 	display.barWidth = pickRandom(RANDOM_BAR_WIDTHS);
