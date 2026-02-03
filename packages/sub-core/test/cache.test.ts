@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import * as path from "node:path";
 import { CACHE_PATH, onCacheSnapshot, onCacheUpdate, readCache, watchCacheUpdates } from "../src/cache.js";
 import { getCacheLockPath } from "../src/paths.js";
 
@@ -11,6 +12,11 @@ function wait(ms: number): Promise<void> {
 }
 
 async function withCacheFiles(fn: () => Promise<void> | void): Promise<void> {
+	const cacheDir = path.dirname(CACHE_PATH);
+	const lockDir = path.dirname(LOCK_PATH);
+	fs.mkdirSync(cacheDir, { recursive: true });
+	fs.mkdirSync(lockDir, { recursive: true });
+
 	const cacheExists = fs.existsSync(CACHE_PATH);
 	const lockExists = fs.existsSync(LOCK_PATH);
 	const cacheBackup = cacheExists ? fs.readFileSync(CACHE_PATH, "utf-8") : null;
