@@ -171,7 +171,7 @@ export default function createExtension(pi: ExtensionAPI) {
 					resolve(undefined);
 				};
 				const container = new Container();
-				container.addChild(new Text(theme.fg("muted", "Share string"), 1, 0));
+				container.addChild(new Text(theme.fg("muted", "Paste Theme Share string"), 1, 0));
 				container.addChild(new Spacer(1));
 				container.addChild(input);
 				return {
@@ -613,7 +613,7 @@ export default function createExtension(pi: ExtensionAPI) {
 				onDisplayThemeShared: (_name, shareString) => {
 					pi.sendMessage({
 						customType: "sub-bar",
-						content: `Theme share string:\n/sub-bar:import ${shareString}`,
+						content: `Theme share string:\n${shareString}`,
 						display: true,
 					});
 				},

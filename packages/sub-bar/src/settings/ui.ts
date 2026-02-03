@@ -718,11 +718,11 @@ export async function showSettingsUI(
 				} else if (currentCategory === "display-theme-import") {
 					const input = new Input();
 					input.focused = true;
-					const titleText = new Text(theme.fg("muted", "Share string"), 1, 0);
+					const titleText = new Text(theme.fg("muted", "Paste Theme Share string"), 1, 0);
 					input.onSubmit = (value) => {
 						const trimmed = value.trim();
 						if (!trimmed) {
-							ctx.ui.notify("Enter a share string", "warning");
+							ctx.ui.notify("Enter a theme share string", "warning");
 							return;
 						}
 						const decoded = decodeDisplayShareString(trimmed);
@@ -1146,7 +1146,7 @@ export async function showSettingsUI(
 					if (currentCategory === "display-theme-save" || currentCategory === "display-theme-import-name") {
 						helpText = "Type name • Enter to save • Esc back";
 					} else if (currentCategory === "display-theme-import") {
-						helpText = "Paste share string • Enter to import • Esc back";
+						helpText = "Paste theme share string • Enter to import • Esc back";
 					} else if (
 						currentCategory === "main" ||
 						currentCategory === "providers" ||
