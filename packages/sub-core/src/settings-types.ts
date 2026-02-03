@@ -7,7 +7,6 @@ import type {
 	CoreProviderSettingsMap,
 	CoreProviderSettings,
 	BehaviorSettings,
-	ToolsSettings,
 	ProviderName,
 	ProviderEnabledSetting,
 } from "@marckrenn/pi-sub-shared";
@@ -17,7 +16,6 @@ export type {
 	CoreProviderSettings,
 	CoreProviderSettingsMap,
 	BehaviorSettings,
-	ToolsSettings,
 	CoreSettings,
 	ProviderEnabledSetting,
 } from "@marckrenn/pi-sub-shared";
@@ -45,7 +43,6 @@ export function getDefaultSettings(): Settings {
 		providers: coreDefaults.providers,
 		behavior: coreDefaults.behavior,
 		statusRefresh: coreDefaults.statusRefresh,
-		tools: coreDefaults.tools,
 		providerOrder: coreDefaults.providerOrder,
 		defaultProvider: coreDefaults.defaultProvider,
 	};

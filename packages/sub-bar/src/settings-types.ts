@@ -514,10 +514,6 @@ export function getDefaultSettings(): Settings {
 			refreshOnTurnStart: false,
 			refreshOnToolResult: false,
 		},
-		tools: {
-			usageTool: false,
-			allUsageTool: false,
-		},
 		providerOrder: [...PROVIDERS],
 		defaultProvider: null,
 	};

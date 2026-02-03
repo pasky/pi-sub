@@ -4,7 +4,7 @@
 
 import type { ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { DynamicBorder, getSettingsListTheme } from "@mariozechner/pi-coding-agent";
-import { Container, getEditorKeybindings, Input, type SelectItem, SelectList, Spacer, Text } from "@mariozechner/pi-tui";
+import { Container, Input, type SelectItem, SelectList, Spacer, Text } from "@mariozechner/pi-tui";
 import { SettingsList, type SettingItem, CUSTOM_OPTION } from "../ui/settings-list.js";
 import type { ProviderName } from "../types.js";
 import type { Settings } from "../settings-types.js";
@@ -26,7 +26,6 @@ type SettingsCategory =
 	| ProviderCategory
 	| "behavior"
 	| "status-refresh"
-	| "tools"
 	| "provider-order";
 
 /**
@@ -164,7 +163,6 @@ export async function showSettingsUI(
 					providers: "Provider Settings",
 					behavior: "Usage Refresh Settings",
 					"status-refresh": "Status Refresh Settings",
-					tools: "Tools",
 					"provider-order": "Provider Order",
 				};
 				const providerCategory = getProviderFromCategory(currentCategory);
@@ -306,44 +304,6 @@ export async function showSettingsUI(
 
 					activeList = selectList;
 					container.addChild(selectList);
-				} else if (currentCategory === "tools") {
-					const toolsInfoLines = [
-						theme.fg("muted", "Tools are disabled by default."),
-						theme.fg("dim", "Enable them by editing:"),
-						theme.fg("accent", "~/.pi/agent/pi-sub-core-settings.json"),
-						"",
-						theme.fg("dim", "\"tools\": {"),
-						theme.fg("dim", "  \"usageTool\": true,"),
-						theme.fg("dim", "  \"allUsageTool\": true"),
-						theme.fg("dim", "}"),
-						"",
-						theme.fg("muted", "Then run /reload (or restart pi) to register tools."),
-						"",
-						theme.fg("dim", "Tool names:"),
-						theme.fg("dim", "• sub_get_usage / get_current_usage"),
-						theme.fg("dim", "• sub_get_all_usage / get_all_usage"),
-					];
-
-					for (const line of toolsInfoLines) {
-						if (!line) {
-							container.addChild(new Spacer(1));
-						} else {
-							container.addChild(new Text(line, 1, 0));
-						}
-					}
-					container.addChild(new Spacer(1));
-					container.addChild(new Text(theme.fg("dim", "Esc to go back"), 1, 0));
-
-					const kb = getEditorKeybindings();
-					activeList = {
-						handleInput: (data: string) => {
-							if (kb.matches(data, "selectCancel")) {
-								currentCategory = "main";
-								rebuild();
-								tui.requestRender();
-							}
-						},
-					};
 				} else {
 					let items: SettingItem[];
 					let handleChange: (id: string, value: string) => void;
@@ -419,7 +379,6 @@ export async function showSettingsUI(
 				const usesSettingsList =
 					currentCategory === "behavior" ||
 					currentCategory === "status-refresh" ||
-					currentCategory === "tools" ||
 					getProviderFromCategory(currentCategory) !== null;
 				if (!usesSettingsList) {
 					let helpText: string;

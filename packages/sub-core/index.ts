@@ -247,16 +247,11 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		});
 	};
 
-	const toolsEnabled = settings.tools ?? { usageTool: false, allUsageTool: false };
-	if (toolsEnabled.usageTool) {
-		for (const name of TOOL_NAMES.usage) {
-			registerUsageTool(name);
-		}
+	for (const name of TOOL_NAMES.usage) {
+		registerUsageTool(name);
 	}
-	if (toolsEnabled.allUsageTool) {
-		for (const name of TOOL_NAMES.allUsage) {
-			registerAllUsageTool(name);
-		}
+	for (const name of TOOL_NAMES.allUsage) {
+		registerAllUsageTool(name);
 	}
 
 	pi.registerCommand("sub-core:settings", {

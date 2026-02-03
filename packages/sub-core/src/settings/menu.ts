@@ -13,10 +13,6 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 	const enabledCount = Object.values(settings.providers).filter((p) => p.enabled !== "off" && p.enabled !== false).length;
 	const totalCount = Object.keys(settings.providers).length;
 
-	const tools = settings.tools ?? { usageTool: false, allUsageTool: false };
-	const toolEnabledCount = Object.values(tools).filter(Boolean).length;
-	const toolDescription = toolEnabledCount === 0 ? "disabled by default" : `${toolEnabledCount}/2 enabled`;
-
 	return [
 		{
 			value: "providers",
@@ -35,12 +31,6 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 			label: "Status Refresh Settings",
 			description: `refresh ${settings.statusRefresh.refreshInterval}s`,
 			tooltip: "Control status refresh interval and triggers.",
-		},
-		{
-			value: "tools",
-			label: "Tools",
-			description: toolDescription,
-			tooltip: "Tools are disabled by default. See details to enable usage tools.",
 		},
 		{
 			value: "provider-order",

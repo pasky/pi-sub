@@ -82,21 +82,11 @@ export interface BehaviorSettings {
 	refreshOnToolResult: boolean;
 }
 
-export interface ToolsSettings {
-	usageTool: boolean;
-	allUsageTool: boolean;
-}
-
 export const DEFAULT_BEHAVIOR_SETTINGS: BehaviorSettings = {
 	refreshInterval: 60,
 	minRefreshInterval: 10,
 	refreshOnTurnStart: false,
 	refreshOnToolResult: false,
-};
-
-export const DEFAULT_TOOLS_SETTINGS: ToolsSettings = {
-	usageTool: false,
-	allUsageTool: false,
 };
 
 export function getDefaultCoreProviderSettings(): CoreProviderSettingsMap {
@@ -115,7 +105,6 @@ export function getDefaultCoreSettings(): CoreSettings {
 		providers: getDefaultCoreProviderSettings(),
 		behavior: { ...DEFAULT_BEHAVIOR_SETTINGS },
 		statusRefresh: { ...DEFAULT_BEHAVIOR_SETTINGS },
-		tools: { ...DEFAULT_TOOLS_SETTINGS },
 		providerOrder: [...PROVIDERS],
 		defaultProvider: null,
 	};
@@ -125,7 +114,6 @@ export interface CoreSettings {
 	providers: CoreProviderSettingsMap;
 	behavior: BehaviorSettings;
 	statusRefresh: BehaviorSettings;
-	tools: ToolsSettings;
 	providerOrder: ProviderName[];
 	defaultProvider: ProviderName | null;
 }
