@@ -13,6 +13,9 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 	const enabledCount = Object.values(settings.providers).filter((p) => p.enabled !== "off" && p.enabled !== false).length;
 	const totalCount = Object.keys(settings.providers).length;
 
+	const toolEnabledCount = Object.values(settings.tools).filter(Boolean).length;
+	const toolDescription = toolEnabledCount === 0 ? "disabled" : `${toolEnabledCount}/2 enabled`;
+
 	return [
 		{
 			value: "providers",
@@ -31,6 +34,12 @@ export function buildMainMenuItems(settings: Settings): TooltipSelectItem[] {
 			label: "Status Refresh Settings",
 			description: `refresh ${settings.statusRefresh.refreshInterval}s`,
 			tooltip: "Control status refresh interval and triggers.",
+		},
+		{
+			value: "tools",
+			label: "Tools",
+			description: toolDescription,
+			tooltip: "Enable or disable sub-core tools (sub_get_usage, sub_get_all_usage).",
 		},
 		{
 			value: "provider-order",

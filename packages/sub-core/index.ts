@@ -33,6 +33,13 @@ type SubCoreAction = {
 	force?: boolean;
 };
 
+const TOOL_NAMES = {
+	usage: "sub_get_usage",
+	allUsage: "sub_get_all_usage",
+} as const;
+
+type ToolName = (typeof TOOL_NAMES)[keyof typeof TOOL_NAMES];
+
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 	const result = { ...target } as T;
 	for (const key of Object.keys(source) as (keyof T)[]) {
@@ -124,6 +131,27 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		emitCurrentUpdate(update.provider, update.usage);
 	}
 
+	function syncToolActivation(): void {
+		const activeTools = new Set(pi.getActiveTools());
+		const desiredTools: Array<{ name: ToolName; enabled: boolean }> = [
+			{ name: TOOL_NAMES.usage, enabled: settings.tools.usageTool },
+			{ name: TOOL_NAMES.allUsage, enabled: settings.tools.allUsageTool },
+		];
+		let changed = false;
+		for (const tool of desiredTools) {
+			if (tool.enabled && !activeTools.has(tool.name)) {
+				activeTools.add(tool.name);
+				changed = true;
+			} else if (!tool.enabled && activeTools.has(tool.name)) {
+				activeTools.delete(tool.name);
+				changed = true;
+			}
+		}
+		if (changed) {
+			pi.setActiveTools(Array.from(activeTools));
+		}
+	}
+
 	async function refresh(ctx: ExtensionContext, options?: { force?: boolean; allowStaleCache?: boolean }) {
 		lastContext = ctx;
 		try {
@@ -185,6 +213,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		settings = deepMerge(settings, patch);
 		saveSettings(settings);
 		setupRefreshInterval();
+		syncToolActivation();
 		pi.events.emit("sub-core:settings:updated", { settings });
 	}
 
@@ -198,7 +227,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 	}
 
 	pi.registerTool({
-		name: "sub_get_usage",
+		name: TOOL_NAMES.usage,
 		label: "Sub Usage",
 		description: "Refresh and return the latest subscription usage snapshot.",
 		parameters: Type.Object({
@@ -216,7 +245,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 	});
 
 	pi.registerTool({
-		name: "sub_get_all_usage",
+		name: TOOL_NAMES.allUsage,
 		label: "Sub All Usage",
 		description: "Refresh and return usage snapshots for all enabled providers.",
 		parameters: Type.Object({
@@ -235,6 +264,8 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 			};
 		},
 	});
+
+	syncToolActivation();
 
 	pi.registerCommand("sub-core:settings", {
 		description: "Open sub-core settings",
@@ -297,6 +328,7 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		lastContext = ctx;
 		settings = loadSettings();
 		setupRefreshInterval();
+		syncToolActivation();
 		void refresh(ctx, { force: true, allowStaleCache: true });
 		void refreshStatus(ctx, { force: true, allowStaleCache: true });
 		pi.events.emit("sub-core:ready", { state: lastState, settings });

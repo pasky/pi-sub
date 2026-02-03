@@ -504,13 +504,19 @@ export function getDefaultSettings(): Settings {
 
 		behavior: {
 			refreshInterval: 60,
+			minRefreshInterval: 10,
 			refreshOnTurnStart: false,
 			refreshOnToolResult: false,
 		},
 		statusRefresh: {
 			refreshInterval: 60,
+			minRefreshInterval: 10,
 			refreshOnTurnStart: false,
 			refreshOnToolResult: false,
+		},
+		tools: {
+			usageTool: false,
+			allUsageTool: false,
 		},
 		providerOrder: [...PROVIDERS],
 		defaultProvider: null,
