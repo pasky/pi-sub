@@ -98,7 +98,7 @@ The extension loads automatically. Use:
 - `Ctrl+Alt+R` - Toggle reset timer format (relative vs datetime)
 
 **Caching:**
-- Handled by sub-core at `cache.json` next to the sub-core extension entry
+- Handled by sub-core at `~/.pi/agent/pi-sub-core-cache.json`
 - Cache TTL matches your auto-refresh interval setting
 - Lock file prevents race conditions between multiple pi windows
 

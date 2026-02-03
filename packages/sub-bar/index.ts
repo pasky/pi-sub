@@ -128,6 +128,59 @@ export default function createExtension(pi: ExtensionAPI) {
 	let settingsSnapshot = "";
 	let settingsMtimeMs = 0;
 	let settingsWatchStarted = false;
+	let subCoreBootstrapAttempted = false;
+
+	async function probeSubCore(timeoutMs = 200): Promise<boolean> {
+		return new Promise((resolve) => {
+			let resolved = false;
+			const timer = setTimeout(() => {
+				if (!resolved) {
+					resolved = true;
+					resolve(false);
+				}
+			}, timeoutMs);
+
+			const request: SubCoreRequest = {
+				type: "current",
+				reply: () => {
+					if (resolved) return;
+					resolved = true;
+					clearTimeout(timer);
+					resolve(true);
+				},
+			};
+			pi.events.emit("sub-core:request", request);
+		});
+	}
+
+	async function ensureSubCoreLoaded(): Promise<void> {
+		if (subCoreBootstrapAttempted) return;
+		subCoreBootstrapAttempted = true;
+		const hasCore = await probeSubCore();
+		if (hasCore) return;
+		try {
+			const bundledUrl = new URL("./node_modules/@marckrenn/pi-sub-core/index.ts", import.meta.url);
+			const module = await import(bundledUrl.toString());
+			const createCore = module.default as undefined | ((api: ExtensionAPI) => void | Promise<void>);
+			if (typeof createCore === "function") {
+				void createCore(pi);
+				return;
+			}
+		} catch {
+			// Fall back to package resolution
+		}
+		try {
+			const module = await import("@marckrenn/pi-sub-core");
+			const createCore = module.default as undefined | ((api: ExtensionAPI) => void | Promise<void>);
+			if (typeof createCore === "function") {
+				void createCore(pi);
+			}
+		} catch (error) {
+			console.warn("Failed to auto-load sub-core:", error);
+		}
+	}
+
+	void ensureSubCoreLoaded();
 
 	async function promptImportAction(ctx: ExtensionContext): Promise<"save-apply" | "save" | "cancel"> {
 		return new Promise((resolve) => {
