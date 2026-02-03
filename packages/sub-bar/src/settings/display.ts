@@ -654,7 +654,7 @@ export function applyDisplayChange(settings: Settings, id: string, value: string
 		case "showContextBar":
 			settings.display.showContextBar = value === "on";
 			break;
-		case "paddingLeft": { 
+		case "paddingLeft": {
 			const parsed = parseClampedNumber(value, 0, 100);
 			if (parsed !== null) {
 				settings.display.paddingLeft = parsed;
