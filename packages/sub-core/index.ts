@@ -40,6 +40,9 @@ const TOOL_NAMES = {
 
 type ToolName = (typeof TOOL_NAMES)[keyof typeof TOOL_NAMES][number];
 
+type SubCoreGlobalState = { active: boolean };
+const subCoreGlobal = globalThis as typeof globalThis & { __piSubCore?: SubCoreGlobalState };
+
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {
 	const result = { ...target } as T;
 	for (const key of Object.keys(source) as (keyof T)[]) {
@@ -72,6 +75,12 @@ function stripUsageProvider(usage?: UsageSnapshot): Omit<UsageSnapshot, "provide
  * Create the extension
  */
 export default function createExtension(pi: ExtensionAPI, deps: Dependencies = createDefaultDependencies()): void {
+	if (subCoreGlobal.__piSubCore?.active) {
+		console.warn("[sub-core] Duplicate instance detected; skipping initialization.");
+		return;
+	}
+	subCoreGlobal.__piSubCore = { active: true };
+
 	let usageRefreshInterval: ReturnType<typeof setInterval> | undefined;
 	let statusRefreshInterval: ReturnType<typeof setInterval> | undefined;
 	let lastContext: ExtensionContext | undefined;
@@ -376,5 +385,6 @@ export default function createExtension(pi: ExtensionAPI, deps: Dependencies = c
 		unsubscribeCacheSnapshot();
 		stopCacheWatch();
 		lastContext = undefined;
+		subCoreGlobal.__piSubCore = undefined;
 	});
 }
