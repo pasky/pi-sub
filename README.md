@@ -97,12 +97,12 @@ UI extensions like `sub-bar` listen for updates and render the current provider 
 
 ## Settings & Cache
 
-Settings live in the agent directory to survive updates (legacy extension `settings.json` files are migrated on first run when present, and removed after successful migration). Cache/lock files also live in the agent directory and legacy cache/lock files next to the sub-core extension entry are migrated and removed on first run.
+Settings live in the agent directory to survive updates (legacy extension `settings.json` files are migrated on first run when present, and removed after successful migration). Cache/lock files live under `~/.pi/agent/cache/sub-core`; legacy cache/lock files next to the sub-core extension entry or in the agent root are migrated and removed on first run.
 
 - **sub-core settings**: `~/.pi/agent/pi-sub-core-settings.json`
 - **sub-bar settings**: `~/.pi/agent/pi-sub-bar-settings.json`
-- **cache**: `~/.pi/agent/pi-sub-core-cache.json`
-- **lock**: `~/.pi/agent/pi-sub-core-cache.lock`
+- **cache**: `~/.pi/agent/cache/sub-core/cache.json`
+- **lock**: `~/.pi/agent/cache/sub-core/cache.lock`
 
 ## Adding a Provider (summary)
 

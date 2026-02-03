@@ -8,7 +8,14 @@ import * as fs from "node:fs";
 import type { ProviderName, ProviderStatus, UsageSnapshot } from "./types.js";
 import { isExpectedMissingData } from "./errors.js";
 import { getStorage } from "./storage.js";
-import { getCachePath, getCacheLockPath, getLegacyCacheLockPath, getLegacyCachePath } from "./paths.js";
+import {
+	getCachePath,
+	getCacheLockPath,
+	getLegacyAgentCacheLockPath,
+	getLegacyAgentCachePath,
+	getLegacyCacheLockPath,
+	getLegacyCachePath,
+} from "./paths.js";
 import { tryAcquireFileLock, releaseFileLock, waitForLockRelease } from "./storage/lock.js";
 
 /**
@@ -56,16 +63,26 @@ function migrateLegacyCache(): void {
 	legacyCacheMigrated = true;
 	const storage = getStorage();
 	try {
-		if (!storage.exists(CACHE_PATH) && storage.exists(LEGACY_CACHE_PATH)) {
-			const content = storage.readFile(LEGACY_CACHE_PATH);
-			if (content) {
-				ensureCacheDir();
-				storage.writeFile(CACHE_PATH, content);
+		const legacyCachePaths = [LEGACY_AGENT_CACHE_PATH, LEGACY_CACHE_PATH];
+		if (!storage.exists(CACHE_PATH)) {
+			const legacyPath = legacyCachePaths.find((path) => storage.exists(path));
+			if (legacyPath) {
+				const content = storage.readFile(legacyPath);
+				if (content) {
+					ensureCacheDir();
+					storage.writeFile(CACHE_PATH, content);
+				}
 			}
-			storage.removeFile(LEGACY_CACHE_PATH);
 		}
-		if (storage.exists(LEGACY_LOCK_PATH)) {
-			storage.removeFile(LEGACY_LOCK_PATH);
+		for (const legacyPath of legacyCachePaths) {
+			if (storage.exists(legacyPath)) {
+				storage.removeFile(legacyPath);
+			}
+		}
+		for (const legacyLockPath of [LEGACY_AGENT_LOCK_PATH, LEGACY_LOCK_PATH]) {
+			if (storage.exists(legacyLockPath)) {
+				storage.removeFile(legacyLockPath);
+			}
 		}
 	} catch (error) {
 		console.error("Failed to migrate cache:", error);
@@ -111,12 +128,14 @@ function emitCacheSnapshot(cache: Cache): void {
  */
 export const CACHE_PATH = getCachePath();
 const LEGACY_CACHE_PATH = getLegacyCachePath();
+const LEGACY_AGENT_CACHE_PATH = getLegacyAgentCachePath();
 
 /**
  * Lock file path
  */
 const LOCK_PATH = getCacheLockPath();
 const LEGACY_LOCK_PATH = getLegacyCacheLockPath();
+const LEGACY_AGENT_LOCK_PATH = getLegacyAgentCacheLockPath();
 
 /**
  * Lock timeout in milliseconds
