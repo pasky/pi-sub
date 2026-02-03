@@ -266,7 +266,12 @@ export default function createExtension(pi: ExtensionAPI) {
 		}
 	}
 
-	async function shareThemeString(ctx: ExtensionContext, name: string, shareString: string): Promise<void> {
+	async function shareThemeString(
+		ctx: ExtensionContext,
+		name: string,
+		shareString: string,
+		mode: "prompt" | "gist" | "string" = "prompt",
+	): Promise<void> {
 		const trimmedName = name.trim();
 		const notify = (message: string, level: "info" | "warning" | "error") => {
 			if (ctx.hasUI) {
@@ -281,22 +286,30 @@ export default function createExtension(pi: ExtensionAPI) {
 				console.log(message);
 			}
 		};
-		if (ctx.hasUI) {
-			const wantsGist = await ctx.ui.confirm("Share Theme", "Upload to a secret GitHub gist?");
-			if (wantsGist) {
-				const gistUrl = await createThemeGist(ctx, trimmedName, shareString);
-				if (gistUrl) {
-					pi.sendMessage({
-						customType: "sub-bar",
-						content: `Theme gist:\n${gistUrl}`,
-						display: true,
-					});
-					notify("Theme gist posted to chat", "info");
-					return;
-				}
-				notify("Posting share string instead.", "warning");
+		let resolvedMode = mode;
+		if (resolvedMode === "prompt") {
+			if (!ctx.hasUI) {
+				resolvedMode = "string";
+			} else {
+				const wantsGist = await ctx.ui.confirm("Share Theme", "Upload to a secret GitHub gist?");
+				resolvedMode = wantsGist ? "gist" : "string";
 			}
 		}
+
+		if (resolvedMode === "gist") {
+			const gistUrl = await createThemeGist(ctx, trimmedName, shareString);
+			if (gistUrl) {
+				pi.sendMessage({
+					customType: "sub-bar",
+					content: `Theme gist:\n${gistUrl}`,
+					display: true,
+				});
+				notify("Theme gist posted to chat", "info");
+				return;
+			}
+			notify("Posting share string instead.", "warning");
+		}
+
 		pi.sendMessage({
 			customType: "sub-bar",
 			content: `Theme share string:\n${shareString}`,
@@ -722,7 +735,7 @@ export default function createExtension(pi: ExtensionAPI) {
 						display: true,
 					});
 				},
-				onDisplayThemeShared: (name, shareString) => shareThemeString(ctx, name, shareString),
+				onDisplayThemeShared: (name, shareString, mode) => shareThemeString(ctx, name, shareString, mode ?? "prompt"),
 			});
 			settings = newSettings;
 			void ensurePinnedEntries(settings.pinnedProvider ?? null);
